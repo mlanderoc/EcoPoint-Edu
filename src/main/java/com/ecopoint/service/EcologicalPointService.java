@@ -16,7 +16,7 @@ import java.util.List;
  * Business service responsible for managing {@link Institution}, {@link Zone},
  * and {@link EcologicalPoint} entities along with their regulatory containers.
  *
- * @author Estefania Marquez Martinez
+ * @author EstefaniaMarquez
  * @version 1.0
  */
 public class EcologicalPointService {
