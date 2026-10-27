@@ -1,6 +1,6 @@
 
 
-package com.ecopoint;
+package com.mycompany.ecopoint.edu;
 
 /**
  *
