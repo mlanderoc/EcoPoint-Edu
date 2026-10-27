@@ -28,7 +28,7 @@
    * `feature/excepciones`: Jerarquía de excepciones personalizadas (`com.ecopoint.exceptions`) y configuración Maven.
    * `feature/modelo`: Entidades del dominio (`com.ecopoint.model`) con encapsulamiento y métodos Experto en Información.
    * `feature/validacion`: Validadores de datos de entrada y reglas de negocio (`com.ecopoint.validation`).
-   * `feature/servicio`: Lógica de negocio, cálculo de cuarteo y generación automática de alertas (`com.ecopoint.service`).
+   * `feature/servicios`: Lógica de negocio, cálculo de cuarteo y generación automática de alertas (`com.ecopoint.service`).
    * `docs/documentacion`: Documentación general del repositorio (`README.md`, `TEAM.md`) y diagramas UML/arquitectura en `docs/`.
 3. **Reglas de Estilo e Idioma:**
    * **Código fuente, nombres de clases/métodos, JavaDoc y diagramas técnicos:** en **Inglés**.
