@@ -1,6 +1,6 @@
-# Class Diagram — EcoPoint Edu Core Architecture
+# Class Diagram — EcoPoint Edu Architecture
 
-This document presents the complete Unified Modeling Language (UML) class diagram for the core backend layers of **EcoPoint Edu** (`com.ecopoint.exceptions`, `com.ecopoint.model`, `com.ecopoint.validation`, and `com.ecopoint.service`).
+This document presents the Unified Modeling Language (UML) class diagram for **EcoPoint Edu**, integrating the Domain Model (`com.ecopoint.model`), Custom Exceptions (`com.ecopoint.exceptions`), Stateless Validators (`com.ecopoint.validation`), Protected Variations Persistence (`com.ecopoint.persistence`), Business Services (`com.ecopoint.service`), and Java Swing User Interface (`com.ecopoint.ui`).
 
 ## 1. Integrated UML Class Diagram
 
@@ -60,11 +60,6 @@ classDiagram
             -int idInstitution
             -String name
             -String address
-            +Institution()
-            +Institution(int idInstitution, String name, String address)
-            +getIdInstitution() int
-            +getName() String
-            +getAddress() String
         }
 
         class Zone {
@@ -72,11 +67,6 @@ classDiagram
             -int idInstitution
             -String name
             -String description
-            +Zone()
-            +Zone(int idZone, int idInstitution, String name, String description)
-            +getIdZone() int
-            +getIdInstitution() int
-            +getName() String
         }
 
         class EcologicalPoint {
@@ -89,7 +79,6 @@ classDiagram
             -BigDecimal coordY
             -String observations
             -List~Container~ containers
-            +EcologicalPoint()
             +addContainer(Container container) void
             +hasMandatoryThreeColors() boolean
         }
@@ -100,7 +89,6 @@ classDiagram
             -String wasteType
             -String color
             -BigDecimal capacity
-            +Container()
             +isRegulatoryColor() boolean
         }
 
@@ -110,7 +98,6 @@ classDiagram
             -String lastName
             -String email
             -String role
-            +User()
             +getFullName() String
         }
 
@@ -119,7 +106,6 @@ classDiagram
             -LocalDate date
             -String observations
             -List~InspectionRecord~ inspectionRecords
-            +InspectionDay()
             +addInspectionRecord(InspectionRecord record) void
         }
 
@@ -134,9 +120,6 @@ classDiagram
             -List~ContainerDetail~ containerDetails
             -List~Evidence~ evidences
             -Quartering quartering
-            +InspectionRecord()
-            +addContainerDetail(ContainerDetail detail) void
-            +addEvidence(Evidence evidence) void
             +hasCriticalIncidents() boolean
         }
 
@@ -150,7 +133,6 @@ classDiagram
             -String signageCondition
             -boolean improperSeparation
             -String observations
-            +ContainerDetail()
             +requiresOverflowAlert() boolean
             +requiresImproperSeparationAlert() boolean
         }
@@ -162,7 +144,6 @@ classDiagram
             -boolean attended
             -String description
             -LocalDateTime generatedAt
-            +Alert()
             +markAsAttended() void
         }
 
@@ -172,7 +153,6 @@ classDiagram
             -String filePath
             -String description
             -LocalDateTime uploadedAt
-            +Evidence()
         }
 
         class WasteCategory {
@@ -180,7 +160,6 @@ classDiagram
             -String name
             -String description
             -String associatedColor
-            +WasteCategory()
         }
 
         class Quartering {
@@ -190,8 +169,6 @@ classDiagram
             -BigDecimal sampleWeight
             -String observations
             -List~QuarteringResult~ results
-            +Quartering()
-            +addResult(QuarteringResult result) void
             +calculateTotalClassifiedWeight() BigDecimal
             +calculateSampleLoss() BigDecimal
             +calculateCompositionPercentages() void
@@ -204,7 +181,6 @@ classDiagram
             -BigDecimal weight
             -int quantity
             -BigDecimal percentage
-            +QuarteringResult()
             +calculatePercentageOver(BigDecimal sampleWeight) BigDecimal
         }
     }
@@ -216,7 +192,6 @@ classDiagram
     EcologicalPoint "1" <-- "0..*" InspectionRecord : inspected-in
     User "1" <-- "0..*" InspectionRecord : captured-by
     InspectionRecord "1" *-- "3" ContainerDetail : evaluates
-    Container "1" <-- "0..*" ContainerDetail : refers-to
     ContainerDetail "1" --> "0..*" Alert : triggers
     InspectionRecord "1" *-- "0..*" Evidence : attaches
     InspectionRecord "1" *-- "0..1" Quartering : originates
@@ -224,16 +199,93 @@ classDiagram
     WasteCategory "1" <-- "0..*" QuarteringResult : classifies
 
     %% ==========================================
+    %% PACKAGE: com.ecopoint.persistence
+    %% ==========================================
+    namespace com_ecopoint_persistence {
+        class UserRepository {
+            <<interface>>
+            +save(User user) User
+            +findById(int idUser) User
+            +findByEmail(String email) User
+            +findAll() List~User~
+            +deleteById(int idUser) boolean
+        }
+
+        class InstitutionRepository {
+            <<interface>>
+            +save(Institution institution) Institution
+            +findById(int idInstitution) Institution
+            +findAll() List~Institution~
+            +deleteById(int idInstitution) boolean
+        }
+
+        class ZoneRepository {
+            <<interface>>
+            +save(Zone zone) Zone
+            +findById(int idZone) Zone
+            +findAll() List~Zone~
+            +deleteById(int idZone) boolean
+        }
+
+        class EcologicalPointRepository {
+            <<interface>>
+            +save(EcologicalPoint point) EcologicalPoint
+            +findById(int idPoint) EcologicalPoint
+            +findAll() List~EcologicalPoint~
+            +deleteById(int idPoint) boolean
+        }
+
+        class InspectionRepository {
+            <<interface>>
+            +saveDay(InspectionDay day) InspectionDay
+            +findDayById(int idDay) InspectionDay
+            +findAllDays() List~InspectionDay~
+            +saveRecord(InspectionRecord record) InspectionRecord
+            +findRecordById(int idRecord) InspectionRecord
+            +findAllRecords() List~InspectionRecord~
+        }
+
+        class QuarteringRepository {
+            <<interface>>
+            +save(Quartering quartering) Quartering
+            +findById(int idQuartering) Quartering
+            +findAll() List~Quartering~
+            +deleteById(int idQuartering) boolean
+        }
+
+        class AlertRepository {
+            <<interface>>
+            +save(Alert alert) Alert
+            +findById(int idAlert) Alert
+            +findAll() List~Alert~
+            +deleteById(int idAlert) boolean
+        }
+
+        class FileUserRepository
+        class FileInstitutionRepository
+        class FileZoneRepository
+        class FileEcologicalPointRepository
+        class FileInspectionRepository
+        class FileQuarteringRepository
+        class FileAlertRepository
+    }
+
+    UserRepository <|.. FileUserRepository
+    InstitutionRepository <|.. FileInstitutionRepository
+    ZoneRepository <|.. FileZoneRepository
+    EcologicalPointRepository <|.. FileEcologicalPointRepository
+    InspectionRepository <|.. FileInspectionRepository
+    QuarteringRepository <|.. FileQuarteringRepository
+    AlertRepository <|.. FileAlertRepository
+
+    %% ==========================================
     %% PACKAGE: com.ecopoint.validation
     %% ==========================================
     namespace com_ecopoint_validation {
         class UserValidator {
             +validateUserData(User user)$ void
-            +validatePersonName(String nameValue, String fieldName)$ void
-            +validateEmailFormat(String email)$ void
-            +validateInstitutionalRole(String role)$ void
             +validateUniqueEmail(String email, List~User~ existingUsers)$ void
-            +validateUserExists(User user, Object identifier)$ void
+            +validateUniqueEmailForUpdate(int currentUserId, String email, List~User~ existingUsers)$ void
         }
 
         class EcologicalPointValidator {
@@ -242,23 +294,17 @@ classDiagram
             +validateEcologicalPointData(EcologicalPoint point)$ void
             +validateCoordinates(BigDecimal coordX, BigDecimal coordY)$ void
             +validateRegulatoryContainers(List~Container~ containers)$ void
-            +validatePointExists(EcologicalPoint point, int idPoint)$ void
         }
 
         class InspectionValidator {
             +validateInspectionDayData(InspectionDay day)$ void
             +validateInspectionRecordData(InspectionRecord record)$ void
-            +validateContainerDetailData(ContainerDetail detail)$ void
-            +validateEvidenceData(Evidence evidence)$ void
-            +validateInspectionDayExists(InspectionDay day, int idDay)$ void
-            +validateInspectionRecordExists(InspectionRecord record, int idRecord)$ void
         }
 
         class QuarteringValidator {
             +validateQuarteringData(Quartering quartering)$ void
             +validateWeightCoherence(Quartering quartering)$ void
             +validateUniqueQuarteringPerRecord(int idRecord, List~Quartering~ existingQuarterings)$ void
-            +validateQuarteringExists(Quartering quartering, int idQuartering)$ void
         }
     }
 
@@ -267,32 +313,29 @@ classDiagram
     %% ==========================================
     namespace com_ecopoint_service {
         class UserService {
-            -List~User~ users
-            -int nextId
+            -UserRepository userRepository
+            +authenticateByEmail(String email) User
             +registerUser(User user) User
-            +getUserById(int idUser) User
-            +getUserByEmail(String email) User
+            +updateUser(User user) User
+            +deleteUser(int idUser) void
             +listAllUsers() List~User~
         }
 
         class EcologicalPointService {
-            -List~Institution~ institutions
-            -List~Zone~ zones
-            -List~EcologicalPoint~ points
+            -InstitutionRepository institutionRepository
+            -ZoneRepository zoneRepository
+            -EcologicalPointRepository pointRepository
             +registerInstitution(Institution institution) Institution
             +registerZone(Zone zone) Zone
             +registerEcologicalPoint(EcologicalPoint point) EcologicalPoint
-            +updatePointCoordinatesAndStatus(int idPoint, BigDecimal coordX, BigDecimal coordY, String newStatus) EcologicalPoint
-            +getEcologicalPointById(int idPoint) EcologicalPoint
-            +listPointsByZone(Integer idZone) List~EcologicalPoint~
+            +updateEcologicalPoint(EcologicalPoint point) EcologicalPoint
+            +deleteEcologicalPoint(int idPoint) void
         }
 
         class AlertService {
-            -List~Alert~ alerts
-            -int nextAlertId
+            -AlertRepository alertRepository
             +evaluateAndGenerateAutomaticAlerts(InspectionRecord record) List~Alert~
             +markAlertAsAttended(int idAlert) Alert
-            +getAlertById(int idAlert) Alert
             +listPendingAlerts() List~Alert~
         }
 
@@ -300,35 +343,51 @@ classDiagram
             -EcologicalPointService pointService
             -UserService userService
             -AlertService alertService
+            -InspectionRepository inspectionRepository
             +createInspectionDay(InspectionDay day) InspectionDay
             +registerPointInspection(InspectionRecord record) InspectionRecord
-            +getInspectionDayById(int idDay) InspectionDay
-            +getInspectionRecordById(int idRecord) InspectionRecord
-            +listInspectionDays() List~InspectionDay~
         }
 
         class QuarteringService {
             -InspectionService inspectionService
-            -List~Quartering~ quarterings
+            -QuarteringRepository quarteringRepository
             +registerQuartering(Quartering quartering) Quartering
-            +getQuarteringById(int idQuartering) Quartering
-            +listAllQuarterings() List~Quartering~
+            +calculateConsolidatedStatistics() Map~String, BigDecimal~
         }
     }
 
-    UserService --> UserValidator : delegates validation
-    EcologicalPointService --> EcologicalPointValidator : delegates validation
-    InspectionService --> InspectionValidator : delegates validation
-    InspectionService --> AlertService : triggers alerts
-    InspectionService --> EcologicalPointService : verifies point
-    InspectionService --> UserService : verifies user
-    QuarteringService --> QuarteringValidator : delegates validation
-    QuarteringService --> InspectionService : verifies record
+    %% ==========================================
+    %% PACKAGE: com.ecopoint.ui
+    %% ==========================================
+    namespace com_ecopoint_ui {
+        class LoginFrame
+        class MainFrame
+        class DashboardAndAlertsPanel
+        class CampusAndPointPanel
+        class InspectionManagementPanel
+        class QuarteringManagementPanel
+        class UserManagementPanel
+    }
 
-    UserValidator ..> EcoPointException : throws
-    EcologicalPointValidator ..> EcoPointException : throws
-    InspectionValidator ..> EcoPointException : throws
-    QuarteringValidator ..> EcoPointException : throws
+    LoginFrame --> MainFrame : launches
+    MainFrame *-- DashboardAndAlertsPanel
+    MainFrame *-- CampusAndPointPanel
+    MainFrame *-- InspectionManagementPanel
+    MainFrame *-- QuarteringManagementPanel
+    MainFrame *-- UserManagementPanel
+
+    UserService --> UserRepository : Protected Variations
+    EcologicalPointService --> InstitutionRepository : Protected Variations
+    EcologicalPointService --> ZoneRepository : Protected Variations
+    EcologicalPointService --> EcologicalPointRepository : Protected Variations
+    InspectionService --> InspectionRepository : Protected Variations
+    QuarteringService --> QuarteringRepository : Protected Variations
+    AlertService --> AlertRepository : Protected Variations
+
+    UserService --> UserValidator : delegates
+    EcologicalPointService --> EcologicalPointValidator : delegates
+    InspectionService --> InspectionValidator : delegates
+    QuarteringService --> QuarteringValidator : delegates
 ```
 
 ---
@@ -337,9 +396,7 @@ classDiagram
 
 | Pattern / Principle | Category | Applied Classes | Architectural Justification |
 | :--- | :---: | :--- | :--- |
-| **Information Expert** | GRASP | `Quartering`, `QuarteringResult`, `ContainerDetail`, `EcologicalPoint`, `User` | Each domain entity computes values derived directly from its own attributes (`calculateCompositionPercentages()`, `requiresOverflowAlert()`, `hasMandatoryThreeColors()`, `getFullName()`). |
-| **Creator** | GRASP | `EcologicalPoint`, `InspectionRecord`, `AlertService` | `EcologicalPoint` aggregates `Container` instances; `InspectionRecord` aggregates `ContainerDetail` and `Evidence`; `AlertService` instantiates `Alert` objects from inspection evaluations. |
-| **Pure Fabrication** | GRASP | `UserValidator`, `EcologicalPointValidator`, `InspectionValidator`, `QuarteringValidator` | Stateless validation classes fabricated to avoid overloading domain entities or business services with raw input parsing and regulatory checks. |
-| **Low Coupling & High Cohesion** | GRASP | `UserService`, `EcologicalPointService`, `InspectionService`, `QuarteringService` | Services focus strictly on business orchestration while delegating validation rules to dedicated validators and communicating errors via unchecked `EcoPointException` subclasses. |
-| **Single Responsibility Principle (SRP)** | SOLID | `*Validator` vs `*Service` vs `model.*` | Domain models only change when business state/calculations change; validators only change when validation rules change; services only change when use-case workflows change. |
-| **Open/Closed (OCP) & Liskov Substitution (LSP)** | SOLID | `EcoPointException` hierarchy | New domain error types can be added as subclasses without modifying `EcoPointException`, and all subclasses honor the base contract (`getErrorCode()`, `getMessage()`). |
+| **Protected Variations & Dependency Inversion (DIP)** | GRASP / SOLID | `UserRepository`, `EcologicalPointRepository`, `InspectionRepository`, `QuarteringRepository`, `AlertRepository` and `File*Repository` | Services depend exclusively on repository interfaces (`*Repository`), isolating the business logic and Swing UI from the underlying flat-file storage (`data/*.txt`) and enabling zero-impact migration to a relational database. |
+| **Information Expert** | GRASP | `Quartering`, `QuarteringResult`, `ContainerDetail`, `EcologicalPoint`, `User` | Domain models compute derived metrics directly from their encapsulated state (`calculateCompositionPercentages()`, `requiresOverflowAlert()`, `hasMandatoryThreeColors()`). |
+| **Pure Fabrication & Single Responsibility (SRP)** | GRASP / SOLID | `*Validator`, `FileStorageHelper`, `File*Repository` | Validation rules and flat-file I/O operations are extracted into dedicated classes so domain entities and services remain cohesive. |
+| **Open/Closed (OCP) & Liskov Substitution (LSP)** | SOLID | `EcoPointException` hierarchy & `*Repository` implementations | Any repository implementation (`File*Repository` or future `Jdbc*Repository`) and any `EcoPointException` subclass can be substituted transparently without altering client contracts. |
