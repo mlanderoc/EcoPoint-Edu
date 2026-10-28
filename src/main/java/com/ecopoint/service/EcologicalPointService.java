@@ -1,43 +1,57 @@
 package com.ecopoint.service;
 
+import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.Container;
 import com.ecopoint.model.EcologicalPoint;
 import com.ecopoint.model.Institution;
 import com.ecopoint.model.Zone;
+import com.ecopoint.persistence.EcologicalPointRepository;
+import com.ecopoint.persistence.FileEcologicalPointRepository;
+import com.ecopoint.persistence.FileInstitutionRepository;
+import com.ecopoint.persistence.FileZoneRepository;
+import com.ecopoint.persistence.InstitutionRepository;
+import com.ecopoint.persistence.ZoneRepository;
 import com.ecopoint.validation.EcologicalPointValidator;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
- * Business service responsible for managing {@link Institution}, {@link Zone},
- * and {@link EcologicalPoint} entities along with their regulatory containers.
+ * Business service responsible for managing Institution, Zone, and EcologicalPoint
+ * CRUD operations along with their regulatory containers.
+ * Depends on repository interfaces applying Protected Variations and SOLID DIP.
  *
  * @author EstefaniaMarquez
  * @version 1.0
  */
 public class EcologicalPointService {
 
-    private final List<Institution> institutions;
-    private final List<Zone> zones;
-    private final List<EcologicalPoint> points;
-    private int nextInstitutionId;
-    private int nextZoneId;
-    private int nextPointId;
+    private final InstitutionRepository institutionRepository;
+    private final ZoneRepository zoneRepository;
+    private final EcologicalPointRepository pointRepository;
 
     /**
-     * Constructs an EcologicalPointService with empty in-memory collections.
+     * Constructs an EcologicalPointService using default flat-file repositories.
      */
     public EcologicalPointService() {
-        this.institutions = new ArrayList<>();
-        this.zones = new ArrayList<>();
-        this.points = new ArrayList<>();
-        this.nextInstitutionId = 1;
-        this.nextZoneId = 1;
-        this.nextPointId = 1;
+        this(new FileInstitutionRepository(), new FileZoneRepository(), new FileEcologicalPointRepository());
+    }
+
+    /**
+     * Constructs an EcologicalPointService with injected repository contracts.
+     *
+     * @param institutionRepository institution repository contract
+     * @param zoneRepository        zone repository contract
+     * @param pointRepository       ecological point repository contract
+     */
+    public EcologicalPointService(InstitutionRepository institutionRepository,
+                                  ZoneRepository zoneRepository,
+                                  EcologicalPointRepository pointRepository) {
+        this.institutionRepository = institutionRepository;
+        this.zoneRepository = zoneRepository;
+        this.pointRepository = pointRepository;
     }
 
     /**
@@ -48,11 +62,49 @@ public class EcologicalPointService {
      */
     public Institution registerInstitution(Institution institution) {
         EcologicalPointValidator.validateInstitutionData(institution);
-        institution.setIdInstitution(nextInstitutionId++);
+        institution.setIdInstitution(0);
         institution.setName(institution.getName().trim());
         institution.setAddress(institution.getAddress().trim());
-        institutions.add(institution);
-        return institution;
+        return institutionRepository.save(institution);
+    }
+
+    /**
+     * Updates an existing educational institution.
+     *
+     * @param institution institution with updated attributes
+     * @return updated institution
+     */
+    public Institution updateInstitution(Institution institution) {
+        EcologicalPointValidator.validateInstitutionData(institution);
+        getInstitutionById(institution.getIdInstitution());
+        institution.setName(institution.getName().trim());
+        institution.setAddress(institution.getAddress().trim());
+        return institutionRepository.save(institution);
+    }
+
+    /**
+     * Deletes an institution if it has no associated zones.
+     *
+     * @param idInstitution identifier of the institution to delete
+     */
+    public void deleteInstitution(int idInstitution) {
+        getInstitutionById(idInstitution);
+        for (Zone z : zoneRepository.findAll()) {
+            if (z.getIdInstitution() == idInstitution) {
+                throw new BusinessRuleException(
+                        "No se puede eliminar la institución porque tiene zonas asociadas.");
+            }
+        }
+        institutionRepository.deleteById(idInstitution);
+    }
+
+    /**
+     * Lists all registered institutions.
+     *
+     * @return list of institutions
+     */
+    public List<Institution> listAllInstitutions() {
+        return institutionRepository.findAll();
     }
 
     /**
@@ -62,13 +114,58 @@ public class EcologicalPointService {
      * @return registered zone with assigned ID
      */
     public Zone registerZone(Zone zone) {
-        EcologicalPointValidator.validateZoneData(zone, zones);
+        zone.setIdZone(0);
+        EcologicalPointValidator.validateZoneData(zone, zoneRepository.findAll());
         getInstitutionById(zone.getIdInstitution());
 
-        zone.setIdZone(nextZoneId++);
         zone.setName(zone.getName().trim());
-        zones.add(zone);
-        return zone;
+        if (zone.getDescription() != null) {
+            zone.setDescription(zone.getDescription().trim());
+        }
+        return zoneRepository.save(zone);
+    }
+
+    /**
+     * Updates an existing zone.
+     *
+     * @param zone zone with updated attributes
+     * @return updated zone
+     */
+    public Zone updateZone(Zone zone) {
+        getZoneById(zone.getIdZone());
+        EcologicalPointValidator.validateZoneData(zone, zoneRepository.findAll());
+        getInstitutionById(zone.getIdInstitution());
+
+        zone.setName(zone.getName().trim());
+        if (zone.getDescription() != null) {
+            zone.setDescription(zone.getDescription().trim());
+        }
+        return zoneRepository.save(zone);
+    }
+
+    /**
+     * Deletes a zone if it has no associated ecological points.
+     *
+     * @param idZone identifier of the zone to delete
+     */
+    public void deleteZone(int idZone) {
+        getZoneById(idZone);
+        for (EcologicalPoint p : pointRepository.findAll()) {
+            if (p.getIdZone() == idZone) {
+                throw new BusinessRuleException(
+                        "No se puede eliminar la zona porque tiene puntos ecológicos registrados.");
+            }
+        }
+        zoneRepository.deleteById(idZone);
+    }
+
+    /**
+     * Lists all registered zones.
+     *
+     * @return list of zones
+     */
+    public List<Zone> listAllZones() {
+        return zoneRepository.findAll();
     }
 
     /**
@@ -82,21 +179,34 @@ public class EcologicalPointService {
         EcologicalPointValidator.validateEcologicalPointData(point);
         getZoneById(point.getIdZone());
 
-        point.setIdPoint(nextPointId++);
-        point.setLocation(point.getLocation().trim());
-        point.setStatus(point.getStatus().trim().toUpperCase());
-        point.setInitialStatus(point.getInitialStatus().trim().toUpperCase());
+        point.setIdPoint(0);
+        normalizePointAndContainers(point);
+        return pointRepository.save(point);
+    }
 
-        int containerSequence = 1;
-        for (Container container : point.getContainers()) {
-            container.setIdPoint(point.getIdPoint());
-            container.setIdContainer(containerSequence++);
-            container.setColor(container.getColor().trim().toUpperCase());
-            container.setWasteType(container.getWasteType().trim());
-        }
+    /**
+     * Updates an existing ecological point and its three containers.
+     *
+     * @param point ecological point with updated fields
+     * @return updated ecological point
+     */
+    public EcologicalPoint updateEcologicalPoint(EcologicalPoint point) {
+        getEcologicalPointById(point.getIdPoint());
+        EcologicalPointValidator.validateEcologicalPointData(point);
+        getZoneById(point.getIdZone());
 
-        points.add(point);
-        return point;
+        normalizePointAndContainers(point);
+        return pointRepository.save(point);
+    }
+
+    /**
+     * Deletes an ecological point by ID.
+     *
+     * @param idPoint identifier of the ecological point to delete
+     */
+    public void deleteEcologicalPoint(int idPoint) {
+        getEcologicalPointById(idPoint);
+        pointRepository.deleteById(idPoint);
     }
 
     /**
@@ -117,7 +227,7 @@ public class EcologicalPointService {
         if (newStatus != null && !newStatus.trim().isEmpty()) {
             point.setStatus(newStatus.trim().toUpperCase());
         }
-        return point;
+        return pointRepository.save(point);
     }
 
     /**
@@ -127,12 +237,11 @@ public class EcologicalPointService {
      * @return matching institution
      */
     public Institution getInstitutionById(int idInstitution) {
-        for (Institution inst : institutions) {
-            if (inst.getIdInstitution() == idInstitution) {
-                return inst;
-            }
+        Institution found = institutionRepository.findById(idInstitution);
+        if (found == null) {
+            throw new ResourceNotFoundException("Institución", idInstitution);
         }
-        throw new ResourceNotFoundException("Institución", idInstitution);
+        return found;
     }
 
     /**
@@ -142,12 +251,11 @@ public class EcologicalPointService {
      * @return matching zone
      */
     public Zone getZoneById(int idZone) {
-        for (Zone zone : zones) {
-            if (zone.getIdZone() == idZone) {
-                return zone;
-            }
+        Zone found = zoneRepository.findById(idZone);
+        if (found == null) {
+            throw new ResourceNotFoundException("Zona", idZone);
         }
-        throw new ResourceNotFoundException("Zona", idZone);
+        return found;
     }
 
     /**
@@ -157,13 +265,7 @@ public class EcologicalPointService {
      * @return matching ecological point
      */
     public EcologicalPoint getEcologicalPointById(int idPoint) {
-        EcologicalPoint found = null;
-        for (EcologicalPoint point : points) {
-            if (point.getIdPoint() == idPoint) {
-                found = point;
-                break;
-            }
-        }
+        EcologicalPoint found = pointRepository.findById(idPoint);
         EcologicalPointValidator.validatePointExists(found, idPoint);
         return found;
     }
@@ -171,19 +273,36 @@ public class EcologicalPointService {
     /**
      * Lists all ecological points, optionally filtered by zone ID.
      *
-     * @param idZone optional zone identifier ({@code null} returns all points)
+     * @param idZone optional zone identifier (null returns all points)
      * @return list of matching ecological points
      */
     public List<EcologicalPoint> listPointsByZone(Integer idZone) {
+        List<EcologicalPoint> all = pointRepository.findAll();
         if (idZone == null) {
-            return Collections.unmodifiableList(points);
+            return all;
         }
         List<EcologicalPoint> filtered = new ArrayList<>();
-        for (EcologicalPoint point : points) {
+        for (EcologicalPoint point : all) {
             if (point.getIdZone() == idZone) {
                 filtered.add(point);
             }
         }
         return filtered;
+    }
+
+    private void normalizePointAndContainers(EcologicalPoint point) {
+        point.setLocation(point.getLocation().trim());
+        point.setStatus(point.getStatus().trim().toUpperCase());
+        point.setInitialStatus(point.getInitialStatus().trim().toUpperCase());
+        if (point.getObservations() != null) {
+            point.setObservations(point.getObservations().trim());
+        }
+        int containerSequence = 1;
+        for (Container container : point.getContainers()) {
+            container.setIdPoint(point.getIdPoint());
+            container.setIdContainer(containerSequence++);
+            container.setColor(container.getColor().trim().toUpperCase());
+            container.setWasteType(container.getWasteType().trim());
+        }
     }
 }

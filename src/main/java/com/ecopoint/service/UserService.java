@@ -1,31 +1,50 @@
 package com.ecopoint.service;
 
 import com.ecopoint.model.User;
+import com.ecopoint.persistence.FileUserRepository;
+import com.ecopoint.persistence.UserRepository;
 import com.ecopoint.validation.UserValidator;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
- * Business service responsible for managing {@link User} registration and lookup.
- * Delegates all input format and email uniqueness checks to {@link UserValidator}
- * following SOLID SRP and GRASP Low Coupling.
+ * Business service responsible for managing User authentication and CRUD operations.
+ * Depends on UserRepository applying Protected Variations and SOLID DIP.
  *
  * @author EstefaniaMarquez
  * @version 1.0
  */
 public class UserService {
 
-    private final List<User> users;
-    private int nextId;
+    private final UserRepository userRepository;
 
     /**
-     * Constructs a UserService with an empty in-memory user registry.
+     * Constructs a UserService using the default flat-file repository implementation.
      */
     public UserService() {
-        this.users = new ArrayList<>();
-        this.nextId = 1;
+        this(new FileUserRepository());
+    }
+
+    /**
+     * Constructs a UserService with an injected UserRepository contract.
+     *
+     * @param userRepository repository implementation to use
+     */
+    public UserService(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    }
+
+    /**
+     * Authenticates a user by email address for session login.
+     *
+     * @param email institutional or personal email entered at login
+     * @return authenticated User instance
+     */
+    public User authenticateByEmail(String email) {
+        UserValidator.validateEmailFormat(email);
+        User found = userRepository.findByEmail(email.trim());
+        UserValidator.validateUserExists(found, email.trim());
+        return found;
     }
 
     /**
@@ -37,16 +56,45 @@ public class UserService {
      */
     public User registerUser(User user) {
         UserValidator.validateUserData(user);
-        UserValidator.validateUniqueEmail(user.getEmail(), this.users);
+        UserValidator.validateUniqueEmail(user.getEmail(), userRepository.findAll());
 
-        user.setIdUser(nextId++);
+        user.setIdUser(0);
         user.setFirstName(user.getFirstName().trim());
         user.setLastName(user.getLastName().trim());
         user.setEmail(user.getEmail().trim().toLowerCase());
         user.setRole(user.getRole().trim());
 
-        this.users.add(user);
-        return user;
+        return userRepository.save(user);
+    }
+
+    /**
+     * Updates an existing user after verifying existence, format rules, and email uniqueness.
+     *
+     * @param user user instance containing updated fields and existing idUser
+     * @return updated user instance
+     */
+    public User updateUser(User user) {
+        UserValidator.validateUserData(user);
+        getUserById(user.getIdUser());
+        UserValidator.validateUniqueEmailForUpdate(
+                user.getIdUser(), user.getEmail(), userRepository.findAll());
+
+        user.setFirstName(user.getFirstName().trim());
+        user.setLastName(user.getLastName().trim());
+        user.setEmail(user.getEmail().trim().toLowerCase());
+        user.setRole(user.getRole().trim());
+
+        return userRepository.save(user);
+    }
+
+    /**
+     * Deletes a user by identifier.
+     *
+     * @param idUser identifier of the user to delete
+     */
+    public void deleteUser(int idUser) {
+        getUserById(idUser);
+        userRepository.deleteById(idUser);
     }
 
     /**
@@ -54,16 +102,9 @@ public class UserService {
      *
      * @param idUser identifier of the user
      * @return matching user instance
-     * @throws com.ecopoint.exceptions.ResourceNotFoundException if the user does not exist
      */
     public User getUserById(int idUser) {
-        User found = null;
-        for (User user : users) {
-            if (user.getIdUser() == idUser) {
-                found = user;
-                break;
-            }
-        }
+        User found = userRepository.findById(idUser);
         UserValidator.validateUserExists(found, idUser);
         return found;
     }
@@ -73,29 +114,21 @@ public class UserService {
      *
      * @param email email address to search
      * @return matching user instance
-     * @throws com.ecopoint.exceptions.ResourceNotFoundException if no user matches the email
      */
     public User getUserByEmail(String email) {
         UserValidator.validateEmailFormat(email);
         String normalized = email.trim();
-        User found = null;
-        for (User user : users) {
-            if (user.getEmail().equalsIgnoreCase(normalized)) {
-                found = user;
-                break;
-            }
-        }
+        User found = userRepository.findByEmail(normalized);
         UserValidator.validateUserExists(found, normalized);
         return found;
     }
 
     /**
-     * Returns an unmodifiable view of all registered users.
+     * Returns all registered users.
      *
      * @return list of registered users
      */
     public List<User> listAllUsers() {
-        return Collections.unmodifiableList(users);
+        return userRepository.findAll();
     }
 }
-
