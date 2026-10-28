@@ -13,11 +13,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Stateless validator for {@link InspectionDay}, {@link InspectionRecord},
- * {@link ContainerDetail}, and {@link Evidence} entities
- * (GRASP Pure Fabrication &amp; SOLID SRP).
+ * Stateless validator for InspectionDay, InspectionRecord, ContainerDetail,
+ * and Evidence entities applying GRASP Pure Fabrication and SOLID SRP.
  *
- * @author Carlos Raul Gomez Galvis
+ * @author craulgomez
  * @version 1.0
  */
 public final class InspectionValidator {
@@ -35,7 +34,7 @@ public final class InspectionValidator {
     }
 
     /**
-     * Validates an {@link InspectionDay} before creation.
+     * Validates an InspectionDay before creation or update.
      *
      * @param day inspection day to validate
      * @throws InvalidDataException if the date is null or lies in the future
@@ -54,8 +53,8 @@ public final class InspectionValidator {
     }
 
     /**
-     * Validates a complete field {@link InspectionRecord} including its three
-     * container evaluations and any attached photographic evidence.
+     * Validates a complete field InspectionRecord including its three container
+     * evaluations and any attached photographic evidence.
      *
      * @param record inspection record to validate
      * @throws InvalidDataException  if required attributes or fill levels are invalid
@@ -108,7 +107,7 @@ public final class InspectionValidator {
     }
 
     /**
-     * Validates an individual {@link ContainerDetail} evaluation.
+     * Validates an individual ContainerDetail evaluation.
      *
      * @param detail container detail to validate
      * @throws InvalidDataException if fill level or physical conditions are outside allowed values
@@ -140,7 +139,7 @@ public final class InspectionValidator {
     }
 
     /**
-     * Validates photographic {@link Evidence} metadata.
+     * Validates photographic Evidence metadata.
      *
      * @param evidence evidence item to validate
      * @throws InvalidDataException if the file path is blank or does not have an image extension
@@ -168,11 +167,11 @@ public final class InspectionValidator {
     }
 
     /**
-     * Verifies that an {@link InspectionDay} exists.
+     * Verifies that an InspectionDay exists.
      *
      * @param day   inspection day reference
      * @param idDay searched identifier
-     * @throws ResourceNotFoundException if {@code day} is {@code null}
+     * @throws ResourceNotFoundException if day is null
      */
     public static void validateInspectionDayExists(InspectionDay day, int idDay) {
         if (day == null) {
@@ -181,11 +180,11 @@ public final class InspectionValidator {
     }
 
     /**
-     * Verifies that an {@link InspectionRecord} exists.
+     * Verifies that an InspectionRecord exists.
      *
      * @param record   inspection record reference
      * @param idRecord searched identifier
-     * @throws ResourceNotFoundException if {@code record} is {@code null}
+     * @throws ResourceNotFoundException if record is null
      */
     public static void validateInspectionRecordExists(InspectionRecord record, int idRecord) {
         if (record == null) {
