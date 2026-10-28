@@ -10,11 +10,10 @@ import java.math.BigDecimal;
 import java.util.List;
 
 /**
- * Stateless validator for the solid waste Quartering Method ({@link Quartering}
- * and {@link QuarteringResult}) enforcing physical weight coherence and domain rules
- * (GRASP Pure Fabrication &amp; SOLID SRP).
+ * Stateless validator for the solid waste Quartering Method enforcing
+ * physical weight coherence and domain rules applying GRASP Pure Fabrication and SOLID SRP.
  *
- * @author Carlos Raul Gomez Galvis
+ * @author craulgomez
  * @version 1.0
  */
 public final class QuarteringValidator {
@@ -23,7 +22,7 @@ public final class QuarteringValidator {
     }
 
     /**
-     * Validates all inputs and physical weight rules of a {@link Quartering} procedure.
+     * Validates all inputs and physical weight rules of a Quartering procedure.
      *
      * @param quartering quartering procedure to validate
      * @throws InvalidDataException  if weights or quantities are null or negative
@@ -78,10 +77,8 @@ public final class QuarteringValidator {
 
     /**
      * Enforces physical weight coherence rules for the Quartering Method:
-     * <ol>
-     *   <li>{@code sampleWeight <= initialWeight}</li>
-     *   <li>{@code sum(result.weight) <= sampleWeight}</li>
-     * </ol>
+     * sampleWeight must not exceed initialWeight, and the sum of classified
+     * weights must not exceed sampleWeight.
      *
      * @param quartering quartering instance to verify
      * @throws BusinessRuleException if physical weight constraints are violated
@@ -104,7 +101,7 @@ public final class QuarteringValidator {
 
     /**
      * Verifies that an inspection record does not already have a registered quartering
-     * procedure (enforcing the 1 to 0..1 relationship).
+     * procedure enforcing the 1 to 0..1 relationship.
      *
      * @param idRecord            inspection record identifier
      * @param existingQuarterings list of registered quartering procedures
@@ -124,11 +121,11 @@ public final class QuarteringValidator {
     }
 
     /**
-     * Verifies that a {@link Quartering} instance exists.
+     * Verifies that a Quartering instance exists.
      *
      * @param quartering   quartering reference
      * @param idQuartering searched identifier
-     * @throws ResourceNotFoundException if {@code quartering} is {@code null}
+     * @throws ResourceNotFoundException if quartering is null
      */
     public static void validateQuarteringExists(Quartering quartering, int idQuartering) {
         if (quartering == null) {

@@ -1,4 +1,3 @@
-
 package com.ecopoint.validation;
 
 import com.ecopoint.exceptions.BusinessRuleException;
@@ -15,10 +14,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Stateless validator for {@link Institution}, {@link Zone}, {@link EcologicalPoint},
- * and {@link Container} data and business rules (GRASP Pure Fabrication &amp; SOLID SRP).
+ * Stateless validator for Institution, Zone, EcologicalPoint, and Container
+ * data and business rules applying GRASP Pure Fabrication and SOLID SRP.
  *
- * @author Carlos Raul Gomez Galvis
+ * @author craulgomez
  * @version 1.0
  */
 public final class EcologicalPointValidator {
@@ -39,7 +38,7 @@ public final class EcologicalPointValidator {
     }
 
     /**
-     * Validates an {@link Institution} before registration.
+     * Validates an Institution before registration or update.
      *
      * @param institution institution to validate
      * @throws InvalidDataException if name or address is null, blank, or purely numeric
@@ -56,7 +55,7 @@ public final class EcologicalPointValidator {
     }
 
     /**
-     * Validates a {@link Zone} and checks for duplicate zone names within the same institution.
+     * Validates a Zone and checks for duplicate zone names within the same institution.
      *
      * @param zone          zone to validate
      * @param existingZones existing zones to check for duplicates
@@ -77,6 +76,7 @@ public final class EcologicalPointValidator {
             String normalizedName = zone.getName().trim();
             for (Zone existing : existingZones) {
                 if (existing != null
+                        && existing.getIdZone() != zone.getIdZone()
                         && existing.getIdInstitution() == zone.getIdInstitution()
                         && existing.getName() != null
                         && existing.getName().trim().equalsIgnoreCase(normalizedName)) {
@@ -88,7 +88,7 @@ public final class EcologicalPointValidator {
     }
 
     /**
-     * Validates all attributes and containers of an {@link EcologicalPoint}.
+     * Validates all attributes and containers of an EcologicalPoint.
      *
      * @param point ecological point to validate
      * @throws InvalidDataException  if basic fields or coordinates are invalid
@@ -120,12 +120,12 @@ public final class EcologicalPointValidator {
     }
 
     /**
-     * Validates that relative map coordinates {@code coordX} and {@code coordY}
-     * fall within the closed interval {@code [0.00, 100.00]}.
+     * Validates that relative map coordinates coordX and coordY fall within
+     * the closed interval 0.00 to 100.00.
      *
      * @param coordX horizontal percentage coordinate
      * @param coordY vertical percentage coordinate
-     * @throws InvalidDataException if either coordinate is null or outside {@code [0.00, 100.00]}
+     * @throws InvalidDataException if either coordinate is null or outside 0.00 to 100.00
      */
     public static void validateCoordinates(BigDecimal coordX, BigDecimal coordY) {
         if (coordX == null) {
@@ -146,8 +146,7 @@ public final class EcologicalPointValidator {
 
     /**
      * Validates that an ecological point has exactly the three mandatory containers
-     * required by Colombian Resolution 2184 of 2019 ({@code BLANCO}, {@code VERDE}, {@code NEGRO}),
-     * with positive capacities and non-empty waste descriptions.
+     * required by Colombian Resolution 2184 of 2019 (BLANCO, VERDE, NEGRO).
      *
      * @param containers list of containers to validate
      * @throws InvalidDataException  if container fields or capacities are invalid
@@ -189,11 +188,11 @@ public final class EcologicalPointValidator {
     }
 
     /**
-     * Verifies that an {@link EcologicalPoint} exists.
+     * Verifies that an EcologicalPoint exists.
      *
      * @param point   ecological point reference
      * @param idPoint searched identifier
-     * @throws ResourceNotFoundException if {@code point} is {@code null}
+     * @throws ResourceNotFoundException if point is null
      */
     public static void validatePointExists(EcologicalPoint point, int idPoint) {
         if (point == null) {
