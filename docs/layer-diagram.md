@@ -1,11 +1,27 @@
 # Layered Architecture Diagram — EcoPoint Edu
 
-This document describes the layered architecture of the **EcoPoint Edu** backend core, illustrating package responsibilities and unidirectional dependency flow.
+This document describes the layered architecture of **EcoPoint Edu**, including the Java Swing Presentation Layer (`com.ecopoint.ui`), Business Service Layer (`com.ecopoint.service`), Validation Layer (`com.ecopoint.validation`), Protected Variations Persistence Layer (`com.ecopoint.persistence`), Domain Model Layer (`com.ecopoint.model`), and Cross-Cutting Exception Layer (`com.ecopoint.exceptions`).
 
 ## 1. Package Dependency and Layer Diagram
 
 ```mermaid
 flowchart TD
+    subgraph UI_LAYER["Presentation Layer — Java Swing (com.ecopoint.ui)"]
+        LF["LoginFrame"]
+        MF["MainFrame"]
+        DAP["DashboardAndAlertsPanel"]
+        CPP["CampusAndPointPanel (Interactive % Map)"]
+        IMP["InspectionManagementPanel"]
+        QMP["QuarteringManagementPanel"]
+        UMP["UserManagementPanel"]
+        LF --> MF
+        MF --> DAP
+        MF --> CPP
+        MF --> IMP
+        MF --> QMP
+        MF --> UMP
+    end
+
     subgraph SERVICE_LAYER["Business Logic Layer (com.ecopoint.service)"]
         US["UserService"]
         EPS["EcologicalPointService"]
@@ -25,35 +41,41 @@ flowchart TD
         QV["QuarteringValidator"]
     end
 
+    subgraph PERSISTENCE_LAYER["Persistence Layer — Protected Variations (com.ecopoint.persistence)"]
+        REPO_INT["Repository Interfaces (Stable Contract)\nUserRepository · InstitutionRepository · ZoneRepository\nEcologicalPointRepository · InspectionRepository\nQuarteringRepository · AlertRepository"]
+        FILE_IMPL["Flat-File Implementations (data/*.txt)\nFileUserRepository · FileInstitutionRepository · FileZoneRepository\nFileEcologicalPointRepository · FileInspectionRepository\nFileQuarteringRepository · FileAlertRepository"]
+        FILE_IMPL -. "implements" .-> REPO_INT
+    end
+
     subgraph MODEL_LAYER["Domain Model Layer (com.ecopoint.model)"]
-        M_STRUCT["Institution · Zone · EcologicalPoint · Container"]
-        M_OPER["User · InspectionDay · InspectionRecord · ContainerDetail"]
-        M_ANALYT["Alert · Evidence · WasteCategory · Quartering · QuarteringResult"]
+        M_ALL["Institution · Zone · EcologicalPoint · Container · User\nInspectionDay · InspectionRecord · ContainerDetail\nAlert · Evidence · WasteCategory · Quartering · QuarteringResult"]
     end
 
     subgraph EXCEPTION_LAYER["Cross-Cutting Exception Layer (com.ecopoint.exceptions)"]
         EPE["EcoPointException (Abstract Root)\n├── InvalidDataException\n├── BusinessRuleException\n├── ResourceNotFoundException\n└── PersistenceException"]
     end
 
-    US --> UV
-    EPS --> EPV
-    IS --> IV
-    QS --> QV
-
+    UI_LAYER --> SERVICE_LAYER
+    SERVICE_LAYER --> VALIDATION_LAYER
+    SERVICE_LAYER --> REPO_INT
     SERVICE_LAYER --> MODEL_LAYER
     VALIDATION_LAYER --> MODEL_LAYER
+    PERSISTENCE_LAYER --> MODEL_LAYER
 
-    VALIDATION_LAYER -. "Throws typed domain exceptions" .-> EXCEPTION_LAYER
-    SERVICE_LAYER -. "Propagates / throws exceptions" .-> EXCEPTION_LAYER
+    VALIDATION_LAYER -. "Throws InvalidData / BusinessRule / NotFound" .-> EXCEPTION_LAYER
+    PERSISTENCE_LAYER -. "Throws PersistenceException" .-> EXCEPTION_LAYER
+    UI_LAYER -. "Catches EcoPointException & displays Spanish dialogs" .-> EXCEPTION_LAYER
 ```
 
 ---
 
-## 2. Layer Responsibilities and Dependency Rules
+## 2. Layer Responsibilities and Protected Variations
 
-| Layer | Package | Core Responsibility | Allowed Dependencies |
-| :--- | :--- | :--- | :--- |
-| **Business Service Layer** | `com.ecopoint.service` | Coordinates domain use cases, invokes validators before state mutation, triggers automatic alerts, and executes quartering composition calculations. | `com.ecopoint.validation`, `com.ecopoint.model`, `com.ecopoint.exceptions` |
-| **Validation Layer** | `com.ecopoint.validation` | Stateless precondition gates verifying syntactic format (e.g., no numbers in names, valid `@` email format, coordinate ranges) and domain invariants (e.g., unique email, 3 mandatory container colors, quartering weight coherence). | `com.ecopoint.model`, `com.ecopoint.exceptions` |
-| **Domain Model Layer** | `com.ecopoint.model` | Encapsulates domain entities with private attributes, constructors, getters/setters, and Information Expert methods. | Standard Java API (`java.math`, `java.time`, `java.util`) |
-| **Cross-Cutting Exceptions** | `com.ecopoint.exceptions` | Provides the unchecked exception hierarchy rooted in `EcoPointException` carrying user-facing messages in Spanish and semantic error codes. | Standard Java API (`java.lang.RuntimeException`) |
+| Layer | Package | Core Responsibility |
+| :--- | :--- | :--- |
+| **Presentation Layer** | `com.ecopoint.ui` | Java Swing graphical interface applying the official EcoPoint Edu logo color palette. Provides session login, full CRUD forms, interactive percentage map, quartering calculator, and dashboard statistics. |
+| **Business Service Layer** | `com.ecopoint.service` | Orchestrates domain use cases, delegates precondition checks to validators, triggers automatic alerts, computes consolidated statistics, and persists changes through `*Repository` interfaces. |
+| **Validation Layer** | `com.ecopoint.validation` | Stateless precondition gates verifying syntactic format and domain rules (Resolution 2184 of 2019 3-color rule, unique user emails, quartering weight coherence). |
+| **Persistence Layer** | `com.ecopoint.persistence` | Applies **Protected Variations** and **Dependency Inversion (DIP)** via `*Repository` interfaces. Currently implemented over UTF-8 flat files (`data/*.txt`) and ready for seamless database migration. |
+| **Domain Model Layer** | `com.ecopoint.model` | Encapsulates the 13 domain entities and their Information Expert calculations. |
+| **Cross-Cutting Exceptions** | `com.ecopoint.exceptions` | Unchecked exception hierarchy rooted in `EcoPointException` carrying user-facing Spanish error messages. |
