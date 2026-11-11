@@ -1,0 +1,3 @@
+# Line endings for the Maven Wrapper scripts
+mvnw text eol=lf
+*.cmd text eol=crlf

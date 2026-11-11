@@ -17,7 +17,7 @@ Reglas:
 - [x] **T00. Tag del modelo anterior.** Crear el tag `v1-modelo-anterior` sobre el `develop` actual y subirlo.
   *Verificación:* el tag aparece en GitHub.
 
-- [ ] **T01. Base del proyecto.** Agregar el Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`), JUnit Jupiter 5.11 y `maven-surefire-plugin` 3.5 al `pom.xml`, y quitar `exec.mainClass`. Agregar `target/` al `.gitignore`.
+- [x] **T01. Base del proyecto.** Agregar el Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`), JUnit Jupiter 5.11 y `maven-surefire-plugin` 3.5 al `pom.xml`, y quitar `exec.mainClass`. Agregar `target/` al `.gitignore`.
   *Verificación:* `./mvnw test` corre y termina en BUILD SUCCESS.
 
 - [ ] **T02. Eliminar el código del modelo anterior** (plan, sección 2): `ui/`, `persistence/`, `service/`, `Main.java`, las 6 clases del modelo de puntos ecológicos y `Zone`, y los 2 validadores viejos. Ajustar lo mínimo para que compile lo que queda.
