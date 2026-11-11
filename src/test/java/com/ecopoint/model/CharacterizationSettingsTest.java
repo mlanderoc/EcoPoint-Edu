@@ -44,6 +44,8 @@ class CharacterizationSettingsTest {
     void rn037_bagPlausibilityLimits() {
         assertTrue(settings.isBagNetWeightPlausible(new BigDecimal("50.00")));
         assertFalse(settings.isBagNetWeightPlausible(new BigDecimal("70.00")));
+        assertFalse(settings.isBagNetWeightPlausible(BigDecimal.ZERO));
+        assertFalse(settings.isBagNetWeightPlausible(new BigDecimal("-1.00")));
         assertTrue(settings.isBagDensityPlausible(new BigDecimal("150.00")));
         assertFalse(settings.isBagDensityPlausible(new BigDecimal("1200.00")));
         assertFalse(settings.isBagDensityPlausible(new BigDecimal("10.00")));

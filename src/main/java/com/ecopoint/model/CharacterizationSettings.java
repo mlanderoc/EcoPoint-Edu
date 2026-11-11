@@ -75,10 +75,10 @@ public record CharacterizationSettings(BigDecimal minSampleWeight,
      * Indicates whether a bag net weight is plausible (RN-037).
      *
      * @param netWeight bag net weight in kg
-     * @return true if the weight does not exceed the configured maximum
+     * @return true if the weight is positive and does not exceed the configured maximum
      */
     public boolean isBagNetWeightPlausible(BigDecimal netWeight) {
-        return netWeight != null && netWeight.compareTo(maxBagNetWeight) <= 0;
+        return netWeight != null && netWeight.signum() > 0 && netWeight.compareTo(maxBagNetWeight) <= 0;
     }
 
     /**
