@@ -11,9 +11,7 @@
 
 ## 1. Objetivo
 
-Guardar de forma permanente y segura todos los datos del dominio de la spec 001 en **PostgreSQL 16+**, reemplazando los archivos planos (`data/*.txt`). La base de datos debe poder reconstruirse desde cero con dos scripts y quedar lista para la demostración.
-
-Esta spec también sirve a la asignatura **Base de Datos I**: el esquema, las restricciones y los datos semilla son parte de su entrega.
+Guardar de forma permanente y segura todos los datos del dominio de la spec 001 en **PostgreSQL 16+**, reemplazando los archivos planos (`data/*.txt`). La base de datos se crea desde cero con dos scripts nuevos y queda lista para la demostración.
 
 ## 2. Requerimientos que cubre
 
@@ -42,7 +40,6 @@ Todos los RF del plan de reestructuración, en lo que toca a almacenamiento. En 
 - **R-001** (Debe). `sql/001_schema.sql` crea todo el esquema desde cero: tipos, tablas, claves, restricciones, índices y vistas. Se puede ejecutar varias veces: primero borra lo que exista.
 - **R-002** (Debe). `sql/002_seed.sql` carga los datos semilla (sección 5.5).
 - **R-003** (Debe). Ejecutar `001` y luego `002` sobre una base vacía termina sin errores.
-- **R-004** (Debe). El script actual `data/ecopoint_script_entrega2.sql` queda como histórico de la Entrega 2 y no se modifica.
 
 ### 5.2 Integridad en la base de datos
 
@@ -53,7 +50,7 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 - **R-012** (Debe). Restricciones `CHECK` para: formato del código de fuente, días del 1 al 8, población ≥ 0 y total > 0, peso bruto > tara ≥ 0, volumen > 0, pesos de subcategoría ≥ 0, latitud y longitud en rango.
 - **R-013** (Debe). Listas cerradas (tipo de fuente, grupo, turno, estados, roles, tipos de alerta) como tipos `ENUM` o tablas de catálogo.
 - **R-014** (Debe). El peso neto y la densidad de la bolsa **no** se guardan digitados: se calculan (columna generada o vista), para que nunca contradigan bruto, tara y volumen.
-- **R-015** (Debe). Políticas de borrado: `RESTRICT` por defecto (no se borra lo que tiene registros dependientes); `CASCADE` solo de cuarteo a sus resultados. Cada política lleva un comentario con su porqué, como ya hace el script de la Entrega 2.
+- **R-015** (Debe). Políticas de borrado: `RESTRICT` por defecto (no se borra lo que tiene registros dependientes); `CASCADE` solo de cuarteo a sus resultados. Cada política lleva un comentario con su porqué.
 
 ### 5.3 Transacciones
 
@@ -84,11 +81,6 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 - **R-051** (Debe). Los datos de conexión (servidor, usuario, contraseña) se leen de configuración o de variables de entorno. Nunca se escriben en el código ni se suben al repositorio.
 - **R-052** (Debe). Se eliminan los repositorios de archivos planos (`File*Repository`, `FileStorageHelper`) y la carpeta `data/*.txt`.
 
-### 5.7 Documentación
-
-- **R-060** (Debe). Diccionario de datos actualizado: tabla por tabla, columna por columna (tipo, nulabilidad, significado), como pide la guía de Base de Datos I.
-- **R-061** (Debe). Diagrama entidad-relación actualizado en `docs/`.
-
 ## 6. Criterios de aceptación
 
 - **CA-100.** Dada una base de datos vacía, cuando se ejecutan `001_schema.sql` y `002_seed.sql`, entonces terminan sin errores y existen la institución piloto, sus fuentes, los 4 grupos con sus subcategorías, un usuario por rol y el estudio de demostración.
@@ -113,8 +105,8 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 
 | # | Pregunta | Propuesta |
 | --- | --- | --- |
-| P1 | ¿Nombres de tablas en español (como la Entrega 2) o en inglés (como las clases Java)? | En español, en mayúsculas, como la Entrega 2 (`ESTUDIO`, `TURNO`, `BOLSA`…). Así se mantiene la continuidad para Base de Datos I. |
-| P2 | ¿Acceso a datos con Spring Data JPA o con JDBC (`JdbcTemplate`)? | JDBC con `JdbcTemplate`: el SQL queda visible y se defiende mejor en Base de Datos I. Se decide en `plan.md`. |
-| P3 | ¿Listas cerradas como `ENUM` de PostgreSQL o como tablas de catálogo? | `ENUM`, como la Entrega 2. Las subcategorías sí son tabla, porque pueden crecer. |
+| P1 | ¿Nombres de tablas en español o en inglés (como las clases Java)? | En español, en mayúsculas (`ESTUDIO`, `TURNO`, `BOLSA`…). |
+| P2 | ¿Acceso a datos con Spring Data JPA o con JDBC (`JdbcTemplate`)? | JDBC con `JdbcTemplate`: el SQL queda visible y es más fácil de revisar. Se decide en `plan.md`. |
+| P3 | ¿Listas cerradas como `ENUM` de PostgreSQL o como tablas de catálogo? | `ENUM`. Las subcategorías sí son tabla, porque pueden crecer. |
 | P4 | ¿Las pruebas de integración usan un PostgreSQL local o uno en contenedor (Testcontainers)? | Testcontainers si el equipo tiene Docker; si no, una base local de pruebas. |
 | P5 | ¿Instalar PostGIS? | No por ahora (R-033 queda como "Podría"). |
