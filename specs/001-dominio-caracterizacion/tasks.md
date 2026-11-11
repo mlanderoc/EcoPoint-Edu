@@ -34,7 +34,7 @@ Reglas:
 - [x] **T05. Roles y permisos.** `Permission` y `UserRole` con la matriz RN-081.
   *Verificación:* `UserRolePermissionTest`: una prueba por cada celda de la matriz (4 roles × 11 acciones).
 
-- [ ] **T06. Objetos de valor.** `GeoPoint`, `GeoPolygon`, `BagLabel`, `CharacterizationSettings`.
+- [x] **T06. Objetos de valor.** `GeoPoint`, `GeoPolygon`, `BagLabel`, `CharacterizationSettings`.
   *Verificación:* `GeoPolygonTest` (CA-003), `BagLabelTest` (formato `AU-D3-M` y `AU-D3-M-2`), `CharacterizationSettingsTest` (valores por defecto).
 
 ## Fase 2 — Institución, fuentes, residuos y usuarios
