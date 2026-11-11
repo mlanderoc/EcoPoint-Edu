@@ -25,7 +25,7 @@ Reglas:
 
 ## Fase 1 — Excepciones, enums y objetos de valor
 
-- [ ] **T03. Excepciones nuevas.** `QualityControlException` y `AccessDeniedException` (plan, sección 6).
+- [x] **T03. Excepciones nuevas.** `QualityControlException` y `AccessDeniedException` (plan, sección 6).
   *Verificación:* `ExceptionsTest`: cada una devuelve su `errorCode` y su mensaje en español.
 
 - [ ] **T04. Enums del dominio.** `WasteGroup`, `SourceType`, `ShiftType`, `ShiftStatus`, `StudyStatus`, `VerificationStatus`, `QualityStatus`, `AlertType`, `EvidenceTarget`.
