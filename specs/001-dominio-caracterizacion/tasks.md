@@ -28,7 +28,7 @@ Reglas:
 - [x] **T03. Excepciones nuevas.** `QualityControlException` y `AccessDeniedException` (plan, sección 6).
   *Verificación:* `ExceptionsTest`: cada una devuelve su `errorCode` y su mensaje en español.
 
-- [ ] **T04. Enums del dominio.** `WasteGroup`, `SourceType`, `ShiftType`, `ShiftStatus`, `StudyStatus`, `VerificationStatus`, `QualityStatus`, `AlertType`, `EvidenceTarget`.
+- [x] **T04. Enums del dominio.** `WasteGroup`, `SourceType`, `ShiftType`, `ShiftStatus`, `StudyStatus`, `VerificationStatus`, `QualityStatus`, `AlertType`, `EvidenceTarget`.
   *Verificación:* `StudyStatusTest` (CA-013: PLANIFICADO → CERRADO no permitido; cada transición válida sí); `WasteGroupTest` (`isRecoverable`, `isHazardous`).
 
 - [ ] **T05. Roles y permisos.** `Permission` y `UserRole` con la matriz RN-081.
