@@ -2,8 +2,6 @@ package com.ecopoint.model;
 
 import com.ecopoint.exceptions.InvalidDataException;
 
-import java.util.regex.Pattern;
-
 /**
  * Immutable label written on a waste bag, with the format
  * {@code SOURCE-D<day>-<M|T>} and an optional sequence when the same source
@@ -19,9 +17,6 @@ import java.util.regex.Pattern;
  */
 public record BagLabel(String sourceCode, int dayNumber, ShiftType shiftType, int sequence) {
 
-    /** Valid source code: 2 to 6 uppercase letters or digits (RN-002). */
-    public static final Pattern SOURCE_CODE_PATTERN = Pattern.compile("^[A-Z0-9]{2,6}$");
-
     /** Number of sampling days of a characterization study (RN-010). */
     public static final int STUDY_DAYS = 8;
 
@@ -31,7 +26,7 @@ public record BagLabel(String sourceCode, int dayNumber, ShiftType shiftType, in
      * @throws InvalidDataException if a part is missing or out of range
      */
     public BagLabel {
-        if (sourceCode == null || !SOURCE_CODE_PATTERN.matcher(sourceCode).matches()) {
+        if (!GenerationSource.isValidCode(sourceCode)) {
             throw new InvalidDataException("codigoFuente",
                     "El código de la fuente debe tener de 2 a 6 letras mayúsculas o dígitos.");
         }

@@ -39,7 +39,7 @@ Reglas:
 
 ## Fase 2 — Institución, fuentes, residuos y usuarios
 
-- [ ] **T07. Institución y fuentes.** Reescribir `Institution`; crear `GenerationSource` y `GenerationSourceValidator`.
+- [x] **T07. Institución y fuentes.** Reescribir `Institution`; crear `GenerationSource` y `GenerationSourceValidator`.
   *Verificación:* `GenerationSourceValidatorTest`: CA-001, CA-002, CA-003; RN-005 (fuente inactiva).
 
 - [ ] **T08. Residuos.** Reescribir `WasteCategory` (subcategoría con `WasteGroup`); crear `WasteCategoryValidator`.

@@ -1,44 +1,64 @@
 package com.ecopoint.model;
 
 /**
- * Represents an educational institution (school, college, or university)
- * registered in the EcoPoint Edu system.
+ * Educational institution (school or university) whose solid waste is
+ * characterized. It holds where its map opens (center and zoom) and the
+ * configurable parameters of its characterization studies.
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
-
 public class Institution {
 
-    private int idInstitution;
+    /** Zoom used when the institution has no zoom configured yet. */
+    public static final int DEFAULT_MAP_ZOOM = 17;
+
+    private Long id;
     private String name;
     private String address;
+    private GeoPoint mapCenter;
+    private int mapZoom;
+    private CharacterizationSettings settings;
 
     /**
-     * Default constructor.
+     * Creates an empty institution with the default map zoom and the default
+     * characterization settings.
      */
     public Institution() {
+        this.mapZoom = DEFAULT_MAP_ZOOM;
+        this.settings = CharacterizationSettings.defaults();
     }
 
     /**
-     * Constructs an Institution with all attributes.
+     * Creates an institution with its basic data, the default map zoom and the
+     * default characterization settings.
      *
-     * @param idInstitution unique identifier of the institution
-     * @param name          institutional name
-     * @param address       physical address of the institution
+     * @param id      identifier, or null if not saved yet
+     * @param name    institution name
+     * @param address physical address
      */
-    public Institution(int idInstitution, String name, String address) {
-        this.idInstitution = idInstitution;
+    public Institution(Long id, String name, String address) {
+        this();
+        this.id = id;
         this.name = name;
         this.address = address;
     }
 
-    public int getIdInstitution() {
-        return idInstitution;
+    /**
+     * Indicates whether the institution already has a map center configured.
+     *
+     * @return true if the map center is set
+     */
+    public boolean hasMapCenter() {
+        return mapCenter != null;
     }
 
-    public void setIdInstitution(int idInstitution) {
-        this.idInstitution = idInstitution;
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -55,5 +75,34 @@ public class Institution {
 
     public void setAddress(String address) {
         this.address = address;
+    }
+
+    public GeoPoint getMapCenter() {
+        return mapCenter;
+    }
+
+    public void setMapCenter(GeoPoint mapCenter) {
+        this.mapCenter = mapCenter;
+    }
+
+    public int getMapZoom() {
+        return mapZoom;
+    }
+
+    public void setMapZoom(int mapZoom) {
+        this.mapZoom = mapZoom;
+    }
+
+    public CharacterizationSettings getSettings() {
+        return settings;
+    }
+
+    /**
+     * Replaces the characterization settings; null restores the defaults.
+     *
+     * @param settings new settings, or null for the defaults
+     */
+    public void setSettings(CharacterizationSettings settings) {
+        this.settings = settings != null ? settings : CharacterizationSettings.defaults();
     }
 }
