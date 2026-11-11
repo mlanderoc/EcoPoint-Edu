@@ -20,7 +20,7 @@ Reglas:
 - [x] **T01. Base del proyecto.** Agregar el Maven Wrapper (`mvnw`, `mvnw.cmd`, `.mvn/`), JUnit Jupiter 5.11 y `maven-surefire-plugin` 3.5 al `pom.xml`, y quitar `exec.mainClass`. Agregar `target/` al `.gitignore`.
   *Verificación:* `./mvnw test` corre y termina en BUILD SUCCESS.
 
-- [ ] **T02. Eliminar el código del modelo anterior** (plan, sección 2): `ui/`, `persistence/`, `service/`, `Main.java`, las 6 clases del modelo de puntos ecológicos y `Zone`, y los 2 validadores viejos. Ajustar lo mínimo para que compile lo que queda.
+- [x] **T02. Eliminar el código del modelo anterior** (plan, sección 2): `ui/`, `persistence/`, `service/`, `Main.java`, las 6 clases del modelo de puntos ecológicos y `Zone`, y los 2 validadores viejos. Ajustar lo mínimo para que compile lo que queda.
   *Verificación:* `./mvnw compile` sin errores; `git grep -n "EcologicalPoint\|Zone\b\|Swing"` en `src/` no encuentra nada.
 
 ## Fase 1 — Excepciones, enums y objetos de valor
