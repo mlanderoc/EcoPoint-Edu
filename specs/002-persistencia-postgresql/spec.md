@@ -70,7 +70,7 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 ### 5.5 Datos semilla
 
 - **R-040** (Debe). Catálogo completo de grupos y subcategorías de la Res. 2184 de 2019 (al menos: papel, cartón, plástico PET, otros plásticos, vidrio, metales, Tetra Pak, restos de comida, hojas y podas, papel higiénico y servilletas, icopor, barrido, pilas, luminarias, RAEE).
-- **R-041** (Debe). La institución piloto, I.E. Prudencia Daza, con sus fuentes de generación. Los polígonos son provisionales hasta trazar el plano real (spec 007).
+- **R-041** (Debe). La institución piloto, I.E. Prudencia Daza, con fuentes de generación **ficticias pero realistas** (`AU1`, `AU2`, `OF`, `TI`, `PAE`, `BA`, `ZV`, `LAB`) hasta tener la lista real. Los polígonos son provisionales hasta trazar el plano real (spec 007).
 - **R-042** (Debe). Un usuario por rol, con contraseñas de demostración documentadas en el README.
 - **R-043** (Debe). Un estudio de demostración CERRADO, con los 8 días completos y datos realistas, para que el tablero y los reportes muestren resultados desde el primer arranque.
 - **R-044** (Debería). Un segundo estudio EN_EJECUCION, a medio llenar, para demostrar el registro en campo.
@@ -79,7 +79,13 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 
 - **R-050** (Debe). Los servicios dependen de **interfaces** de repositorio, nunca de una implementación concreta (Variaciones Protegidas, como ya está diseñado hoy).
 - **R-051** (Debe). Los datos de conexión (servidor, usuario, contraseña) se leen de configuración o de variables de entorno. Nunca se escriben en el código ni se suben al repositorio.
-- **R-052** (Debe). Se eliminan los repositorios de archivos planos (`File*Repository`, `FileStorageHelper`) y la carpeta `data/*.txt`.
+- **R-052** (Debe). Se eliminan los repositorios de archivos planos (`File*Repository`, `FileStorageHelper`) y la carpeta `data/*.txt`. Todos los datos viven en PostgreSQL; el sistema no usa archivos planos para nada.
+- **R-053** (Debe). Cada integrante usa PostgreSQL 16+ instalado localmente en su computador. El README explica paso a paso cómo instalarlo, crear la base y ejecutar los scripts.
+
+### 5.7 Documentación de la base de datos
+
+- **R-060** (Debe). `docs/base-de-datos.md` documenta la base de datos de este proyecto tal como quedó construida: un diagrama de las tablas y sus relaciones (en Mermaid, para que GitHub lo muestre), para qué sirve cada tabla, y las decisiones de diseño con su porqué (tipos `ENUM`, geometrías en `jsonb`, columnas calculadas, políticas de borrado, transacciones).
+- **R-061** (Debe). La documentación se actualiza en el mismo PR que cambie el esquema.
 
 ## 6. Criterios de aceptación
 
@@ -108,5 +114,5 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 | P1 | ¿Nombres de tablas en español o en inglés (como las clases Java)? | En español, en mayúsculas (`ESTUDIO`, `TURNO`, `BOLSA`…). |
 | P2 | ¿Acceso a datos con Spring Data JPA o con JDBC (`JdbcTemplate`)? | JDBC con `JdbcTemplate`: el SQL queda visible y es más fácil de revisar. Se decide en `plan.md`. |
 | P3 | ¿Listas cerradas como `ENUM` de PostgreSQL o como tablas de catálogo? | `ENUM`. Las subcategorías sí son tabla, porque pueden crecer. |
-| P4 | ¿Las pruebas de integración usan un PostgreSQL local o uno en contenedor (Testcontainers)? | Testcontainers si el equipo tiene Docker; si no, una base local de pruebas. |
+| P4 | ¿Las pruebas de integración usan un PostgreSQL local o uno en contenedor (Testcontainers)? | Una base local de pruebas (`ecopoint_test`), separada de la de desarrollo, en el PostgreSQL instalado de cada integrante (R-053). |
 | P5 | ¿Instalar PostGIS? | No por ahora (R-033 queda como "Podría"). |
