@@ -64,6 +64,9 @@ Decisiones D1–D9 del plan de reestructuración, confirmadas el 11 nov 2026:
 | D8 | Submuestra de cuarteo en un **rango configurable**, por defecto **45 a 55 kg**. |
 | D9 | Los **estudiantes menores** registran pesajes; **no** validan datos ni registran residuos peligrosos. |
 | — | Plano con **latitud/longitud (WGS84) y MapLibre GL JS**, no coordenadas en %. |
+| D10 | Toda la persistencia en **PostgreSQL 16+, instalado localmente** por cada integrante. Nada de archivos planos. El esquema se diseña desde cero; el script del modelo anterior no se usa. |
+| D11 | El código del modelo anterior (Swing, repositorios de archivos, puntos ecológicos) se **elimina al empezar** la spec 001. Antes se marca con un tag de git para poder consultarlo. |
+| D12 | Mientras no lleguen los datos reales de la I.E. Prudencia Daza, los datos semilla son **ficticios pero realistas**. |
 
 ### Diferencias con el Requerimiento Técnico oficial (registro de riesgo)
 
