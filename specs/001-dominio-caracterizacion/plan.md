@@ -158,16 +158,13 @@ classDiagram
         String lastName
         String email
         UserRole role
-        boolean minor
-        ConsentRecord consent
-        canOperate() boolean
     }
     class Crew {
         Long id
         String name
         Long responsibleUserId
         List~User~ members
-        hasAdult() boolean
+        hasResponsibleTeacher() boolean
     }
     class Alert {
         AlertType type
@@ -210,7 +207,7 @@ classDiagram
 | `StudyStatus` | PLANIFICADO, EN_EJECUCION, EN_DEPURACION, CERRADO | `canTransitionTo(StudyStatus)`: solo avanza un paso; además CERRADO → EN_DEPURACION (RN-017) |
 | `VerificationStatus` | PENDIENTE, VERIFICADO, CORREGIDO | — |
 | `QualityStatus` | CONFORME, NO_CONFORME, ANULADO | — |
-| `UserRole` | COORDINADOR, DOCENTE, ESTUDIANTE_UNIVERSITARIO, ESTUDIANTE_COLEGIO | `hasPermission(Permission)` con la matriz RN-081; `canSuperviseCrew()` (RN-085). Que un usuario sea menor de edad lo dice `User`, no el rol |
+| `UserRole` | DOCENTE, ESTUDIANTE_UNIVERSITARIO (D9) | `hasPermission(Permission)` con la matriz RN-081; `canSuperviseCrew()` (RN-085) |
 | `Permission` | Una constante por fila de la matriz RN-081 (ej. `MANAGE_ADMINISTRATION`, `REGISTER_BAGS`, `REGISTER_HAZARDOUS_WASTE`, `VERIFY_RECORDS`…) | — |
 | `AlertType` | CUARTEO_NO_CONFORME, VALOR_ATIPICO, VERIFICACION_PENDIENTE | — |
 | `EvidenceTarget` | SHIFT, BAG, QUARTERING | — |
@@ -227,9 +224,8 @@ Objetos inmutables (`record` de Java 17) con su propia validación en el constru
 | `GeoPolygon` | `List<GeoPoint> vertices` | Cerrado, ≥ 3 vértices distintos (RN-004) |
 | `BagLabel` | `sourceCode`, `dayNumber`, `shiftType`, `sequence` (0 = sin consecutivo) | `toString()` → `AU-D3-M` o `AU-D3-M-2` (RN-031) |
 | `CharacterizationSettings` | Rango de submuestra (45–55 kg), tolerancia (2 %), peso neto máximo por bolsa (50 kg), densidad mínima y máxima (20–1 000 kg/m³) | `defaults()` con esos valores (D8, RN-037, RN-052) |
-| `ConsentRecord` | `guardianName`, `consentDate` | Ambos obligatorios (RN-082) |
 
-### 4.4 Verificación y correcciones (RN-060 a RN-064)
+### 4.4 Verificación y correcciones (RN-060 a RN-063)
 
 - `VerificationInfo`: `status`, `enteredBy` (id de usuario), `enteredAt`, `verifiedBy`, `verifiedAt`. Métodos `markVerified(Long userId, LocalDateTime at)` y `markCorrected(Long userId, LocalDateTime at)`.
 - `VerifiableRecord` (clase **abstracta**): base de `ShiftPopulation`, `WasteBag`, `Quartering` y `DensityMeasurement`. Contiene `id` y `VerificationInfo`. Así las cuatro se verifican igual (polimorfismo) y la bandeja de verificación de la spec 005 las trata como una sola lista.
@@ -257,15 +253,15 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | `WasteBagValidator` | `validate(bag, shift, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 |
 | `QuarteringValidator` | `validate(quartering, shift, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)` | RN-050, RN-051, RN-055 |
 | `DensityValidator` | `validate(measurement, shift)` | RN-057 |
-| `VerificationValidator` | `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062 a RN-064 |
-| `UserValidator` | `validate(user)`, `validateUniqueEmail(user, Set<String> existingEmails)`, `validateCanOperate(user)` | RN-082 a RN-084 |
+| `VerificationValidator` | `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062, RN-063 |
+| `UserValidator` | `validate(user)`, `validateUniqueEmail(user, Set<String> existingEmails)` | RN-084 |
 | `CrewValidator` | `validate(crew)` | RN-085 |
 | `EvidenceValidator` | `validate(evidence)` | RN-090 |
 | `AccessPolicy` | `require(User user, Permission permission)` | RN-081; lanza `AccessDeniedException` |
 
 **El control del 2 % (RN-052) no es un rechazo.** El cuarteo NO_CONFORME **se guarda** y genera una alerta, para que la cuadrilla repese. Por eso `Quartering.evaluateQuality(...)` devuelve el estado y no lanza excepción. `QualityControlException` se usa solo cuando se intenta una acción que exige un cuarteo conforme, como cerrar el estudio con un cuarteo no conforme sin resolver.
 
-**RN-056** (residuos peligrosos solo los registra un docente o coordinador) se valida con `AccessPolicy.require(user, Permission.REGISTER_HAZARDOUS_WASTE)` cuando un resultado del cuarteo pertenece al grupo SIN_COLOR.
+**RN-056** (residuos peligrosos solo con el permiso correspondiente; hoy lo tienen los dos roles) se valida con `AccessPolicy.require(user, Permission.REGISTER_HAZARDOUS_WASTE)` cuando un resultado del cuarteo pertenece al grupo SIN_COLOR.
 
 ## 6. Excepciones nuevas
 

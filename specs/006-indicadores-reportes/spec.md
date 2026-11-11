@@ -22,15 +22,14 @@ Calcular los **indicadores de la línea base** del póster, mostrarlos en un **t
 
 ## 3. Actores
 
-- **Coordinador y docentes**: consultan el tablero y descargan los reportes.
-- **Estudiantes**: consultan el tablero de su institución.
+- **Docentes y estudiantes universitarios**: consultan el tablero y descargan los reportes.
 - **Institución educativa** (directivos, comité PRAE): recibe el informe.
 
 ## 4. Historias de usuario
 
-- **HU-050.** Como coordinador, quiero ver la generación diaria, la PPC, la densidad y la composición calculadas automáticamente, para no hacer cálculos a mano.
-- **HU-051.** Como coordinador, quiero saber si los indicadores son preliminares u oficiales, para no presentar datos sin depurar.
-- **HU-052.** Como coordinador, quiero descargar el informe de línea base en PDF, para entregarlo a la institución.
+- **HU-050.** Como docente, quiero ver la generación diaria, la PPC, la densidad y la composición calculadas automáticamente, para no hacer cálculos a mano.
+- **HU-051.** Como docente, quiero saber si los indicadores son preliminares u oficiales, para no presentar datos sin depurar.
+- **HU-052.** Como docente, quiero descargar el informe de línea base en PDF, para entregarlo a la institución.
 - **HU-053.** Como investigador, quiero descargar todos los datos en Excel, para hacer análisis adicionales.
 - **HU-054.** Como docente del colegio, quiero ver qué fuentes generan más residuos, para enfocar las campañas del PRAE.
 

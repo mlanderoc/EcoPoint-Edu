@@ -17,7 +17,7 @@ La API es el **contrato** entre backend y frontend. Una vez aprobada, los dos la
 
 ## 2. Requerimientos que cubre
 
-- RF-11: roles, permisos y protección de menores.
+- RF-11: roles y permisos.
 - Exposición de RF-01 a RF-14 hacia el frontend.
 
 ## 3. Actores
@@ -28,7 +28,7 @@ La API es el **contrato** entre backend y frontend. Una vez aprobada, los dos la
 ## 4. Historias de usuario
 
 - **HU-020.** Como usuario, quiero iniciar sesión con mi correo y contraseña, para usar el sistema según mi rol.
-- **HU-021.** Como coordinador, quiero que cada rol solo pueda hacer lo que le corresponde, aunque alguien intente llamar a la API directamente.
+- **HU-021.** Como docente, quiero que cada rol solo pueda hacer lo que le corresponde, aunque alguien intente llamar a la API directamente.
 - **HU-022.** Como desarrollador del frontend, quiero que todos los errores lleguen con el mismo formato y un mensaje en español, para mostrarlos al usuario sin traducirlos.
 
 ## 5. Requisitos
@@ -77,7 +77,7 @@ La API es el **contrato** entre backend y frontend. Una vez aprobada, los dos la
 - **R-120** (Debe). Inicio de sesión con correo y contraseña. Las contraseñas se guardan cifradas con un algoritmo de hash seguro (BCrypt); nunca en texto plano.
 - **R-121** (Debe). Todas las rutas exigen sesión, excepto `POST /api/v1/auth/login`.
 - **R-122** (Debe). Cada ruta aplica la matriz de permisos de RN-081. Las reglas que dependen del dato (ej. RN-056, pesos SIN_COLOR) también se aplican en la API, no solo en la pantalla.
-- **R-123** (Debe). Un usuario menor sin consentimiento (RN-082) no puede iniciar sesión.
+- **R-123** — Eliminado: no hay menores de edad en el sistema (D9).
 - **R-124** (Debe). La sesión vence tras 8 horas, lo que cubre una jornada completa de muestreo.
 - **R-125** (Debe). `GET /api/v1/auth/me` devuelve el usuario actual con su rol y su institución, para que el frontend arme el menú.
 - **R-126** (Debería). Después de 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.
@@ -93,8 +93,8 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 | `institutions` | Listar, ver, crear, editar | 004, 007 |
 | `institutions/{id}/sources` | Listar, ver, crear, editar, desactivar fuentes | 004, 007 |
 | `institutions/{id}/map` | Ver el plano: GeoJSON de fuentes con sus indicadores | 007 |
-| `waste-categories` | Listar grupos y subcategorías; crear y editar (coordinador) | 005 |
-| `users` | Listar, ver, crear, editar, desactivar; registrar consentimiento | 004 |
+| `waste-categories` | Listar grupos y subcategorías; crear y editar (docente) | 005 |
+| `users` | Listar, ver, crear, editar, desactivar | 004 |
 | `crews` | Listar, crear, editar integrantes | 004 |
 | `studies` | Listar, ver, crear, editar, cambiar estado | 004, 006 |
 | `studies/{id}/days` | Ver y editar fechas de los días | 004 |
@@ -122,13 +122,13 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 - **CA-200.** Dada una persona sin sesión, cuando llama a `GET /api/v1/studies`, entonces recibe 401 con `ERR_UNAUTHORIZED`.
 - **CA-201.** Dado un usuario con correo y contraseña correctos, cuando hace login, entonces recibe 200 y puede llamar a `GET /api/v1/auth/me`, que devuelve su nombre, rol e institución.
 - **CA-202.** Dada una contraseña incorrecta, cuando hace login, entonces recibe 401 con un mensaje que no revela si el correo existe.
-- **CA-203.** Dado un ESTUDIANTE_COLEGIO con sesión, cuando llama a la ruta de verificar una bolsa, entonces recibe 403 con `ERR_FORBIDDEN`.
-- **CA-204.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando envía un cuarteo con un peso de "Pilas", entonces recibe 403 aunque el resto del cuarteo sea válido.
+- **CA-203.** Dado un ESTUDIANTE_UNIVERSITARIO con sesión, cuando llama a la ruta de crear un estudio, entonces recibe 403 con `ERR_FORBIDDEN`.
+- **CA-204.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando intenta cerrar un turno que cumple todas las condiciones, entonces recibe 403.
 - **CA-205.** Dada una bolsa con tara mayor que el bruto, cuando se envía, entonces recibe 400 con `ERR_INVALID_DATA` y `fieldErrors` señala `tare`.
 - **CA-206.** Dado un turno sin población, cuando se envía una bolsa, entonces recibe 422 con `ERR_BUSINESS_RULE` y el mensaje de RN-023.
 - **CA-207.** Dado un id de estudio que no existe, cuando se pide, entonces recibe 404 con `ERR_NOT_FOUND`.
 - **CA-208.** Dada una falla simulada de base de datos, cuando se llama cualquier ruta, entonces recibe 500 sin texto de SQL ni traza en la respuesta, y el detalle queda en el log.
-- **CA-209.** Dado un menor sin consentimiento, cuando intenta hacer login con datos correctos, entonces es rechazado.
+- **CA-209** — Eliminado: no hay menores de edad en el sistema (D9).
 - **CA-210.** Cuando se consulta la base de datos, entonces ninguna contraseña está en texto plano.
 - **CA-211.** Para cada fila de la matriz RN-081 existe al menos una prueba automática de API que confirma el "Sí" y una que confirma el "No".
 - **CA-212.** Cuando se abre la documentación OpenAPI, entonces aparecen todos los recursos de la sección 5.4.
@@ -146,4 +146,4 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 | P1 | ¿Sesión con cookie del servidor o con token JWT? | Cookie de sesión `HttpOnly` del servidor: más simple y segura para una aplicación web propia. Se decide en `plan.md`. |
 | P2 | ¿El servidor sirve también el frontend compilado o van separados? | Separados en desarrollo; en la entrega, el backend sirve el frontend compilado, para tener un solo servidor que arrancar. |
 | P3 | En campo puede no haber internet. ¿Se necesita trabajar sin conexión? | No en esta versión: el papel es el respaldo (doble registro) y se digita al volver la señal. Se anota como mejora futura. |
-| P4 | ¿Quién crea los usuarios: el coordinador o cada uno se registra? | Solo el coordinador crea usuarios. No hay registro abierto, por la protección de menores. |
+| P4 | ¿Quién crea los usuarios: el docente o cada uno se registra? | Solo el docente crea usuarios. No hay registro abierto. |

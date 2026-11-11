@@ -33,7 +33,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 | Subcategoría de residuo | Tipo específico dentro de un grupo | Nombre, grupo, descripción |
 | Verificación | Cotejo de un registro contra la planilla en papel | Estado, digitador, verificador, fecha |
 | Corrección | Cambio de un dato ya registrado | Valor anterior, valor nuevo, motivo, quién, cuándo |
-| Usuario | Persona que usa el sistema | Nombre, correo, rol, menor de edad, consentimiento |
+| Usuario | Persona que usa el sistema | Nombre, correo, rol |
 | Cuadrilla | Grupo mixto que trabaja un turno | Nombre, integrantes, docente responsable |
 | Alerta | Aviso automático de un problema de calidad | Tipo, origen, descripción, atendida |
 | Evidencia | Foto o archivo de soporte | Archivo, descripción, a qué registro pertenece |
@@ -65,7 +65,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 - **RN-015** (Debe). Para pasar a EN_EJECUCION, el estudio necesita al menos una fuente activa y las 8 fechas definidas.
 - **RN-016** (Debe). Para pasar a CERRADO, no puede quedar ningún registro en estado PENDIENTE de verificación ni ningún cuarteo NO_CONFORME sin resolver (ver RN-052 y RN-062).
-- **RN-017** (Debería). Un estudio CERRADO puede reabrirse a EN_DEPURACION solo por un COORDINADOR, indicando el motivo. Queda registrado.
+- **RN-017** (Debería). Un estudio CERRADO puede reabrirse a EN_DEPURACION solo por un DOCENTE, indicando el motivo. Queda registrado.
 
 ### 3.3 Turnos y población
 
@@ -74,7 +74,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 - **RN-022** (Debe). La población se registra **al inicio** del turno: estudiantes, docentes y personal administrativo/de servicios, cada uno un entero ≥ 0. El total debe ser mayor que 0.
 - **RN-023** (Debe). **No se pueden registrar bolsas en un turno sin población registrada.**
 - **RN-024** (Debe). Para cerrar un turno, cada fuente participante debe tener al menos una bolsa registrada **o** estar marcada como "sin generación en este turno". Así se distingue un cero real de un dato olvidado.
-- **RN-025** (Debería). Un turno cerrado puede reabrirse mientras el estudio esté EN_EJECUCION, por un DOCENTE o COORDINADOR.
+- **RN-025** (Debería). Un turno cerrado puede reabrirse mientras el estudio esté EN_EJECUCION, por un DOCENTE.
 
 ### 3.4 Bolsas y pesajes
 
@@ -105,11 +105,11 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 - **RN-050** (Debe). Cada turno tiene **como máximo un cuarteo**.
 - **RN-051** (Debe). El peso de la submuestra debe estar en el rango configurado (D8: por defecto 45 a 55 kg) **y** no puede superar el peso neto total del turno. Si el peso neto total del turno es menor que el mínimo del rango, se clasifica todo el residuo del turno y el cuarteo queda marcado como "muestra completa".
-- **RN-052** (Debe). **Control de calidad del 2 %**: diferencia % = |Σ pesos de subcategorías − peso de la submuestra| / peso de la submuestra × 100. Si la diferencia es ≤ 2 %, el cuarteo es CONFORME. Si es > 2 %, el cuarteo es NO_CONFORME y se genera una alerta (RN-070). Un cuarteo NO_CONFORME se resuelve volviendo a pesar (corrigiendo los pesos) hasta que sea CONFORME, o lo anula un DOCENTE/COORDINADOR con un motivo escrito.
+- **RN-052** (Debe). **Control de calidad del 2 %**: diferencia % = |Σ pesos de subcategorías − peso de la submuestra| / peso de la submuestra × 100. Si la diferencia es ≤ 2 %, el cuarteo es CONFORME. Si es > 2 %, el cuarteo es NO_CONFORME y se genera una alerta (RN-070). Un cuarteo NO_CONFORME se resuelve volviendo a pesar (corrigiendo los pesos) hasta que sea CONFORME, o lo anula un usuario con permiso para anular cuarteos (RN-081) con un motivo escrito.
 - **RN-053** (Debe). Composición de una subcategoría (%) = peso de la subcategoría / Σ pesos de todas las subcategorías del cuarteo × 100, con 2 decimales. Se divide entre la suma clasificada, no entre la submuestra, para que la composición sume 100 % (ver pregunta P4).
 - **RN-054** (Debe). Composición de un grupo (%) = suma de la composición de sus subcategorías.
 - **RN-055** (Debe). Cada peso de subcategoría es ≥ 0. Una subcategoría no puede aparecer dos veces en el mismo cuarteo.
-- **RN-056** (Debe). Solo un DOCENTE o COORDINADOR puede registrar pesos de subcategorías del grupo SIN_COLOR (D9).
+- **RN-056** (Debe). Registrar pesos de subcategorías del grupo SIN_COLOR exige el permiso de residuos peligrosos (RN-081). Hoy lo tienen los dos roles (D9).
 - **RN-057** (Debe). Cada turno tiene como máximo una medición de densidad: volumen del recipiente de medición (m³, > 0) y peso neto de los residuos en él (kg, > 0). Densidad del turno = peso / volumen, en kg/m³.
 
 ### 3.7 Doble registro, verificación y correcciones
@@ -118,14 +118,14 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 - **RN-061** (Debe). El sistema guarda quién digitó cada registro y cuándo.
 - **RN-062** (Debe). **Quien verifica debe ser una persona distinta de quien digitó.** Al verificar se guarda quién y cuándo.
 - **RN-063** (Debe). Si al cotejar con el papel el dato no coincide, se corrige: el registro pasa a CORREGIDO y se guarda el valor anterior, el nuevo, el motivo, quién y cuándo. Nunca se pierde el valor original.
-- **RN-064** (Debe). Un estudiante menor de edad (ESTUDIANTE_COLEGIO) no puede verificar ni corregir (D9).
+- **RN-064** — Eliminada: no hay estudiantes de colegio en el sistema (D9).
 
 ### 3.8 Alertas
 
 - **RN-070** (Debe). Se genera una alerta automática de tipo CUARTEO_NO_CONFORME cuando un cuarteo supera la tolerancia del 2 %.
 - **RN-071** (Debería). Se genera una alerta de tipo VALOR_ATIPICO cuando una bolsa queda fuera de los límites de RN-037.
 - **RN-072** (Debería). Se genera una alerta de tipo VERIFICACION_PENDIENTE cuando un turno cerrado conserva registros PENDIENTES 24 horas después de su cierre.
-- **RN-073** (Debe). Una alerta se marca como atendida por un DOCENTE o COORDINADOR, con una observación. Una alerta atendida no se borra.
+- **RN-073** (Debe). Una alerta se marca como atendida por un usuario con permiso para atender alertas (RN-081), con una observación. Una alerta atendida no se borra.
 
 ### 3.9 Usuarios, roles y cuadrillas
 
@@ -133,31 +133,29 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
   | Rol | Quién es |
   | --- | --- |
-  | COORDINADOR | Docente de la universidad que dirige el estudio |
-  | DOCENTE | Docente del colegio o de la universidad que supervisa una cuadrilla |
+  | DOCENTE | Docente (de la universidad o de la institución) que dirige el estudio y supervisa las cuadrillas |
   | ESTUDIANTE_UNIVERSITARIO | Estudiante de la UPC en la cuadrilla |
-  | ESTUDIANTE_COLEGIO | Estudiante de la institución, normalmente menor de edad |
 
 - **RN-081** (Debe). Matriz de permisos:
 
-  | Acción | COORDINADOR | DOCENTE | EST. UNIVERSITARIO | EST. COLEGIO |
-  | --- | --- | --- | --- | --- |
-  | Gestionar instituciones, fuentes y usuarios | Sí | No | No | No |
-  | Crear estudio y cambiar su estado | Sí | No | No | No |
-  | Abrir, cerrar y reabrir turnos | Sí | Sí | No | No |
-  | Registrar población | Sí | Sí | Sí | No |
-  | Registrar bolsas | Sí | Sí | Sí | Sí |
-  | Registrar cuarteo y densidad (grupos Blanco, Verde, Negro) | Sí | Sí | Sí | Sí |
-  | Registrar pesos del grupo SIN_COLOR | Sí | Sí | No | No |
-  | Verificar y corregir registros | Sí | Sí | Sí | No |
-  | Anular un cuarteo NO_CONFORME | Sí | Sí | No | No |
-  | Atender alertas | Sí | Sí | No | No |
-  | Ver indicadores y reportes | Sí | Sí | Sí | Sí (solo de su institución) |
+  | Acción | DOCENTE | EST. UNIVERSITARIO |
+  | --- | --- | --- |
+  | Gestionar instituciones, fuentes y usuarios | Sí | No |
+  | Crear estudio y cambiar su estado | Sí | No |
+  | Abrir, cerrar y reabrir turnos | Sí | No |
+  | Registrar población | Sí | Sí |
+  | Registrar bolsas | Sí | Sí |
+  | Registrar cuarteo y densidad (grupos Blanco, Verde, Negro) | Sí | Sí |
+  | Registrar pesos del grupo SIN_COLOR | Sí | Sí |
+  | Verificar y corregir registros | Sí | Sí |
+  | Anular un cuarteo NO_CONFORME | Sí | Sí |
+  | Atender alertas | Sí | Sí |
+  | Ver indicadores y reportes | Sí | Sí |
 
-- **RN-082** (Debe). Un usuario marcado como menor de edad solo puede usar el sistema si tiene registrado el **consentimiento informado** (Ley 1098 de 2006, Res. 8430 de 1993): fecha y nombre del acudiente que lo firmó.
-- **RN-083** (Debe). De los menores solo se guardan los datos mínimos: nombre, grado, institución y consentimiento. No se guardan documento de identidad, teléfono ni dirección.
+- **RN-082** — Eliminada: no hay menores de edad en el sistema (D9). Texto anterior: un usuario marcado como menor de edad solo puede usar el sistema si tiene registrado el **consentimiento informado** (Ley 1098 de 2006, Res. 8430 de 1993): fecha y nombre del acudiente que lo firmó.
+- **RN-083** — Eliminada: no hay menores de edad en el sistema (D9). Texto anterior: de los menores solo se guardan los datos mínimos: nombre, grado, institución y consentimiento. No se guardan documento de identidad, teléfono ni dirección.
 - **RN-084** (Debe). El correo del usuario es único en el sistema.
-- **RN-085** (Debe). Toda cuadrilla tiene un DOCENTE o COORDINADOR responsable. Una cuadrilla con estudiantes de colegio debe tener al menos un adulto.
+- **RN-085** (Debe). Toda cuadrilla tiene un DOCENTE responsable.
 - **RN-086** (Podría). Al abrir un turno se registra la verificación de EPP de la cuadrilla: guantes, tapabocas, bata u overol (sí/no cada uno).
 
 ### 3.10 Evidencias
@@ -166,11 +164,11 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 ## 4. Historias de usuario
 
-- **HU-001.** Como coordinador, quiero que el sistema rechace datos imposibles (tara mayor que el bruto, población 0, submuestra fuera de rango), para no contaminar la línea base.
+- **HU-001.** Como docente, quiero que el sistema rechace datos imposibles (tara mayor que el bruto, población 0, submuestra fuera de rango), para no contaminar la línea base.
 - **HU-002.** Como estudiante de la cuadrilla, quiero que el rótulo de la bolsa se genere solo, para no equivocarme al escribirlo.
 - **HU-003.** Como docente, quiero saber de inmediato si el cuarteo cumple la tolerancia del 2 %, para repesar antes de que se mezclen los residuos.
-- **HU-004.** Como coordinador, quiero que cada corrección guarde el valor original, para poder demostrar la trazabilidad del dato.
-- **HU-005.** Como coordinador, quiero que los menores solo hagan lo que les corresponde, para cumplir la protección de menores.
+- **HU-004.** Como docente, quiero que cada corrección guarde el valor original, para poder demostrar la trazabilidad del dato.
+- **HU-005.** Como docente, quiero que cada rol solo haga lo que le corresponde, para mantener el control del estudio.
 
 ## 5. Criterios de aceptación
 
@@ -212,18 +210,18 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 - **CA-053.** Dada una submuestra de 50,00 kg cuyas subcategorías suman 48,50 kg (diferencia 3,0 %), cuando se evalúa, entonces es NO_CONFORME y se genera una alerta CUARTEO_NO_CONFORME.
 - **CA-054.** Dadas subcategorías papel 10 kg, restos de comida 25 kg e icopor 15 kg, cuando se calcula la composición, entonces papel = 20,00 %, restos de comida = 50,00 %, icopor = 30,00 %, y los grupos quedan BLANCO 20 %, VERDE 50 %, NEGRO 30 %, SIN_COLOR 0 %.
 - **CA-055.** Dado un turno que ya tiene un cuarteo, cuando se registra otro, entonces se rechaza (RN-050).
-- **CA-056.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando registra un peso de la subcategoría "Pilas" (SIN_COLOR), entonces se rechaza (RN-056).
+- **CA-056.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando registra un peso de la subcategoría "Pilas" (SIN_COLOR), entonces se acepta, porque su rol tiene el permiso de residuos peligrosos (RN-056, RN-081).
 
 **Verificación**
 
 - **CA-060.** Dada una bolsa digitada por el usuario A, cuando A intenta verificarla, entonces se rechaza; cuando la verifica B, queda VERIFICADO con B y la fecha.
 - **CA-061.** Dada una bolsa con bruto 12,40 kg, cuando B la corrige a 12,04 kg con el motivo "error de digitación", entonces queda CORREGIDO y la corrección guarda 12,40 → 12,04, el motivo, B y la fecha.
-- **CA-062.** Dado un ESTUDIANTE_COLEGIO, cuando intenta verificar cualquier registro, entonces se rechaza.
+- **CA-062.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando verifica un registro que digitó otra persona, entonces se acepta.
 
 **Usuarios**
 
-- **CA-080.** Dado un usuario menor de edad sin consentimiento, cuando se activa, entonces se rechaza (RN-082).
-- **CA-081.** Dada una cuadrilla solo con estudiantes de colegio, cuando se valida, entonces se rechaza por no tener un adulto responsable (RN-085).
+- **CA-080.** Dado un usuario con un correo ya registrado, cuando se crea, entonces se rechaza (RN-084).
+- **CA-081.** Dada una cuadrilla cuyo responsable es un ESTUDIANTE_UNIVERSITARIO, o sin responsable, cuando se valida, entonces se rechaza (RN-085).
 
 **Errores**
 

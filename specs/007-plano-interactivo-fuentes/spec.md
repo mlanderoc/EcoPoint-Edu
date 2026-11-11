@@ -26,17 +26,17 @@ Reglas aplicadas: RN-001 a RN-005 (spec 001).
 
 ## 3. Actores
 
-- **Coordinador**: dibuja o importa los polígonos de las fuentes.
+- **Docente**: dibuja o importa los polígonos de las fuentes.
 - **Todos los usuarios**: consultan el plano.
 - **Comunidad educativa**: ve el plano en las presentaciones de socialización.
 
 ## 4. Historias de usuario
 
-- **HU-060.** Como coordinador, quiero dibujar sobre la imagen satelital el contorno de cada fuente (bloques de aulas, tienda, PAE, baños, zonas verdes), para tener el plano real de la institución.
-- **HU-061.** Como coordinador, quiero importar un archivo GeoJSON trazado en geojson.io, para no dibujar todo dentro del sistema.
+- **HU-060.** Como docente, quiero dibujar sobre la imagen satelital el contorno de cada fuente (bloques de aulas, tienda, PAE, baños, zonas verdes), para tener el plano real de la institución.
+- **HU-061.** Como docente, quiero importar un archivo GeoJSON trazado en geojson.io, para no dibujar todo dentro del sistema.
 - **HU-062.** Como docente del colegio, quiero ver en el plano qué zonas generan más residuos, para decidir dónde reforzar las canecas y las campañas.
 - **HU-063.** Como cuadrilla, quiero tocar una fuente en el plano y ver su código y nombre, para ubicarme en el muestreo.
-- **HU-064.** Como coordinador, quiero mostrar el plano en 3D en la socialización, para que la comunidad lo entienda mejor.
+- **HU-064.** Como docente, quiero mostrar el plano en 3D en la socialización, para que la comunidad lo entienda mejor.
 
 ## 5. Requisitos
 
@@ -53,7 +53,7 @@ Reglas aplicadas: RN-001 a RN-005 (spec 001).
 - **R-608** (Debería). **Modo "estado del turno"**: durante el muestreo, cada fuente se colorea según su estado en el turno actual: con bolsas, sin generación o pendiente. Así la cuadrilla ve qué zonas faltan.
 - **R-609** (Podría). **Vista 3D** (D5): cada fuente se levanta con su altura (dato opcional; 1 piso ≈ 3,5 m), con botón para inclinar y girar la cámara.
 
-### 5.2 Edición (solo coordinador)
+### 5.2 Edición (solo docente)
 
 - **R-620** (Debe). **Importar GeoJSON**: subir un archivo con polígonos (`FeatureCollection`). Cada polígono se asigna a una fuente existente, por su código (propiedad `code` del archivo) o eligiéndola en una lista. Antes de guardar se muestra una vista previa con lo que se va a asignar.
 - **R-621** (Debe). Los polígonos se validan con RN-004 antes de guardarse. Los inválidos se reportan uno por uno, sin bloquear los válidos.
@@ -79,7 +79,7 @@ Reglas aplicadas: RN-001 a RN-005 (spec 001).
 - **CA-602.** En modo generación, la fuente que más genera es la de color más oscuro y la leyenda muestra los rangos en kg/día.
 - **CA-603.** Dado un GeoJSON con 6 polígonos, uno de ellos sin cerrar, cuando se importa, entonces se guardan los 5 válidos y se reporta el inválido con el motivo.
 - **CA-604.** Dado un polígono cuyo `code` no corresponde a ninguna fuente, cuando se importa, entonces la vista previa pide elegir la fuente o descartarlo.
-- **CA-605.** Dado un usuario que no es coordinador, cuando abre el plano, entonces no ve las opciones de importar, dibujar ni exportar.
+- **CA-605.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando abre el plano, entonces no ve las opciones de importar, dibujar ni exportar.
 - **CA-606.** Dado un celular de 360 px, cuando se abre el plano, entonces se puede acercar con dos dedos, tocar una fuente y leer su panel sin desplazamiento horizontal.
 - **CA-607.** Cuando se exporta y se vuelve a importar el GeoJSON de la institución, entonces los polígonos quedan iguales.
 - **CA-608.** Dada una fuente sin polígono, cuando se abre el plano, entonces aparece en la lista "Fuentes sin ubicar en el plano".
