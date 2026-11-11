@@ -31,7 +31,7 @@ Reglas:
 - [x] **T04. Enums del dominio.** `WasteGroup`, `SourceType`, `ShiftType`, `ShiftStatus`, `StudyStatus`, `VerificationStatus`, `QualityStatus`, `AlertType`, `EvidenceTarget`.
   *Verificación:* `StudyStatusTest` (CA-013: PLANIFICADO → CERRADO no permitido; cada transición válida sí); `WasteGroupTest` (`isRecoverable`, `isHazardous`).
 
-- [ ] **T05. Roles y permisos.** `Permission` y `UserRole` con la matriz RN-081.
+- [x] **T05. Roles y permisos.** `Permission` y `UserRole` con la matriz RN-081.
   *Verificación:* `UserRolePermissionTest`: una prueba por cada celda de la matriz (4 roles × 11 acciones).
 
 - [ ] **T06. Objetos de valor.** `GeoPoint`, `GeoPolygon`, `BagLabel`, `CharacterizationSettings`, `ConsentRecord`.

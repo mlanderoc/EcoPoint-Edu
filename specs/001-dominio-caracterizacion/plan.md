@@ -210,7 +210,7 @@ classDiagram
 | `StudyStatus` | PLANIFICADO, EN_EJECUCION, EN_DEPURACION, CERRADO | `canTransitionTo(StudyStatus)`: solo avanza un paso; además CERRADO → EN_DEPURACION (RN-017) |
 | `VerificationStatus` | PENDIENTE, VERIFICADO, CORREGIDO | — |
 | `QualityStatus` | CONFORME, NO_CONFORME, ANULADO | — |
-| `UserRole` | COORDINADOR, DOCENTE, ESTUDIANTE_UNIVERSITARIO, ESTUDIANTE_COLEGIO | `hasPermission(Permission)` con la matriz RN-081; `isAdultRole()` |
+| `UserRole` | COORDINADOR, DOCENTE, ESTUDIANTE_UNIVERSITARIO, ESTUDIANTE_COLEGIO | `hasPermission(Permission)` con la matriz RN-081; `canSuperviseCrew()` (RN-085). Que un usuario sea menor de edad lo dice `User`, no el rol |
 | `Permission` | Una constante por fila de la matriz RN-081 (ej. `MANAGE_ADMINISTRATION`, `REGISTER_BAGS`, `REGISTER_HAZARDOUS_WASTE`, `VERIFY_RECORDS`…) | — |
 | `AlertType` | CUARTEO_NO_CONFORME, VALOR_ATIPICO, VERIFICACION_PENDIENTE | — |
 | `EvidenceTarget` | SHIFT, BAG, QUARTERING | — |
