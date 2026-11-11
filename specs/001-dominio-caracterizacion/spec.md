@@ -176,7 +176,7 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 
 **Fuentes**
 
-- **CA-001.** Dado un código `au` o `AULAS1`, cuando se valida la fuente, entonces se rechaza por formato (RN-002).
+- **CA-001.** Dado un código `au` (minúsculas), `A` (1 carácter) o `AULAS12` (7 caracteres), cuando se valida la fuente, entonces se rechaza por formato (RN-002); `AULAS1` (6 caracteres) sí es válido.
 - **CA-002.** Dada una institución con una fuente `AU`, cuando se crea otra fuente `AU` en la misma institución, entonces se rechaza; en otra institución sí se acepta.
 - **CA-003.** Dado un polígono de 3 puntos sin cerrar, o con una latitud de 95, cuando se valida, entonces se rechaza (RN-004).
 
