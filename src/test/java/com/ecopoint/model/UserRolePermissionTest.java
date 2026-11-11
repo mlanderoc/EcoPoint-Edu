@@ -10,35 +10,35 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Verifies every cell of the permission matrix RN-081 (4 roles x 11 actions).
- * Abbreviations in the table: COORD = COORDINADOR, DOC = DOCENTE,
- * UNIV = ESTUDIANTE_UNIVERSITARIO, COLE = ESTUDIANTE_COLEGIO.
+ * Verifies every cell of the permission matrix RN-081 (2 roles x 11 actions).
  *
  * @author EstefaniaMarquez
  * @version 1.0
  */
 class UserRolePermissionTest {
 
-    @ParameterizedTest(name = "{0}: COORD={1} DOC={2} UNIV={3} COLE={4}")
+    @ParameterizedTest(name = "{0}: DOCENTE={1} ESTUDIANTE_UNIVERSITARIO={2}")
     @CsvSource({
-            "MANAGE_ADMINISTRATION,    true, false, false, false",
-            "MANAGE_STUDIES,           true, false, false, false",
-            "MANAGE_SHIFTS,            true, true,  false, false",
-            "REGISTER_POPULATION,      true, true,  true,  false",
-            "REGISTER_BAGS,            true, true,  true,  true",
-            "REGISTER_QUARTERING,      true, true,  true,  true",
-            "REGISTER_HAZARDOUS_WASTE, true, true,  false, false",
-            "VERIFY_RECORDS,           true, true,  true,  false",
-            "ANNUL_QUARTERING,         true, true,  false, false",
-            "ATTEND_ALERTS,            true, true,  false, false",
-            "VIEW_INDICATORS,          true, true,  true,  true"
+            "MANAGE_ADMINISTRATION,    true, false",
+            "MANAGE_STUDIES,           true, false",
+            "MANAGE_SHIFTS,            true, false",
+            "REGISTER_POPULATION,      true, true",
+            "REGISTER_BAGS,            true, true",
+            "REGISTER_QUARTERING,      true, true",
+            "REGISTER_HAZARDOUS_WASTE, true, true",
+            "VERIFY_RECORDS,           true, true",
+            "ANNUL_QUARTERING,         true, true",
+            "ATTEND_ALERTS,            true, true",
+            "VIEW_INDICATORS,          true, true"
     })
-    void rn081_permissionMatrix(Permission permission, boolean coordinator, boolean teacher,
-                                boolean universityStudent, boolean schoolStudent) {
-        assertEquals(coordinator, UserRole.COORDINADOR.hasPermission(permission));
+    void rn081_permissionMatrix(Permission permission, boolean teacher, boolean universityStudent) {
         assertEquals(teacher, UserRole.DOCENTE.hasPermission(permission));
         assertEquals(universityStudent, UserRole.ESTUDIANTE_UNIVERSITARIO.hasPermission(permission));
-        assertEquals(schoolStudent, UserRole.ESTUDIANTE_COLEGIO.hasPermission(permission));
+    }
+
+    @Test
+    void rn080_thereAreExactlyTwoRoles() {
+        assertEquals(2, UserRole.values().length);
     }
 
     @Test
@@ -47,33 +47,32 @@ class UserRolePermissionTest {
     }
 
     @Test
+    void rn081_teacherHasEveryPermission() {
+        for (Permission permission : Permission.values()) {
+            assertTrue(UserRole.DOCENTE.hasPermission(permission), permission.name());
+        }
+    }
+
+    @Test
     void rn081_nullPermissionIsNeverGranted() {
-        assertFalse(UserRole.COORDINADOR.hasPermission(null));
+        assertFalse(UserRole.DOCENTE.hasPermission(null));
     }
 
     @Test
-    void rn064_schoolStudentCannotVerifyNorRegisterHazardousWaste() {
-        assertFalse(UserRole.ESTUDIANTE_COLEGIO.hasPermission(Permission.VERIFY_RECORDS));
-        assertFalse(UserRole.ESTUDIANTE_COLEGIO.hasPermission(Permission.REGISTER_HAZARDOUS_WASTE));
-    }
-
-    @Test
-    void rn085_onlyCoordinatorAndTeacherCanSuperviseACrew() {
-        assertTrue(UserRole.COORDINADOR.canSuperviseCrew());
+    void rn085_onlyTeacherCanSuperviseACrew() {
         assertTrue(UserRole.DOCENTE.canSuperviseCrew());
         assertFalse(UserRole.ESTUDIANTE_UNIVERSITARIO.canSuperviseCrew());
-        assertFalse(UserRole.ESTUDIANTE_COLEGIO.canSuperviseCrew());
     }
 
     @Test
     void rn081_permissionSetCannotBeModifiedFromOutside() {
         assertThrows(UnsupportedOperationException.class,
-                () -> UserRole.ESTUDIANTE_COLEGIO.getPermissions().add(Permission.VERIFY_RECORDS));
+                () -> UserRole.ESTUDIANTE_UNIVERSITARIO.getPermissions().add(Permission.MANAGE_STUDIES));
     }
 
     @Test
     void rn080_rolesHaveSpanishNames() {
-        assertEquals("Estudiante de colegio", UserRole.ESTUDIANTE_COLEGIO.getDisplayName());
-        assertEquals("verificar y corregir registros", Permission.VERIFY_RECORDS.getActionDescription());
+        assertEquals("Estudiante universitario", UserRole.ESTUDIANTE_UNIVERSITARIO.getDisplayName());
+        assertEquals("abrir, cerrar y reabrir turnos", Permission.MANAGE_SHIFTS.getActionDescription());
     }
 }

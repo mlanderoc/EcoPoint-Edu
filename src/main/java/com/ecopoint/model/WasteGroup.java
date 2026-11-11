@@ -55,8 +55,8 @@ public enum WasteGroup {
     }
 
     /**
-     * Indicates whether the group holds hazardous or special waste, which only
-     * a teacher or coordinator may register (RN-056).
+     * Indicates whether the group holds hazardous or special waste, which requires
+     * the hazardous-waste permission to be registered (RN-056).
      *
      * @return true for SIN_COLOR
      */

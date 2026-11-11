@@ -14,10 +14,9 @@ import java.util.Set;
  */
 public enum UserRole {
 
-    COORDINADOR("Coordinador", true, EnumSet.allOf(Permission.class)),
+    DOCENTE("Docente", true, EnumSet.allOf(Permission.class)),
 
-    DOCENTE("Docente", true, EnumSet.of(
-            Permission.MANAGE_SHIFTS,
+    ESTUDIANTE_UNIVERSITARIO("Estudiante universitario", false, EnumSet.of(
             Permission.REGISTER_POPULATION,
             Permission.REGISTER_BAGS,
             Permission.REGISTER_QUARTERING,
@@ -25,18 +24,6 @@ public enum UserRole {
             Permission.VERIFY_RECORDS,
             Permission.ANNUL_QUARTERING,
             Permission.ATTEND_ALERTS,
-            Permission.VIEW_INDICATORS)),
-
-    ESTUDIANTE_UNIVERSITARIO("Estudiante universitario", false, EnumSet.of(
-            Permission.REGISTER_POPULATION,
-            Permission.REGISTER_BAGS,
-            Permission.REGISTER_QUARTERING,
-            Permission.VERIFY_RECORDS,
-            Permission.VIEW_INDICATORS)),
-
-    ESTUDIANTE_COLEGIO("Estudiante de colegio", false, EnumSet.of(
-            Permission.REGISTER_BAGS,
-            Permission.REGISTER_QUARTERING,
             Permission.VIEW_INDICATORS));
 
     private final String displayName;
@@ -79,9 +66,9 @@ public enum UserRole {
 
     /**
      * Indicates whether a user with this role may be the person in charge of
-     * a crew (RN-085): a teacher or the coordinator.
+     * a crew (RN-085).
      *
-     * @return true for COORDINADOR and DOCENTE
+     * @return true for DOCENTE
      */
     public boolean canSuperviseCrew() {
         return supervisor;

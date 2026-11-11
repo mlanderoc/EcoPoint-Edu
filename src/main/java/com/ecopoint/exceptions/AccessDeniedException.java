@@ -2,8 +2,8 @@ package com.ecopoint.exceptions;
 
 /**
  * Exception thrown when the role of the current user does not grant the
- * permission required to perform an operation (for example, a school student
- * trying to verify a record or to register hazardous waste).
+ * permission required to perform an operation (for example, a university student
+ * trying to close a shift or to create a study).
  *
  * @author mlanderoc
  * @version 1.0

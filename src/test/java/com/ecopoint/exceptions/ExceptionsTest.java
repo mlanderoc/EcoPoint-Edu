@@ -43,9 +43,9 @@ class ExceptionsTest {
     @Test
     void accessDeniedExceptionBuildsMessageFromRoleAndAction() {
         AccessDeniedException exception =
-                new AccessDeniedException("Estudiante de colegio", "verificar registros");
+                new AccessDeniedException("Estudiante universitario", "abrir, cerrar y reabrir turnos");
 
-        assertEquals("El rol Estudiante de colegio no tiene permiso para verificar registros.",
+        assertEquals("El rol Estudiante universitario no tiene permiso para abrir, cerrar y reabrir turnos.",
                 exception.getMessage());
         assertInstanceOf(EcoPointException.class, exception);
     }
