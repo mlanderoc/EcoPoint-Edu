@@ -92,6 +92,22 @@ class CharacterizationStudyTest {
     }
 
     @Test
+    void r1_restoreRebuildsAStoredStudyWithoutRepeatingTransitions() {
+        StudyReopening reopening = new StudyReopening(7L, "Corregir el día 4", LocalDateTime.of(2026, 3, 20, 10, 0));
+
+        CharacterizationStudy study = CharacterizationStudy.restore(5L, 1L, StudyStatus.EN_DEPURACION,
+                march(2, 3, 4, 5, 6, 9, 10, 11), List.of(reopening));
+
+        assertEquals(5L, study.getId());
+        assertEquals(StudyStatus.EN_DEPURACION, study.getStatus());
+        assertEquals(LocalDate.of(2026, 3, 11), study.getEndDate());
+        assertEquals(List.of(reopening), study.getReopenings());
+        assertTrue(study.isDayExcluded(1));
+        assertThrows(InvalidDataException.class,
+                () -> CharacterizationStudy.restore(5L, 1L, StudyStatus.CERRADO, march(2, 3), List.of()));
+    }
+
+    @Test
     void rn017_closedStudyCanBeReopenedWithAReasonAndItIsRecorded() {
         CharacterizationStudy study = new CharacterizationStudy(null, 1L);
         study.changeStatus(StudyStatus.EN_EJECUCION);
