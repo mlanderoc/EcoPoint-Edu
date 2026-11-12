@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **BORRADOR** — pendiente de aprobación del equipo |
+| Estado | **APROBADO** (12 nov 2026) |
 | Plan | [plan.md](plan.md) |
 | Rama | `feature/005-cuarteo-control-calidad` |
 
