@@ -28,7 +28,7 @@ Reglas:
 - [x] **T03. Scripts de recreación.** `sql/recrear-base.ps1` y `sql/recrear-base.sh` (crean la base si no existe y ejecutan 001 + 002).
   *Verificación:* un solo comando deja lista la base `ecopoint`.
 
-- [ ] **T04. Pruebas del esquema.** Infraestructura de pruebas de integración (recrear `ecopoint_test` antes de la suite) y `SchemaIT`.
+- [x] **T04. Pruebas del esquema.** Infraestructura de pruebas de integración (recrear `ecopoint_test` antes de la suite) y `SchemaIT`.
   *Verificación:* `./mvnw verify` pasa con CA-100 a CA-104 y CA-106.
 
 ## Fase 2 — Repositorios de configuración (Merlín)
