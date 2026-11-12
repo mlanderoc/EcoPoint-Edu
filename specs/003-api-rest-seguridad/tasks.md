@@ -80,7 +80,7 @@ Reglas:
 - [x] **T18. Verificación y evidencias.** `VerificationService` (RN-062: quien verifica es distinto de quien digitó; corrección con historial en una transacción) y `EvidenceService` (5 MB, JPG o PNG, carpeta local). *(Estefanía)*
   *Verificación:* pruebas unitarias; la corrección guarda el valor anterior.
 
-- [ ] **T19. Rutas de la sección 5.3.** Controladores y DTO de cuarteo, densidad, verificaciones, historial, evidencias y alertas. *(Carlos)*
+- [x] **T19. Rutas de la sección 5.3.** Controladores y DTO de cuarteo, densidad, verificaciones, historial, evidencias y alertas. *(Carlos)*
   *Verificación:* `@WebMvcTest` por controlador y una prueba de integración de verificar y corregir una bolsa.
 
 ## Fase 5 — Cierre
