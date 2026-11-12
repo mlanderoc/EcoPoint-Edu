@@ -54,6 +54,36 @@ public class Quartering extends VerifiableRecord {
     }
 
     /**
+     * Rebuilds a quartering read from the database with its results, quality
+     * status and annulment data (spec 002, plan R1). Only the persistence layer
+     * must use it.
+     *
+     * @param id             quartering id
+     * @param shiftId        shift id
+     * @param shiftNetWeight stored net weight of the shift
+     * @param sampleWeight   sample weight
+     * @param verification   stored verification data
+     * @param results        stored subcategory results
+     * @param qualityStatus  stored quality status
+     * @param annulReason    annulment reason, or null
+     * @param annulledBy     user who annulled it, or null
+     * @param annulledAt     when it was annulled, or null
+     * @return the rebuilt quartering
+     */
+    public static Quartering restore(Long id, Long shiftId, BigDecimal shiftNetWeight, BigDecimal sampleWeight,
+                                     VerificationInfo verification, List<QuarteringResult> results,
+                                     QualityStatus qualityStatus, String annulReason, Long annulledBy,
+                                     LocalDateTime annulledAt) {
+        Quartering quartering = new Quartering(id, shiftId, shiftNetWeight, sampleWeight, verification);
+        results.forEach(quartering::addResult);
+        quartering.qualityStatus = qualityStatus;
+        quartering.annulReason = annulReason;
+        quartering.annulledBy = annulledBy;
+        quartering.annulledAt = annulledAt;
+        return quartering;
+    }
+
+    /**
      * Adds the weight of one subcategory to the sample.
      *
      * @param result subcategory result

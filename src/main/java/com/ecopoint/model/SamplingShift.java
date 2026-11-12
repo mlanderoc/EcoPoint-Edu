@@ -64,6 +64,36 @@ public class SamplingShift {
     }
 
     /**
+     * Rebuilds a shift read from the database with everything recorded in it
+     * (spec 002, plan R1). The bags keep their stored labels. Only the
+     * persistence layer must use it.
+     *
+     * @param id                       shift id
+     * @param studyId                  study id
+     * @param dayNumber                sampling day
+     * @param type                     morning or afternoon
+     * @param status                   stored status
+     * @param population               stored population, or null
+     * @param bags                     stored bags
+     * @param quartering               stored quartering, or null
+     * @param density                  stored density measurement, or null
+     * @param sourcesWithoutGeneration sources marked as having no generation
+     * @return the rebuilt shift
+     */
+    public static SamplingShift restore(Long id, Long studyId, int dayNumber, ShiftType type, ShiftStatus status,
+                                        ShiftPopulation population, List<WasteBag> bags, Quartering quartering,
+                                        DensityMeasurement density, Set<Long> sourcesWithoutGeneration) {
+        SamplingShift shift = new SamplingShift(id, studyId, dayNumber, type);
+        shift.status = status;
+        shift.population = population;
+        shift.bags.addAll(bags);
+        shift.quartering = quartering;
+        shift.density = density;
+        shift.sourcesWithoutGeneration.addAll(sourcesWithoutGeneration);
+        return shift;
+    }
+
+    /**
      * Returns a short code of the shift, e.g. {@code D3-M}.
      *
      * @return day and shift code

@@ -11,8 +11,8 @@ flowchart TD
     SVC["service — use cases, transactions<br/>(specs 002–006, pending)"]
     VAL["validation — stateless validators + AccessPolicy<br/>(spec 001, done)"]
     MOD["model — characterization domain<br/>(spec 001, done)"]
-    PER["persistence — repository interfaces + PostgreSQL implementations<br/>(spec 002, pending)"]
-    DB[("PostgreSQL 16+")]
+    PER["persistence — repository interfaces + JDBC implementations<br/>(spec 002, done)"]
+    DB[("PostgreSQL 16+<br/>sql/001_schema.sql")]
     EXC["exceptions — EcoPointException hierarchy<br/>(cross-cutting, done)"]
 
     FE -->|HTTP + JSON| API

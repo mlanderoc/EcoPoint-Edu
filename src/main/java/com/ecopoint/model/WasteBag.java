@@ -45,6 +45,29 @@ public class WasteBag extends VerifiableRecord {
     }
 
     /**
+     * Rebuilds a bag read from the database with its stored label and atypical
+     * mark (spec 002, plan R1). Only the persistence layer must use it.
+     *
+     * @param id           bag id
+     * @param sourceId     source id
+     * @param sourceCode   source code
+     * @param label        stored label
+     * @param grossWeight  gross weight in kg
+     * @param tare         tare in kg
+     * @param volume       volume in m³
+     * @param atypical     stored atypical mark
+     * @param verification stored verification data
+     * @return the rebuilt bag
+     */
+    public static WasteBag restore(Long id, Long sourceId, String sourceCode, BagLabel label, BigDecimal grossWeight,
+                                   BigDecimal tare, BigDecimal volume, boolean atypical, VerificationInfo verification) {
+        WasteBag bag = new WasteBag(id, sourceId, sourceCode, grossWeight, tare, volume, verification);
+        bag.label = label;
+        bag.atypical = atypical;
+        return bag;
+    }
+
+    /**
      * Calculates the net weight: gross weight minus tare (RN-034).
      *
      * @return net weight in kg with 2 decimals, or null if a weight is missing
