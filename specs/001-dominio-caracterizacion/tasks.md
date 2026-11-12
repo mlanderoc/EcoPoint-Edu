@@ -83,7 +83,7 @@ Reglas:
 
 ## Fase 6 — Cierre
 
-- [ ] **T19. Mapa de excepciones.** `ExceptionMappingTest`: prueba parametrizada que confirma que cada rechazo lanza el tipo correcto (CA-090) con mensaje en español.
+- [x] **T19. Mapa de excepciones.** `ExceptionMappingTest`: prueba parametrizada que confirma que cada rechazo lanza el tipo correcto (CA-090) con mensaje en español.
   *Verificación:* la prueba pasa.
 
 - [ ] **T20. Documentación.** Rehacer `docs/class-diagrama.md` con el modelo nuevo (Mermaid), actualizar `docs/exception-hierarchy-diagram.md` con las 2 excepciones nuevas, y poner una nota en el `README.md`: "En reestructuración; ver `specs/`".
