@@ -71,7 +71,7 @@ Reglas:
 
 ## Fase 4 — Cuarteo, verificación, evidencias y alertas
 
-- [ ] **T16. Cuarteo y densidad.** `QuarteringService` (calidad del 2 %, alerta si es NO_CONFORME, RN-056 para SIN_COLOR, anulación) y `DensityService`. *(Carlos)*
+- [x] **T16. Cuarteo y densidad.** `QuarteringService` (calidad del 2 %, alerta si es NO_CONFORME, RN-056 para SIN_COLOR, anulación) y `DensityService`. *(Carlos)*
   *Verificación:* pruebas unitarias; cuarteo y resultados se guardan juntos o no se guarda nada.
 
 - [ ] **T17. Alertas.** `AlertService`: listar con filtros y paginación, atender con observación (RN-073). *(Carlos)*
