@@ -66,8 +66,8 @@ Reglas:
 - [x] **T14. Servicio de bolsas.** `WasteBagService`: registrar (RN-023, rótulo, atípica con su alerta en la misma transacción) y corregir mientras esté PENDIENTE. *(Estefanía)*
   *Verificación:* pruebas unitarias; la alerta de valor atípico se crea junto con la bolsa.
 
-- [ ] **T15. Rutas de estudios, turnos y bolsas.** Controladores y DTO de la sección 5.2 del plan, con paginación de bolsas. *(Carlos)*
-  *Verificación:* CA-205, CA-206 y CA-207 con `@WebMvcTest`, más una prueba de integración del flujo completo: abrir turno → población → bolsa → sin generación → cerrar.
+- [x] **T15. Rutas de estudios, turnos y bolsas.** Controladores y DTO de la sección 5.2 del plan, con paginación de bolsas. *(Carlos)*
+  *Verificación:* `FieldFlowIT`: CA-204, CA-205, CA-206 y CA-207, y el flujo completo: abrir turno → población → bolsa → sin generación → cerrar.
 
 ## Fase 4 — Cuarteo, verificación, evidencias y alertas
 
