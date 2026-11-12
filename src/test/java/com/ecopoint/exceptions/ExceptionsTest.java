@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 class ExceptionsTest {
 
     @Test
-    void qualityControlExceptionHasItsOwnErrorCodeAndSpanishMessage() {
+    void ca090_qualityControlExceptionHasItsOwnErrorCodeAndSpanishMessage() {
         QualityControlException exception = new QualityControlException(
                 "El cuarteo del turno D3-M no es conforme: diferencia de 3,00 %.");
 
@@ -25,7 +25,7 @@ class ExceptionsTest {
     }
 
     @Test
-    void qualityControlExceptionIsABusinessRuleException() {
+    void ca090_qualityControlExceptionIsABusinessRuleException() {
         QualityControlException exception = new QualityControlException("Cuarteo no conforme.");
 
         assertInstanceOf(BusinessRuleException.class, exception);
@@ -33,7 +33,7 @@ class ExceptionsTest {
     }
 
     @Test
-    void accessDeniedExceptionHasForbiddenErrorCodeAndSpanishMessage() {
+    void ca090_accessDeniedExceptionHasForbiddenErrorCodeAndSpanishMessage() {
         AccessDeniedException exception = new AccessDeniedException("No tiene permiso.");
 
         assertEquals("ERR_FORBIDDEN", exception.getErrorCode());
@@ -41,7 +41,7 @@ class ExceptionsTest {
     }
 
     @Test
-    void accessDeniedExceptionBuildsMessageFromRoleAndAction() {
+    void ca090_accessDeniedExceptionBuildsMessageFromRoleAndAction() {
         AccessDeniedException exception =
                 new AccessDeniedException("Estudiante universitario", "abrir, cerrar y reabrir turnos");
 
