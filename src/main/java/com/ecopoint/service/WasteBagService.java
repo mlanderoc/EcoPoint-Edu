@@ -95,6 +95,17 @@ public class WasteBagService {
     }
 
     /**
+     * Returns the shift a bag belongs to.
+     *
+     * @param bagId bag id
+     * @return the shift id
+     * @throws ResourceNotFoundException if the bag does not exist
+     */
+    public Long shiftOf(Long bagId) {
+        return bags.findShiftId(bagId).orElseThrow(() -> new ResourceNotFoundException("Bolsa", bagId));
+    }
+
+    /**
      * Registers a bag. The label is assigned by the shift; an atypical bag is
      * saved anyway together with its alert (RN-037, RN-071).
      *
@@ -141,7 +152,7 @@ public class WasteBagService {
                                    BigDecimal volume) {
         AccessPolicy.require(actor, Permission.REGISTER_BAGS);
         WasteBag bag = get(bagId);
-        Long shiftId = bags.findShiftId(bagId).orElseThrow(() -> new ResourceNotFoundException("Bolsa", bagId));
+        Long shiftId = shiftOf(bagId);
         SamplingShift shift = shift(shiftId);
         CharacterizationStudy study = study(shift);
         ShiftValidator.validateOpenForRegistration(shift, study);
