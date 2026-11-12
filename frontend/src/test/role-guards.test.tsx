@@ -19,6 +19,10 @@ import {
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
 import { Sidebar, BottomNav, AppLayout } from '@/components/layout'
 import { mockUsers } from '@/mocks/data/seedData'
+import { resetMockState } from '@/mocks/handlers'
+
+/** Day 4 of the mock study, morning: a shift not opened yet. */
+const DAY_FOUR_MORNING = new Date(2026, 2, 5, 8, 0)
 import { User } from '@/types'
 
 describe('Role Guards and Conditional Visibility (T310, CA-300, R-311, RN-081)', () => {
@@ -27,17 +31,18 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311, RN-081)',
 
   it('ca300_studentMenuAndButtonsRestricted', async () => {
     // 1. In FieldDashboard, student does NOT see shift control buttons ("Abrir Turno", "Cerrar Turno")
-    render(
+    resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    const { unmount: unmountDashboard } = render(
       <MemoryRouter initialEntries={['/campo']}>
         <AuthProvider initialUser={studentUser}>
-          <FieldDashboard />
+          <FieldDashboard now={DAY_FOUR_MORNING} />
         </AuthProvider>
       </MemoryRouter>
     )
 
+    expect(await screen.findByText('Turno no iniciado')).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Abrir Turno/i })).toBeNull()
-    expect(screen.queryByRole('button', { name: /Turno Abierto/i })).toBeNull()
-    expect(screen.queryByRole('button', { name: /Cerrar Turno/i })).toBeNull()
+    unmountDashboard()
 
     // 2. In Sidebar, student does NOT see administration or study configuration links
     const { unmount: unmountSidebar } = render(
@@ -68,19 +73,17 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311, RN-081)',
   })
 
   it('Teacher sees shift control buttons in FieldDashboard and full administrative menus', async () => {
+    resetMockState('DOCENTE')
     render(
       <MemoryRouter initialEntries={['/campo']}>
         <AuthProvider initialUser={teacherUser}>
-          <FieldDashboard />
+          <FieldDashboard now={DAY_FOUR_MORNING} />
         </AuthProvider>
       </MemoryRouter>
     )
 
-    // Docente CAN see shift buttons
-    expect(
-      screen.getByRole('button', { name: /Turno Abierto|Abrir Turno/i })
-    ).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Cerrar Turno/i })).toBeInTheDocument()
+    // Docente CAN open the shift (R-341); closing lives in the shift screen (T323)
+    expect(await screen.findByRole('button', { name: /Abrir Turno/i })).toBeInTheDocument()
   })
 
   it('RequireAuth redirects unauthenticated visitors to /login', async () => {

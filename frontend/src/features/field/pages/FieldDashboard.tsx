@@ -1,45 +1,99 @@
 /**
- * Field dashboard view for shift monitoring and waste recording (CA-300 / CA-307 / R-340).
+ * Field home: the study in execution, the suggested day and shift, and the
+ * button to open or continue it (Spec 004, T317; R-340, R-341, CA-300).
  *
  * @author craulgomez
  */
 
-import { useState } from 'react'
-import { useLocation } from 'react-router-dom'
-import { PlayCircle, CheckCircle2, ShoppingBag } from 'lucide-react'
-import { Button, Input, Card, CardHeader, CardTitle, CardContent, AlertBanner } from '@/components/ui'
-import { WasteGroupBadge, WasteGroupChip } from '@/components/waste'
-import { WasteGroup } from '@/types'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
+import { PlayCircle, ArrowRight, Clock } from 'lucide-react'
+import { AlertBanner, Button, Card, CardContent, Modal, Select } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
-import { RequirePermission } from '@/features/auth/components/RequirePermission'
+import { hasPermission } from '@/features/auth/utils/permissions'
+import { adminService } from '@/features/admin/services/adminService'
+import { studyService } from '@/features/study/services/studyService'
+import { formatDate } from '@/features/study/utils/samplingDays'
+import { studyTitle } from '@/features/study/utils/studyStatus'
+import { ApiError } from '@/services/apiClient'
+import { CharacterizationStudy, Crew, ShiftSlot, ShiftType } from '@/types'
+import { fieldService } from '../services/fieldService'
+import { suggestSlot } from '../utils/fieldMath'
 
-export function FieldDashboard() {
+const SHIFT_LABELS: Record<ShiftType, string> = { MANANA: 'Mañana', TARDE: 'Tarde' }
+
+export interface FieldDashboardProps {
+  /** Current moment; tests fix it to choose the suggested shift. */
+  now?: Date
+}
+
+export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   const { user } = useAuth()
+  const navigate = useNavigate()
   const location = useLocation()
   const accessDenied = location.state?.accessDenied as boolean | undefined
+  const canOpen = hasPermission(user?.role, 'MANAGE_SHIFTS')
 
-  const [grossWeight, setGrossWeight] = useState('')
-  const [tare, setTare] = useState('')
-  const [isSaving, setIsSaving] = useState(false)
-  const [shiftOpen, setShiftOpen] = useState(true)
+  const [study, setStudy] = useState<CharacterizationStudy | null | undefined>(undefined)
+  const [slots, setSlots] = useState<ShiftSlot[]>([])
+  const [dayNumber, setDayNumber] = useState(1)
+  const [type, setType] = useState<ShiftType>('MANANA')
+  const [crews, setCrews] = useState<Crew[]>([])
+  const [crewId, setCrewId] = useState<string>('')
+  const [isOpening, setIsOpening] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const wasteGroups: WasteGroup[] = ['BLANCO', 'VERDE', 'NEGRO', 'SIN_COLOR']
+  const load = useCallback(async () => {
+    try {
+      const running = (await studyService.list()).find((item) => item.status === 'EN_EJECUCION') ?? null
+      setStudy(running)
+      if (running) {
+        const loaded = await studyService.shifts(running.id)
+        setSlots(loaded)
+        const suggestion = suggestSlot(running, loaded, now ?? new Date())
+        setDayNumber(suggestion.dayNumber)
+        setType(suggestion.type)
+      }
+    } catch {
+      setError('No se pudo cargar el estudio en ejecución.')
+      setStudy(null)
+    }
+  }, [now])
 
-  const tareNum = parseFloat(tare) || 0
-  const grossNum = parseFloat(grossWeight) || 0
-  const tareError =
-    tareNum > 0 && grossNum > 0 && tareNum >= grossNum
-      ? 'La tara no puede superar el peso bruto.'
-      : undefined
+  useEffect(() => {
+    load()
+  }, [load])
 
-  const handleSimulateSave = () => {
-    setIsSaving(true)
-    setTimeout(() => setIsSaving(false), 600)
+  useEffect(() => {
+    if (canOpen) {
+      adminService.getCrews().then(setCrews).catch(() => setCrews([]))
+    }
+  }, [canOpen])
+
+  const slot = useMemo(
+    () => slots.find((item) => item.dayNumber === dayNumber && item.type === type),
+    [slots, dayNumber, type]
+  )
+  const day = study?.days.find((item) => item.dayNumber === dayNumber)
+
+  const handleOpen = async () => {
+    if (!study) return
+    setError(null)
+    try {
+      setIsOpening(true)
+      const shift = await fieldService.openShift(study.id, dayNumber, type, crewId ? Number(crewId) : null)
+      navigate(`/campo/turno/${shift.id}`)
+    } catch (err) {
+      setIsConfirming(false)
+      setError(err instanceof ApiError ? err.message : 'No se pudo abrir el turno.')
+    } finally {
+      setIsOpening(false)
+    }
   }
 
   return (
-    <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
-      {/* Access Denied Warning when student is redirected from admin (CA-300) */}
+    <div className="max-w-3xl w-full mx-auto flex flex-col gap-6">
       {accessDenied && (
         <AlertBanner
           variant="warning"
@@ -48,142 +102,93 @@ export function FieldDashboard() {
         />
       )}
 
-      {/* Header Institucional y Estado del Turno */}
-      <div className="bg-white rounded-2xl p-5 shadow-xs border border-slate-200 flex flex-col md:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <img
-            src="/logo_ecopoint.jpeg"
-            alt="EcoPoint Edu Logo"
-            className="w-16 h-16 object-contain rounded-xl border border-slate-100 shadow-xs"
-          />
-          <div>
-            <h1 className="text-xl md:text-2xl font-black text-[var(--color-brand-dark)] leading-tight">
-              EcoPoint Edu — Sistema de Muestreo
-            </h1>
-            <p className="text-xs md:text-sm text-[var(--color-text-muted)] mt-0.5">
-              I.E. Prudencia Daza — Caracterización participativa 2026
-            </p>
-            <div className="flex items-center gap-2 mt-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary)]">
-                <span className="w-2 h-2 rounded-full bg-[var(--color-primary)] animate-pulse" />
-                Día 1 — Turno Mañana ({shiftOpen ? 'Abierto' : 'Cerrado'})
-              </span>
-              <span className="text-xs text-[var(--color-text-muted)]">
-                Usuario: <strong className="text-slate-800">{user?.firstName} {user?.lastName}</strong> ({user?.role === 'DOCENTE' ? 'Docente' : 'Estudiante'})
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Botones de Control de Turno: Visibles SOLO para Docentes (CA-300 / RN-081) */}
-        <RequirePermission permission="MANAGE_SHIFTS">
-          <div className="flex items-center gap-2 flex-wrap">
-            <Button
-              variant={shiftOpen ? 'outline' : 'primary'}
-              size="default"
-              className="min-h-[48px]"
-              onClick={() => setShiftOpen((prev) => !prev)}
-            >
-              <PlayCircle className="w-5 h-5 mr-1.5" />
-              {shiftOpen ? 'Turno Abierto' : 'Abrir Turno'}
-            </Button>
-            <Button
-              variant="secondary"
-              size="default"
-              className="min-h-[48px]"
-              onClick={() => alert('Turno cerrado por docente')}
-            >
-              <CheckCircle2 className="w-5 h-5 mr-1.5" />
-              Cerrar Turno
-            </Button>
-          </div>
-        </RequirePermission>
+      <div>
+        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Registro en campo</h1>
+        {study && <p className="text-sm text-[var(--color-text-muted)]">{studyTitle(study)}</p>}
       </div>
 
-      {/* Grupos de Residuos Sólidos (Res. 2184/2019 + R-304) */}
-      <Card>
-        <CardHeader>
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <div>
-              <CardTitle>Grupos de Residuos Sólidos</CardTitle>
-              <p className="text-xs text-[var(--color-text-muted)] mt-1">
-                Resolución 2184 de 2019 — Identificación mediante color y nombre explícito (R-304)
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              {wasteGroups.map((g) => (
-                <WasteGroupBadge key={g} group={g} size="sm" />
-              ))}
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-            {wasteGroups.map((g) => (
-              <WasteGroupChip
-                key={g}
-                group={g}
-                count={g === 'BLANCO' ? 12 : g === 'VERDE' ? 18 : 5}
+      {error && <AlertBanner variant="danger" title="No se pudo continuar" message={error} />}
+
+      {study === undefined && <p className="text-sm text-[var(--color-text-muted)]">Cargando estudio...</p>}
+
+      {study === null && !error && (
+        <AlertBanner
+          variant="info"
+          title="No hay un estudio en ejecución"
+          message={canOpen
+            ? 'Inicie la ejecución de un estudio desde Configuración del estudio para registrar datos en campo.'
+            : 'Cuando el docente inicie la ejecución del estudio, aquí podrá registrar los datos del turno.'}
+        />
+      )}
+
+      {study && (
+        <Card>
+          <CardContent className="flex flex-col gap-5 py-5">
+            <div className="grid grid-cols-2 gap-3">
+              <Select
+                id="field-day"
+                label="Día de muestreo"
+                value={String(dayNumber)}
+                onChange={(event) => setDayNumber(Number(event.target.value))}
+                options={study.days.map((item) => ({
+                  value: String(item.dayNumber),
+                  label: `Día ${item.dayNumber}${item.discarded ? ' (descarte)' : ''}`,
+                }))}
               />
-            ))}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Demostración de Ergonomía Táctil y Prevención de Errores (R-300 a R-305) */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Ergonomía de Campo y Touch Targets (≥ 48 px)</CardTitle>
-          <p className="text-xs text-[var(--color-text-muted)] mt-1">
-            Diseño adaptado para operación en smartphone (360 px) bajo sol directo y con guantes
-          </p>
-        </CardHeader>
-        <CardContent className="flex flex-col gap-4">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Input
-              label="Peso Bruto (kg)"
-              inputMode="decimal"
-              normalizeDecimal
-              value={grossWeight}
-              onChange={(e) => setGrossWeight(e.target.value)}
-              placeholder="Ej. 12,40"
-              helperText="Incluye peso de bolsa y residuo"
-            />
-            <Input
-              label="Tara del recipiente (kg)"
-              inputMode="decimal"
-              normalizeDecimal
-              value={tare}
-              onChange={(e) => setTare(e.target.value)}
-              placeholder="Ej. 0,40"
-              error={tareError}
-              helperText="Tara promedio de bolsa"
-            />
-          </div>
-
-          <div className="p-4 bg-[var(--color-primary-light)] rounded-xl border border-emerald-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div>
-              <span className="text-xs font-bold text-[var(--color-brand-dark)] uppercase tracking-wider block">
-                Cálculo en vivo (R-343)
-              </span>
-              <p className="text-xl md:text-2xl font-black text-[var(--color-primary)]">
-                Neto: {grossNum > tareNum ? (grossNum - tareNum).toFixed(2) : '0,00'} kg
-              </p>
+              <Select
+                id="field-shift"
+                label="Turno"
+                value={type}
+                onChange={(event) => setType(event.target.value as ShiftType)}
+                options={[{ value: 'MANANA', label: 'Mañana' }, { value: 'TARDE', label: 'Tarde' }]}
+              />
             </div>
-            <Button
-              variant="primary"
-              size="lg"
-              className="min-h-[48px]"
-              disabled={Boolean(tareError) || grossNum <= 0}
-              loading={isSaving}
-              onClick={handleSimulateSave}
-            >
-              <ShoppingBag className="w-5 h-5 mr-1.5" />
-              Guardar Bolsa
+            <p className="text-sm text-[var(--color-text-muted)] flex items-center gap-2">
+              <Clock className="w-4 h-4" /> {formatDate(day?.date)} · Turno de la {SHIFT_LABELS[type].toLowerCase()}
+            </p>
+
+            {slot?.shiftId ? (
+              <Button className="min-h-[56px] text-lg" onClick={() => navigate(`/campo/turno/${slot.shiftId}`)}>
+                {slot.status === 'CERRADO' ? 'Ver turno cerrado' : 'Continuar turno'}
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            ) : canOpen ? (
+              <Button className="min-h-[56px] text-lg" onClick={() => setIsConfirming(true)}>
+                <PlayCircle className="w-5 h-5 mr-2" /> Abrir turno
+              </Button>
+            ) : (
+              <AlertBanner
+                variant="info"
+                title="Turno no iniciado"
+                message="Espere a que el docente abra el turno para registrar datos."
+              />
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      <Modal open={isConfirming} onClose={() => setIsConfirming(false)} title="Abrir turno"
+        description={`Día ${dayNumber} · ${SHIFT_LABELS[type]} · ${formatDate(day?.date)}`}>
+        <div className="flex flex-col gap-4 mt-2">
+          <Select
+            id="field-crew"
+            label="Cuadrilla"
+            value={crewId}
+            onChange={(event) => setCrewId(event.target.value)}
+            options={[{ value: '', label: 'Sin cuadrilla asignada' },
+              ...crews.map((crew) => ({ value: String(crew.id), label: crew.name }))]}
+            disabled={isOpening}
+          />
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" className="min-h-[48px]" onClick={() => setIsConfirming(false)} disabled={isOpening}>
+              Cancelar
+            </Button>
+            <Button className="min-h-[48px]" onClick={handleOpen} isLoading={isOpening} disabled={isOpening}>
+              Confirmar apertura
             </Button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </Modal>
     </div>
   )
 }

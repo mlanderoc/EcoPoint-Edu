@@ -110,31 +110,31 @@
 
 ## Fase 5 — Flujo de Registro en Campo (Móvil First)
 
-- [ ] **T317. Dashboard de campo y apertura de turno (R-340, R-341, CA-300).**
+- [x] **T317. Dashboard de campo y apertura de turno (R-340, R-341, CA-300).**
   Vista `/campo` con detección del turno actual según la fecha y hora. Botón táctil grande "Abrir turno" visible únicamente para docentes.
   *Verificación:* Pruebas validando que el docente puede abrir el turno y el estudiante visualiza el estado pasivo.
 
-- [ ] **T318. Formulario de población del turno y bloqueo de bolsas (R-342, CA-303).**
+- [x] **T318. Formulario de población del turno y bloqueo de bolsas (R-342, CA-303).**
   Vista `/campo/turno/:id/poblacion` con campos para estudiantes, docentes y personal administrativo, calculando el total en tiempo real. Bloqueo del registro de bolsas hasta que la población esté registrada.
   *Verificación:* `test('ca303_shiftWithoutPopulationBlocksBagEntry')` confirma que el formulario de pesaje muestra el mensaje de bloqueo mientras no haya población.
 
-- [ ] **T319. Registro de pesaje de bolsa con cálculos en vivo (R-343, CA-304).**
+- [x] **T319. Registro de pesaje de bolsa con cálculos en vivo (R-343, CA-304).**
   Formulario `/campo/turno/:id/bolsas/nueva` con selector ágil de fuentes y campos de peso bruto, tara y volumen. Cálculo dinámico en pantalla de peso neto ($\text{bruto} - \text{tara}$) y densidad ($\text{neto} / \text{volumen}$).
   *Verificación:* `test('ca304_netWeightDensityAndLargeLabelCalculated')` comprueba los cálculos para bruto 12,40, tara 0,40 y volumen 0,080.
 
-- [ ] **T320. Validaciones de tara y detección de valores atípicos (R-305, R-344, CA-305).**
+- [x] **T320. Validaciones de tara y detección de valores atípicos (R-305, R-344, CA-305).**
   Validación en cliente con Zod: si $\text{tara} \ge \text{bruto}$, mostrar mensaje de error en rojo bajo el campo tara y deshabilitar el guardado. Si los valores superan los umbrales históricos, desplegar aviso amarillo preventivo permitiendo continuar.
   *Verificación:* `test('ca305_tareGreaterThanGrossDisplaysRedError')` valida el rechazo visual y funcional cuando la tara supera al bruto.
 
-- [ ] **T321. Prevención de envíos dobles y despliegue del rótulo gigante (R-305, R-343, CA-304, CA-310).**
+- [x] **T321. Prevención de envíos dobles y despliegue del rótulo gigante (R-305, R-343, CA-304, CA-310).**
   Al presionar "Guardar bolsa", deshabilitar inmediatamente el botón y mostrar spinner para impedir doble registro ante toques sucesivos. Tras el guardado exitoso, mostrar el rótulo generado en tipografía monoespaciada gigante (ej. `AU-D3-M`) para rotulación física de la bolsa.
   *Verificación:* `test('ca310_doubleClickCreatesOnlyOneBag')` simula clics repetidos y verifica una sola llamada; valida el rótulo en pantalla.
 
-- [ ] **T322. Monitoreo del turno y checklist de fuentes (R-345).**
+- [x] **T322. Monitoreo del turno y checklist de fuentes (R-345).**
   Vista de monitoreo `/campo/turno/:id`: lista de todas las fuentes participantes con conteo de bolsas, peso acumulado y badge de estado (*Con bolsas*, *Sin generación*, *Pendiente*). Botón "Marcar sin generación" para fuentes sin residuos.
   *Verificación:* Pruebas de integración validando el cambio de estado de la fuente al registrar bolsa o marcarla sin generación.
 
-- [ ] **T323. Cierre de turno con validación de fuentes pendientes (R-346, CA-306).**
+- [x] **T323. Cierre de turno con validación de fuentes pendientes (R-346, CA-306).**
   Botón "Cerrar turno" (solo docente). Mantener el botón deshabilitado mientras exista al menos una fuente en estado *Pendiente*. Al resolver todas las fuentes, habilitar el botón y mostrar el resumen consolidado de cierre.
   *Verificación:* `test('ca306_shiftClosingDisabledUntilAllSourcesHandled')` confirma que el botón permanece inactivo con fuentes pendientes y se activa al resolverlas.
 

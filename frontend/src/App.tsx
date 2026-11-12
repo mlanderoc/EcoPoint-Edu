@@ -8,7 +8,7 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { AuthProvider, RequireAuth, RequireRole, LoginPage, useAuth } from '@/features/auth'
 import { AppLayout } from '@/components/layout'
-import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
+import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/features/field'
 import { InstitutionsPage, SourcesPage, UsersPage, CrewsPage, CategoriesPage } from '@/features/admin'
 import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
@@ -77,6 +77,31 @@ export function AppRoutes() {
           element={
             <RoutedAppLayout>
               <FieldDashboard />
+            </RoutedAppLayout>
+          }
+        />
+
+        <Route
+          path="/campo/turno/:id"
+          element={
+            <RoutedAppLayout>
+              <ShiftPage />
+            </RoutedAppLayout>
+          }
+        />
+        <Route
+          path="/campo/turno/:id/poblacion"
+          element={
+            <RoutedAppLayout>
+              <PopulationPage />
+            </RoutedAppLayout>
+          }
+        />
+        <Route
+          path="/campo/turno/:id/bolsas/nueva"
+          element={
+            <RoutedAppLayout>
+              <NewBagPage />
             </RoutedAppLayout>
           }
         />
