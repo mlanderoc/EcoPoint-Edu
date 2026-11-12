@@ -115,7 +115,8 @@ public class Quartering extends VerifiableRecord {
 
     /**
      * Applies the 2 % quality control (RN-052): the quartering is CONFORME when
-     * the difference is within the tolerance, otherwise NO_CONFORME. An annulled
+     * the difference is within the tolerance, otherwise NO_CONFORME. Without a
+     * valid sample weight it cannot be checked, so it is NO_CONFORME. An annulled
      * quartering keeps its status.
      *
      * @param tolerancePercent maximum allowed difference, in percent
@@ -123,6 +124,10 @@ public class Quartering extends VerifiableRecord {
      */
     public QualityStatus evaluateQuality(BigDecimal tolerancePercent) {
         if (qualityStatus == QualityStatus.ANULADO) {
+            return qualityStatus;
+        }
+        if (sampleWeight == null || sampleWeight.signum() <= 0 || tolerancePercent == null) {
+            this.qualityStatus = QualityStatus.NO_CONFORME;
             return qualityStatus;
         }
         BigDecimal allowedKg = sampleWeight.multiply(tolerancePercent);

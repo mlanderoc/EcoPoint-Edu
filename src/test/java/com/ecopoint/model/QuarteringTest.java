@@ -54,6 +54,14 @@ class QuarteringTest {
     }
 
     @Test
+    void rn052_quarteringWithoutSampleWeightIsNotConforming() {
+        Quartering withoutSample = new Quartering(null, 1L, new BigDecimal("120.00"), null,
+                new VerificationInfo(10L, AT));
+
+        assertEquals(QualityStatus.NO_CONFORME, withoutSample.evaluateQuality(TOLERANCE));
+    }
+
+    @Test
     void rn052_exactlyTwoPercentIsStillConforming() {
         Quartering quartering = sampleOf("50.00", "NEGRO", "49.00");
 
