@@ -61,10 +61,13 @@ public class User {
     /**
      * Returns the full name of the user.
      *
-     * @return first name and last name separated by a space
+     * @return first name and last name separated by a space, without extra spaces
+     *         when one of them is missing
      */
     public String getFullName() {
-        return (firstName == null ? "" : firstName.trim()) + " " + (lastName == null ? "" : lastName.trim());
+        String first = firstName == null ? "" : firstName.trim();
+        String last = lastName == null ? "" : lastName.trim();
+        return (first + " " + last).trim();
     }
 
     /**
