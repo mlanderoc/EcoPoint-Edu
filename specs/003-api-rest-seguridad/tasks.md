@@ -85,7 +85,7 @@ Reglas:
 
 ## Fase 5 — Cierre
 
-- [ ] **T20. Matriz de permisos.** `PermissionMatrixIT`: por cada permiso, una ruta representativa con cada rol (sección 7 del plan). *(Carlos)*
+- [x] **T20. Matriz de permisos.** `PermissionMatrixIT`: por cada permiso, una ruta representativa con cada rol (sección 7 del plan). *(Carlos)*
   *Verificación:* CA-203, CA-204 y CA-211.
 
 - [ ] **T21. OpenAPI.** `OpenApiConfig` con título, versión y descripción de la sesión; `OpenApiIT` con el perfil `dev`. *(Merlín)*
