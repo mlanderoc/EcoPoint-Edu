@@ -7,13 +7,21 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { AuthProvider, RequireAuth, RequireRole, RequirePermission, hasPermission } from '@/features/auth'
+import {
+  AuthProvider,
+  RequireAuth,
+  RequireRole,
+  RequirePermission,
+  hasPermission,
+  Permission,
+  ALL_PERMISSIONS,
+} from '@/features/auth'
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
 import { Sidebar, BottomNav, AppLayout } from '@/components/layout'
 import { mockUsers } from '@/mocks/data/seedData'
 import { User } from '@/types'
 
-describe('Role Guards and Conditional Visibility (T310, CA-300, R-311)', () => {
+describe('Role Guards and Conditional Visibility (T310, CA-300, R-311, RN-081)', () => {
   const teacherUser: User = mockUsers.find((u) => u.role === 'DOCENTE')!
   const studentUser: User = mockUsers.find((u) => u.role === 'ESTUDIANTE_UNIVERSITARIO')!
 
@@ -138,7 +146,7 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311)', () => {
   it('RequirePermission renders fallback or null when user lacks required permission', () => {
     render(
       <AuthProvider initialUser={studentUser}>
-        <RequirePermission permission="OPEN_SHIFT" fallback={<div>No autorizado</div>}>
+        <RequirePermission permission="MANAGE_SHIFTS" fallback={<div>No autorizado</div>}>
           <button>Botón Abrir Turno</button>
         </RequirePermission>
       </AuthProvider>
@@ -148,20 +156,38 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311)', () => {
     expect(screen.queryByRole('button', { name: 'Botón Abrir Turno' })).toBeNull()
   })
 
-  it('hasPermission evaluates permissions strictly per AGENTS.md access policies', () => {
-    expect(hasPermission('DOCENTE', 'OPEN_SHIFT')).toBe(true)
-    expect(hasPermission('DOCENTE', 'CLOSE_SHIFT')).toBe(true)
-    expect(hasPermission('DOCENTE', 'MANAGE_STUDIES')).toBe(true)
-    expect(hasPermission('DOCENTE', 'MANAGE_ADMIN')).toBe(true)
-    expect(hasPermission('DOCENTE', 'RECORD_HAZARDOUS_WASTE')).toBe(true)
+  // RN-081 Permission Matrix exact test: 2 roles x 11 permissions = 22 assertions
+  const expectedMatrix: Array<[Permission, boolean, boolean]> = [
+    ['MANAGE_ADMINISTRATION', true, false],
+    ['MANAGE_STUDIES', true, false],
+    ['MANAGE_SHIFTS', true, false],
+    ['REGISTER_POPULATION', true, true],
+    ['REGISTER_BAGS', true, true],
+    ['REGISTER_QUARTERING', true, true],
+    ['REGISTER_HAZARDOUS_WASTE', true, true],
+    ['VERIFY_RECORDS', true, true],
+    ['ANNUL_QUARTERING', true, true],
+    ['ATTEND_ALERTS', true, true],
+    ['VIEW_INDICATORS', true, true],
+  ]
 
-    expect(hasPermission('ESTUDIANTE_UNIVERSITARIO', 'OPEN_SHIFT')).toBe(false)
-    expect(hasPermission('ESTUDIANTE_UNIVERSITARIO', 'CLOSE_SHIFT')).toBe(false)
-    expect(hasPermission('ESTUDIANTE_UNIVERSITARIO', 'MANAGE_STUDIES')).toBe(false)
-    expect(hasPermission('ESTUDIANTE_UNIVERSITARIO', 'MANAGE_ADMIN')).toBe(false)
-    expect(hasPermission('ESTUDIANTE_UNIVERSITARIO', 'RECORD_HAZARDOUS_WASTE')).toBe(false)
+  it.each(expectedMatrix)(
+    'rn081_permissionMatrix: %s => DOCENTE=%s, ESTUDIANTE_UNIVERSITARIO=%s',
+    (perm, teacher, student) => {
+      expect(hasPermission('DOCENTE', perm)).toBe(teacher)
+      expect(hasPermission('ESTUDIANTE_UNIVERSITARIO', perm)).toBe(student)
+    }
+  )
 
-    expect(hasPermission(null, 'OPEN_SHIFT')).toBe(false)
+  it('rn081_matrixCoversAll11Permissions', () => {
+    expect(ALL_PERMISSIONS).toHaveLength(11)
+  })
+
+  it('rn081_nullRoleOrPermissionReturnsFalse', () => {
+    expect(hasPermission(null, 'MANAGE_SHIFTS')).toBe(false)
+    expect(hasPermission(undefined, 'MANAGE_SHIFTS')).toBe(false)
+    // @ts-expect-error test null permission
+    expect(hasPermission('DOCENTE', null)).toBe(false)
   })
 
   it('AppLayout redirects to /login when user has no session', async () => {
@@ -187,3 +213,4 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311)', () => {
     expect(screen.queryByText('Contenido Protegido')).toBeNull()
   })
 })
+

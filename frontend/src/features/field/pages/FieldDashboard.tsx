@@ -75,8 +75,8 @@ export function FieldDashboard() {
           </div>
         </div>
 
-        {/* Botones de Control de Turno: Visibles SOLO para Docentes (CA-300) */}
-        <RequirePermission permission="OPEN_SHIFT">
+        {/* Botones de Control de Turno: Visibles SOLO para Docentes (CA-300 / RN-081) */}
+        <RequirePermission permission="MANAGE_SHIFTS">
           <div className="flex items-center gap-2 flex-wrap">
             <Button
               variant={shiftOpen ? 'outline' : 'primary'}
