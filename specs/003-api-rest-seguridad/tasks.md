@@ -52,8 +52,8 @@ Reglas:
 - [x] **T10. Servicios de usuarios, cuadrillas y subcategorías.** `UserService` (contraseña con BCrypt, correo único RN-084), `CrewService` (RN-085, en una transacción) y `WasteCategoryService`. *(Estefanía)*
   *Verificación:* pruebas unitarias de cada regla.
 
-- [ ] **T11. Rutas de administración.** Controladores y DTO de `institutions`, `sources`, `users`, `crews` y `waste-categories`, con paginación de usuarios. `PasswordStorageIT`. *(Carlos)*
-  *Verificación:* `@WebMvcTest` por controlador; CA-210 en `PasswordStorageIT`.
+- [x] **T11. Rutas de administración.** Controladores y DTO de `institutions`, `sources`, `users`, `crews` y `waste-categories`, con paginación de usuarios. `AdministrationIT` (incluye CA-210). *(Carlos)*
+  *Verificación:* `@WebMvcTest` por controlador; CA-210 en `AdministrationIT`.
 
 ## Fase 3 — Estudios, turnos y bolsas
 

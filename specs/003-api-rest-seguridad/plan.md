@@ -190,7 +190,7 @@ Los servicios **no** tienen reglas que ya estén en el modelo o en los validador
 | `@WebMvcTest` de controladores | Rutas, JSON de entrada y salida, formato de error, códigos HTTP: CA-205, CA-206, CA-207, CA-208 (repositorio simulado que lanza `PersistenceException`) | `./mvnw test` |
 | `AuthIT` | CA-200, CA-201, CA-202, bloqueo por intentos, sesión y CSRF, contra `ecopoint_test` con la semilla | `./mvnw verify` |
 | `PermissionMatrixIT` | CA-203, CA-204, CA-211: por cada permiso, una ruta representativa llamada con cada rol | `./mvnw verify` |
-| `PasswordStorageIT` | CA-210: después de crear un usuario por la API, la columna `clave_hash` empieza por `$2a$` y no contiene la contraseña | `./mvnw verify` |
+| `AdministrationIT` | CA-210: después de crear un usuario por la API, la columna `clave_hash` empieza por `$2a$` y no contiene la contraseña | `./mvnw verify` |
 | `OpenApiIT` | CA-212: el documento OpenAPI tiene las rutas de la sección 5 | `./mvnw verify` con perfil `dev` |
 
 **CA-211:** la matriz tiene 11 permisos. Para los 3 que el estudiante no tiene (`MANAGE_ADMINISTRATION`, `MANAGE_STUDIES`, `MANAGE_SHIFTS`) se prueba "Sí" con el docente y "No" (403) con el estudiante. Los otros 8 los tienen los dos roles (D9), así que se prueba "Sí" con ambos; el "No" de esos permisos no existe con los roles actuales. `VIEW_INDICATORS` se prueba en la spec 006, que crea su ruta.
