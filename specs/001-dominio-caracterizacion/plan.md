@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **APROBADO** (11 nov 2026) — R1 pendiente de confirmar |
+| Estado | **APROBADO** (11 nov 2026) |
 | Spec | [spec.md](spec.md) (aprobada) |
 | Redacta / implementa | Claude |
 | Revisa | Antigravity y equipo |
@@ -307,7 +307,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 
 | # | Tema | Propuesta |
 | --- | --- | --- |
-| R1 | **Rótulo al agregar una segunda bolsa.** CA-030 dice que al registrar la segunda bolsa de la misma fuente y turno, los rótulos quedan `AU-D3-M-1` y `AU-D3-M-2`. Pero la primera bolsa ya fue rotulada a mano como `AU-D3-M`, y cambiarle el rótulo en el sistema haría que no coincida con la bolsa física ni con la planilla. | Que la primera conserve `AU-D3-M` y las siguientes sean `AU-D3-M-2`, `AU-D3-M-3`. **Requiere ajustar CA-030; confirmar con el equipo.** Mientras no se confirme, se implementa como dice la spec. |
+| R1 | Rótulo al agregar una segunda bolsa de la misma fuente y turno. | **Decidido (11 nov 2026):** la primera conserva `AU-D3-M` y las siguientes son `AU-D3-M-2`, `AU-D3-M-3`. Se ajustaron RN-031 y CA-030. |
 | R2 | Borrar el código viejo deja el proyecto sin aplicación ejecutable hasta la spec 003. | Se acepta (D11). El tag `v1-modelo-anterior` conserva la versión Swing. |
 | R3 | `@author` en el JavaDoc de las clases nuevas. | **Decidido:** según el reparto de paquetes de `src/TEAM.md` (sección 10). |
 

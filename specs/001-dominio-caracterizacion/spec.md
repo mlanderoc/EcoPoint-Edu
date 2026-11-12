@@ -79,7 +79,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 ### 3.4 Bolsas y pesajes
 
 - **RN-030** (Debe). Toda bolsa pertenece a una fuente participante del estudio y a un turno ABIERTO.
-- **RN-031** (Debe). El sistema genera el rótulo con el formato `{CÓDIGO_FUENTE}-D{día}-{M|T}`, por ejemplo `AU-D3-M`. Si la misma fuente tiene más de una bolsa en el mismo turno, se agrega un consecutivo: `AU-D3-M-1`, `AU-D3-M-2`. El usuario no escribe el rótulo.
+- **RN-031** (Debe). El sistema genera el rótulo con el formato `{CÓDIGO_FUENTE}-D{día}-{M|T}`, por ejemplo `AU-D3-M`. Si la misma fuente tiene más de una bolsa en el mismo turno, la primera conserva `AU-D3-M` y las siguientes llevan consecutivo: `AU-D3-M-2`, `AU-D3-M-3`. Un rótulo asignado nunca cambia, porque ya está escrito en la bolsa y en la planilla. El usuario no escribe el rótulo.
 - **RN-032** (Debe). El rótulo es único dentro del estudio.
 - **RN-033** (Debe). Peso bruto > 0 y tara ≥ 0, en kg con 2 decimales. **Peso bruto > tara.**
 - **RN-034** (Debe). Peso neto = peso bruto − tara. Lo calcula el sistema; nunca se digita.
@@ -197,7 +197,7 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 
 **Bolsas**
 
-- **CA-030.** Dada la fuente `AU`, día 3, turno mañana, cuando se registra la primera bolsa, entonces su rótulo es `AU-D3-M`; cuando se registra la segunda, los rótulos quedan `AU-D3-M-1` y `AU-D3-M-2`.
+- **CA-030.** Dada la fuente `AU`, día 3, turno mañana, cuando se registra la primera bolsa, entonces su rótulo es `AU-D3-M`; cuando se registran la segunda y la tercera, sus rótulos son `AU-D3-M-2` y `AU-D3-M-3`, y la primera sigue siendo `AU-D3-M`.
 - **CA-031.** Dado peso bruto 3,20 kg y tara 3,50 kg, cuando se valida, entonces se rechaza (RN-033).
 - **CA-032.** Dado peso bruto 12,40 kg, tara 0,40 kg y volumen 0,080 m³, cuando se registra, entonces peso neto = 12,00 kg y densidad = 150,00 kg/m³.
 - **CA-033.** Dado peso neto 70 kg con el límite por defecto, cuando se registra, entonces se acepta, queda marcada como atípica y se genera una alerta VALOR_ATIPICO.
