@@ -13,7 +13,7 @@ Reglas: en orden, un commit por responsable, `./mvnw verify`, `npm test`, `npm r
 - [x] **T400. Servicio.** En `VerificationService`: resumen de depuración por turno (R-424), registros de un turno y un registro por tipo e id, con sus valores (R-420, R-421). *(Estefanía)*
   *Verificación:* pruebas unitarias de cada consulta.
 
-- [ ] **T401. Rutas.** `GET /studies/{id}/verification-summary`, `GET /shifts/{id}/records`, `GET /records/{tipo}/{id}` y su DTO `VerifiableRecordResponse`; `VerificationSummaryIT` con la semilla. *(Carlos)*
+- [x] **T401. Rutas.** `GET /studies/{id}/verification-summary`, `GET /shifts/{id}/records`, `GET /records/{tipo}/{id}` y su DTO `VerifiableRecordResponse`; `VerificationSummaryIT` con la semilla. *(Carlos)*
   *Verificación:* CA-410 en el backend; `@WebMvcTest` de las rutas.
 
 ## Fase 2 — Cuarteo y densidad
