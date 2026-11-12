@@ -46,7 +46,7 @@ Reglas:
 
 ## Fase 2 — Administración
 
-- [ ] **T09. Servicios de institución y fuentes.** `InstitutionService` y `GenerationSourceService` (RN-001 a RN-005, permisos). *(Estefanía)*
+- [x] **T09. Servicios de institución y fuentes.** `InstitutionService` y `GenerationSourceService` (RN-001 a RN-005, permisos). *(Estefanía)*
   *Verificación:* pruebas unitarias, incluido el 403 para el estudiante y la fuente con bolsas que solo se desactiva.
 
 - [ ] **T10. Servicios de usuarios, cuadrillas y subcategorías.** `UserService` (contraseña con BCrypt, correo único RN-084), `CrewService` (RN-085, en una transacción) y `WasteCategoryService`. *(Estefanía)*
