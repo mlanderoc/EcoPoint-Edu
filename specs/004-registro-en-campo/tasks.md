@@ -61,7 +61,7 @@
 
 ## Fase 2 — Autenticación, Sesión y Control de Acceso
 
-- [ ] **T308. Cliente HTTP base con withCredentials y normalizador de errores (R-303).**
+- [x] **T308. Cliente HTTP base con withCredentials y normalizador de errores (R-303).**
   Crear `src/services/apiClient.ts` con Axios o Fetch configurado con `withCredentials: true` para envío de cookies de sesión `HttpOnly` (sin manejo de tokens en LocalStorage). Normalizar las respuestas con el formato de la Spec 003 (`{ timestamp, status, errorCode, message, path, fieldErrors }`) y notificar vencimiento de sesión ante error 401.
   *Verificación:* Pruebas unitarias de cliente HTTP verificando la propagación de mensajes en español y la lista de `fieldErrors`.
 
