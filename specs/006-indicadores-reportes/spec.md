@@ -4,7 +4,7 @@
 | --- | --- |
 | Estado | **APROBADA** (11 nov 2026) |
 | Redacta | Claude |
-| Implementa / revisa | Antigravity / Claude |
+| Implementa / revisa | Claude / Antigravity |
 | Requerimientos | RF-12, RF-13 |
 | Depende de | Spec 005 aprobada; decisión D7 |
 | Fecha | 2026-11-11 |

@@ -51,6 +51,23 @@ public record BagLabel(String sourceCode, int dayNumber, ShiftType shiftType, in
     }
 
     /**
+     * Reads a label written as text, such as {@code AU-D3-M} or {@code AU-D3-M-2}.
+     *
+     * @param text label text
+     * @return the label
+     * @throws InvalidDataException if the text does not follow the label format
+     */
+    public static BagLabel parse(String text) {
+        if (text == null || !text.matches("^[A-Z0-9]{2,6}-D[1-8]-[MT](-[0-9]+)?$")) {
+            throw new InvalidDataException("rotulo", "El rótulo no tiene el formato FUENTE-D<día>-<M|T>.");
+        }
+        String[] parts = text.split("-");
+        ShiftType shift = "M".equals(parts[2]) ? ShiftType.MANANA : ShiftType.TARDE;
+        int sequence = parts.length > 3 ? Integer.parseInt(parts[3]) : 0;
+        return new BagLabel(parts[0], Integer.parseInt(parts[1].substring(1)), shift, sequence);
+    }
+
+    /**
      * Returns a copy of this label with the given sequence number.
      *
      * @param newSequence bag number within the source and shift (1 or more)

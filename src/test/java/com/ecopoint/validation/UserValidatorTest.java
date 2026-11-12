@@ -74,4 +74,13 @@ class UserValidatorTest {
         assertThrows(InvalidDataException.class, () -> UserValidator.validate(
                 new User(null, "Ana", "Pérez", "ana@unicesar.edu.co", UserRole.DOCENTE, null)));
     }
+
+    @Test
+    void r120_passwordMustHaveBetweenEightAndSeventyTwoCharacters() {
+        assertThrows(InvalidDataException.class, () -> UserValidator.validatePassword(null));
+        assertThrows(InvalidDataException.class, () -> UserValidator.validatePassword("       "));
+        assertThrows(InvalidDataException.class, () -> UserValidator.validatePassword("corta12"));
+        assertThrows(InvalidDataException.class, () -> UserValidator.validatePassword("x".repeat(73)));
+        UserValidator.validatePassword("EcoPoint2026");
+    }
 }

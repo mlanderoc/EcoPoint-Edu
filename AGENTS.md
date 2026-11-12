@@ -27,8 +27,7 @@ Este archivo es la "constitución" del proyecto. Lo leen y lo cumplen **todos**:
 
 | Spec | Implementa | Revisa |
 | --- | --- | --- |
-| 001 Dominio, 002 Persistencia, 007 Plano | Claude | Antigravity |
-| 003 API, 004 Registro en campo, 005 Cuarteo y calidad, 006 Indicadores | Antigravity | Claude |
+| Todas (001 a 007) | Claude | Antigravity |
 
 ## 3. Stack tecnológico
 
@@ -79,6 +78,7 @@ Dónde va cada regla:
   | Excepción | Cuándo | HTTP |
   | --- | --- | --- |
   | `InvalidDataException` | Formato, nulo o rango inválido | 400 |
+  | `UnauthorizedException` | Correo o contraseña incorrectos, cuenta bloqueada o sesión inválida | 401 |
   | `AccessDeniedException` | El rol no permite la acción | 403 |
   | `ResourceNotFoundException` | El registro no existe | 404 |
   | `BusinessRuleException` | Viola una regla de negocio | 422 |

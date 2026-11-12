@@ -28,6 +28,7 @@ public class SamplingShift {
     private final int dayNumber;
     private final ShiftType type;
     private ShiftStatus status;
+    private Long crewId;
     private ShiftPopulation population;
     private final List<WasteBag> bags;
     private Quartering quartering;
@@ -61,6 +62,36 @@ public class SamplingShift {
         this.status = ShiftStatus.ABIERTO;
         this.bags = new ArrayList<>();
         this.sourcesWithoutGeneration = new HashSet<>();
+    }
+
+    /**
+     * Rebuilds a shift read from the database with everything recorded in it
+     * (spec 002, plan R1). The bags keep their stored labels. Only the
+     * persistence layer must use it.
+     *
+     * @param id                       shift id
+     * @param studyId                  study id
+     * @param dayNumber                sampling day
+     * @param type                     morning or afternoon
+     * @param status                   stored status
+     * @param population               stored population, or null
+     * @param bags                     stored bags
+     * @param quartering               stored quartering, or null
+     * @param density                  stored density measurement, or null
+     * @param sourcesWithoutGeneration sources marked as having no generation
+     * @return the rebuilt shift
+     */
+    public static SamplingShift restore(Long id, Long studyId, int dayNumber, ShiftType type, ShiftStatus status,
+                                        ShiftPopulation population, List<WasteBag> bags, Quartering quartering,
+                                        DensityMeasurement density, Set<Long> sourcesWithoutGeneration) {
+        SamplingShift shift = new SamplingShift(id, studyId, dayNumber, type);
+        shift.status = status;
+        shift.population = population;
+        shift.bags.addAll(bags);
+        shift.quartering = quartering;
+        shift.density = density;
+        shift.sourcesWithoutGeneration.addAll(sourcesWithoutGeneration);
+        return shift;
     }
 
     /**
@@ -300,6 +331,24 @@ public class SamplingShift {
 
     public ShiftType getType() {
         return type;
+    }
+
+    /**
+     * Returns the crew that works the shift.
+     *
+     * @return crew id, or null when no crew was assigned
+     */
+    public Long getCrewId() {
+        return crewId;
+    }
+
+    /**
+     * Assigns the crew that works the shift (spec 004, R-331 and R-341).
+     *
+     * @param crewId crew id, or null to leave the shift without crew
+     */
+    public void assignCrew(Long crewId) {
+        this.crewId = crewId;
     }
 
     public ShiftStatus getStatus() {

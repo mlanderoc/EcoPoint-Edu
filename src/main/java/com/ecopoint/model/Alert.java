@@ -48,6 +48,33 @@ public class Alert {
     }
 
     /**
+     * Rebuilds an alert read from the database, including its attention data
+     * (spec 002, plan R1). Only the persistence layer must use it.
+     *
+     * @param id          alert id
+     * @param type        alert type
+     * @param targetType  kind of record that caused it
+     * @param targetId    id of that record
+     * @param description explanation in Spanish
+     * @param createdAt   when it was raised
+     * @param attended    whether it was attended
+     * @param attendedBy  who attended it, or null
+     * @param attendedAt  when it was attended, or null
+     * @param attendNote  attention note, or null
+     * @return the rebuilt alert
+     */
+    public static Alert restore(Long id, AlertType type, String targetType, Long targetId, String description,
+                                LocalDateTime createdAt, boolean attended, Long attendedBy, LocalDateTime attendedAt,
+                                String attendNote) {
+        Alert alert = new Alert(id, type, targetType, targetId, description, createdAt);
+        alert.attended = attended;
+        alert.attendedBy = attendedBy;
+        alert.attendedAt = attendedAt;
+        alert.attendNote = attendNote;
+        return alert;
+    }
+
+    /**
      * Marks the alert as attended, with a mandatory note (RN-073).
      *
      * @param user user attending the alert

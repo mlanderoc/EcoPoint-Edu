@@ -27,6 +27,7 @@ classDiagram
         +InvalidDataException(String fieldName, String problemDescription)
         +InvalidDataException(String message)
         +getFieldName() String
+        +getProblemDescription() String
     }
 
     class BusinessRuleException {
@@ -38,6 +39,11 @@ classDiagram
     class QualityControlException {
         +String ERROR_CODE = "ERR_QUALITY_CONTROL"$
         +QualityControlException(String message)
+    }
+
+    class UnauthorizedException {
+        +String ERROR_CODE = "ERR_UNAUTHORIZED"$
+        +UnauthorizedException(String message)
     }
 
     class AccessDeniedException {
@@ -65,6 +71,7 @@ classDiagram
     EcoPointException <|-- InvalidDataException
     EcoPointException <|-- BusinessRuleException
     BusinessRuleException <|-- QualityControlException
+    EcoPointException <|-- UnauthorizedException
     EcoPointException <|-- AccessDeniedException
     EcoPointException <|-- ResourceNotFoundException
     EcoPointException <|-- PersistenceException
@@ -79,6 +86,7 @@ classDiagram
 | **`InvalidDataException`** | `ERR_INVALID_DATA` | 400 | Source code `au` or `AULAS12` (CA-001); tare greater than gross weight (CA-031); population of zero people (CA-021); weights with more than 2 decimals; latitude 95 (CA-003); photo larger than 5 MB (RN-090) |
 | **`BusinessRuleException`** | `ERR_BUSINESS_RULE` | 422 | Duplicated source code (CA-002); bag without shift population (CA-022); study skipping a status (CA-013); sample outside 45–55 kg (CA-050); verifying a record you typed (CA-060); deleting a source with bags (RN-005) |
 | **`QualityControlException`** | `ERR_QUALITY_CONTROL` | 422 | Closing a study with a non-conforming quartering still unresolved (RN-016) |
+| **`UnauthorizedException`** | `ERR_UNAUTHORIZED` | 401 | Wrong email or password, inactive account or account locked after 5 failed logins (CA-202, R-126); the message never reveals whether the email exists |
 | **`AccessDeniedException`** | `ERR_FORBIDDEN` | 403 | A university student trying to open or close a shift (CA-204) or to create a study (CA-203); an inactive user |
 | **`ResourceNotFoundException`** | `ERR_NOT_FOUND` | 404 | Thrown by the service layer when a study, shift, bag or user id does not exist |
 | **`PersistenceException`** | `ERR_PERSISTENCE` | 500 | Database failures in the persistence layer (spec 002); the user only sees a generic message |

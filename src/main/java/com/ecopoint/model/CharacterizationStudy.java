@@ -45,6 +45,37 @@ public class CharacterizationStudy {
     }
 
     /**
+     * Rebuilds a study read from the database with its stored status, dates and
+     * reopenings, without repeating the lifecycle transitions (spec 002, plan R1).
+     * Only the persistence layer must use it; new studies are created with the
+     * constructor.
+     *
+     * @param id            study id
+     * @param institutionId institution id
+     * @param status        stored status
+     * @param dates         the 8 stored dates in order (an element may be null)
+     * @param reopenings    stored reopenings, oldest first
+     * @return the rebuilt study
+     * @throws InvalidDataException if there are not exactly 8 dates
+     */
+    public static CharacterizationStudy restore(Long id, Long institutionId, StudyStatus status,
+                                                List<LocalDate> dates, List<StudyReopening> reopenings) {
+        CharacterizationStudy study = new CharacterizationStudy(id, institutionId);
+        if (dates == null || dates.size() != SAMPLING_DAYS) {
+            throw new InvalidDataException("fechas",
+                    "El estudio necesita exactamente " + SAMPLING_DAYS + " fechas, una por día de muestreo.");
+        }
+        for (int i = 0; i < SAMPLING_DAYS; i++) {
+            study.days.get(i).setDate(dates.get(i));
+        }
+        study.status = status;
+        if (reopenings != null) {
+            study.reopenings.addAll(reopenings);
+        }
+        return study;
+    }
+
+    /**
      * Assigns the dates of the 8 days at once, in order from day 1 to day 8.
      * Their order is checked by {@code StudyValidator} (RN-011).
      *

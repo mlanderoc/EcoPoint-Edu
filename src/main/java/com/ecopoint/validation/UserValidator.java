@@ -24,6 +24,9 @@ public final class UserValidator {
 
     private static final int MIN_NAME_LENGTH = 2;
     private static final int MAX_NAME_LENGTH = 80;
+    /** Shortest password accepted when a teacher creates or changes it (spec 003, R-120). */
+    public static final int MIN_PASSWORD_LENGTH = 8;
+    private static final int MAX_PASSWORD_LENGTH = 72;
 
     private UserValidator() {
     }
@@ -73,6 +76,23 @@ public final class UserValidator {
         if (taken) {
             throw new BusinessRuleException("El correo " + user.getEmail().trim()
                     + " ya está registrado por otro usuario.");
+        }
+    }
+
+    /**
+     * Validates a new password before it is hashed (spec 003, R-120). BCrypt
+     * only uses the first 72 bytes, so longer passwords are rejected.
+     *
+     * @param password password typed by the teacher
+     * @throws InvalidDataException if it is missing, too short or too long
+     */
+    public static void validatePassword(String password) {
+        if (password == null || password.isBlank()) {
+            throw new InvalidDataException("contrasena", "La contraseña es obligatoria.");
+        }
+        if (password.length() < MIN_PASSWORD_LENGTH || password.length() > MAX_PASSWORD_LENGTH) {
+            throw new InvalidDataException("contrasena", "La contraseña debe tener entre " + MIN_PASSWORD_LENGTH
+                    + " y " + MAX_PASSWORD_LENGTH + " caracteres.");
         }
     }
 

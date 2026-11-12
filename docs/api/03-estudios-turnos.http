@@ -1,0 +1,82 @@
+### Estudios, turnos y bolsas (spec 003, sección 5.2). El estudio 2 de la semilla está en ejecución.
+@base = http://localhost:8080/api/v1
+@xsrf = pegue-aqui-el-token
+
+### Estudios de la institución del usuario
+GET {{base}}/studies
+
+### Un estudio con sus 8 días, sus fuentes y sus registros pendientes
+GET {{base}}/studies/2
+
+### Crear un estudio planificado (el día 1 es de descarte)
+POST {{base}}/studies
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{
+  "days": [
+    { "dayNumber": 1, "date": "2027-02-01" }, { "dayNumber": 2, "date": "2027-02-02" },
+    { "dayNumber": 3, "date": "2027-02-03" }, { "dayNumber": 4, "date": "2027-02-04" },
+    { "dayNumber": 5, "date": "2027-02-05" }, { "dayNumber": 6, "date": "2027-02-08" },
+    { "dayNumber": 7, "date": "2027-02-09" }, { "dayNumber": 8, "date": "2027-02-10" }
+  ]
+}
+
+### Avanzar el estado (RN-014); para reabrir uno cerrado envíe también "reason"
+POST {{base}}/studies/3/status
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "status": "EN_EJECUCION" }
+
+### Los 16 turnos posibles del estudio con su avance
+GET {{base}}/studies/2/shifts
+
+### Abrir el turno de la mañana del día 3 (solo docente)
+POST {{base}}/studies/2/shifts
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "dayNumber": 3, "type": "MANANA", "crewId": 1 }
+
+### Turno con el estado de cada fuente (use el id que devolvió la petición anterior)
+GET {{base}}/shifts/21
+
+### Bolsa antes de la población: 422 "Registre primero la población del turno." (CA-206)
+POST {{base}}/shifts/21/bags
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "sourceId": 1, "grossWeight": 12.40, "tare": 0.40, "volume": 0.080 }
+
+### Registrar la población del turno
+PUT {{base}}/shifts/21/population
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "students": 300, "teachers": 12, "staff": 6 }
+
+### Registrar una bolsa: devuelve rótulo, peso neto y densidad
+POST {{base}}/shifts/21/bags
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "sourceId": 1, "grossWeight": 12.40, "tare": 0.40, "volume": 0.080 }
+
+### Tara mayor que el bruto: 400 con fieldErrors en "tare" (CA-205)
+POST {{base}}/shifts/21/bags
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "sourceId": 1, "grossWeight": 3.20, "tare": 3.50, "volume": 0.080 }
+
+### Bolsas del turno, una página a la vez
+GET {{base}}/shifts/21/bags?page=0&size=50
+
+### Marcar una fuente "sin generación" (RN-024)
+POST {{base}}/shifts/21/sources/2/no-generation
+X-XSRF-TOKEN: {{xsrf}}
+
+### Cerrar el turno: solo si ninguna fuente quedó pendiente (solo docente)
+POST {{base}}/shifts/21/close
+X-XSRF-TOKEN: {{xsrf}}

@@ -30,3 +30,8 @@ target/
 frontend/node_modules/
 frontend/dist/
 
+# Variables de entorno locales (nunca se suben)
+.env
+
+# Fotos de evidencia subidas en desarrollo (spec 003)
+uploads/
