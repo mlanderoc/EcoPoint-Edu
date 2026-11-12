@@ -33,7 +33,7 @@ Reglas:
 
 ## Fase 2 — Repositorios de configuración (Merlín)
 
-- [ ] **T05. Traducción de errores.** Utilidad que convierte `DataAccessException` en `PersistenceException` con la operación en español (R-021).
+- [x] **T05. Traducción de errores.** Utilidad que convierte `DataAccessException` en `PersistenceException` con la operación en español (R-021).
   *Verificación:* prueba con una consulta inválida.
 
 - [ ] **T06. Institución y fuentes.** `InstitutionRepository`, `GenerationSourceRepository` y sus implementaciones JDBC (incluye la geometría `jsonb`).
