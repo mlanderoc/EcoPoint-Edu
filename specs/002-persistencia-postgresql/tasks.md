@@ -64,7 +64,7 @@ Reglas:
 
 ## Fase 4 — Cierre
 
-- [ ] **T14. Configuración.** `ConfigurationIT`: la aplicación se conecta a otra base solo cambiando `ECOPOINT_DB_URL` (CA-108).
+- [x] **T14. Configuración.** `ConfigurationIT`: la aplicación se conecta a otra base solo cambiando `ECOPOINT_DB_URL` (CA-108).
   *Verificación:* la prueba pasa.
 
 - [ ] **T15. Documentación.** `docs/base-de-datos.md` con el diagrama Mermaid de tablas y relaciones, el propósito de cada tabla y las decisiones de diseño (R-060). README: instalar PostgreSQL, definir las variables y recrear la base (R-053). Actualizar `docs/layer-diagram.md`.
