@@ -17,7 +17,7 @@ La **Spec 004** implementa la primera versión navegable del frontend web de **E
 
 El diseño y la arquitectura están orientados a resolver la realidad operativa del muestreo: **de pie, en dispositivo móvil (desde 360 px de ancho), bajo luz solar directa y con guantes de látex o nitrilo**. La aplicación debe permitir registrar una bolsa en menos de 30 segundos, generar el rótulo físico de marcación de inmediato en tipografía gigante y evitar cualquier pérdida o duplicación de datos por doble toque o desconexión transitoria.
 
-Para desacoplar el desarrollo de la interfaz de la implementación del backend Spring Boot (Spec 003), el frontend incluye una capa de **Mock Service Worker (MSW v2)** que intercepta las peticiones `/api/v1/*` a nivel de red en el navegador. La autenticación y sesión se gestionan mediante **cookies `HttpOnly`** del servidor (`withCredentials: true`), sin exponer tokens en JavaScript ni en LocalStorage. Esto permite ejecutar y probar el 100 % de los criterios de aceptación (CA-300 a CA-310) sin depender de que el backend esté levantado, conmutando a producción de forma transparente mediante una variable de entorno (`VITE_USE_MOCK_API=false`).
+Para desacoplar el desarrollo de la interfaz de la implementación del backend Spring Boot (Spec 003), el frontend incluye una capa de **Mock Service Worker (MSW v3)** que intercepta las peticiones `/api/v1/*` a nivel de red en el navegador. La autenticación y sesión se gestionan mediante **cookies `HttpOnly`** del servidor (`withCredentials: true`), sin exponer tokens en JavaScript ni en LocalStorage. Esto permite ejecutar y probar el 100 % de los criterios de aceptación (CA-300 a CA-310) sin depender de que el backend esté levantado, conmutando a producción de forma transparente mediante una variable de entorno (`VITE_USE_MOCK_API=false`).
 
 ---
 
@@ -27,15 +27,15 @@ Para desacoplar el desarrollo de la interfaz de la implementación del backend S
 
 | Capa / Módulo | Tecnología | Justificación |
 | --- | --- | --- |
-| **Framework & Build** | React 18+ con Vite 6 y TypeScript 5 | Arranque instantáneo (HMR subsegundo), tipado estricto alineado con los DTOs de la Spec 003, estándar acordado en decisión D4. |
-| **Estilos & Diseño** | Tailwind CSS v4 (`@tailwindcss/vite`) + Radix UI Primitives | Sistema de diseño declarativo de última generación, configuración simplificada en CSS moderno, tokens directos de la paleta del logo y accesibilidad WAI-ARIA nativa (foco, teclado, lectores de pantalla). |
+| **Framework & Build** | React 19 con Vite 8 y TypeScript 7 | Arranque instantáneo (HMR subsegundo), tipado estricto alineado con los DTOs de la Spec 003, estándar acordado en decisión D4. |
+| **Estilos & Diseño** | Tailwind CSS v4 (`@tailwindcss/vite`) + Radix UI Primitives | Sistema de diseño declarativo de última generación, configuración simplificada en CSS moderno con `@theme`, tokens directos de la paleta del logo y accesibilidad WAI-ARIA nativa (foco, teclado, lectores de pantalla). |
 | **Estado del Servidor & Caché** | TanStack Query (React Query v5) | Manejo de estados asíncronos (`isLoading`, `isError`), invalidación automática tras mutaciones y deshabilitación nativa de botones en mutación activa (R-305, CA-310). |
-| **Gestión de Formularios** | React Hook Form + Zod | Formularios no controlados de alto rendimiento en móviles, esquemas de validación Zod sincronizados con las reglas de negocio del dominio (tara < bruto, población ≥ 0). |
-| **Enrutamiento** | React Router v6 | Enrutamiento SPA declarativo, layouts anidados (`AppLayout`, `AuthLayout`), guards por rol (`RequireRole`, `RequireAuth`). |
+| **Gestión de Formularios** | React Hook Form v7 + Zod 4 | Formularios no controlados de alto rendimiento en móviles, esquemas de validación Zod sincronizados con las reglas de negocio del dominio (tara < bruto, población ≥ 0). |
+| **Enrutamiento** | React Router v7 | Enrutamiento SPA declarativo, layouts anidados (`AppLayout`, `AuthLayout`), guards por rol (`RequireRole`, `RequireAuth`). |
 | **Gestión de Sesión** | Cookie `HttpOnly` del servidor (`withCredentials: true`) | Seguridad estricta según propuesta P1 de la Spec 003. El frontend no manipula ni almacena tokens JWT en `localStorage`; la sesión reside en la cookie y el cliente consulta `GET /api/v1/auth/me` para obtener el estado y los datos del usuario. |
-| **Mock API** | Mock Service Worker (MSW v2) | Simulación fiel a nivel de Service Worker del contrato de API REST de la Spec 003, incluyendo el ciclo de cookies de sesión, los códigos de error HTTP (400, 401, 403, 404, 422, 500) y la estructura estándar `{timestamp, status, errorCode, message, path, fieldErrors}`. |
+| **Mock API** | Mock Service Worker (MSW v3) | Simulación fiel a nivel de Service Worker del contrato de API REST de la Spec 003, incluyendo el ciclo de cookies de sesión, los códigos de error HTTP (400, 401, 403, 404, 422, 500) y la estructura estándar `{timestamp, status, errorCode, message, path, fieldErrors}`. |
 | **Iconografía** | Lucide React | Iconos SVG legibles, ligeros, consistentes y escalables para interfaces táctiles. |
-| **Pruebas Automatizadas** | Vitest + React Testing Library + MSW | Pruebas unitarias y de integración que simulan la interacción real del usuario y verifican los criterios CA-300 a CA-310. |
+| **Pruebas Automatizadas** | Vitest 5 + React Testing Library + MSW v3 | Pruebas unitarias y de integración que simulan la interacción real del usuario y verifican los criterios CA-300 a CA-310. |
 
 ### 2.2 Roles del Sistema (Decisión D9 del equipo y Matriz RN-081)
 
@@ -93,7 +93,7 @@ frontend/
 │   ├── services/                    # Cliente HTTP base y manejo global de errores
 │   │   ├── apiClient.ts             # Instancia Axios/Fetch (baseURL /api/v1, withCredentials: true)
 │   │   └── errorHandler.ts          # Normalizador de errores en el formato Spec 003
-│   ├── mocks/                       # Simulación de backend (MSW v2)
+│   ├── mocks/                       # Simulación de backend (MSW v3)
 │   │   ├── browser.ts               # Inicialización del Service Worker en navegador
 │   │   ├── handlers.ts              # Controladores REST con simulación de cookie de sesión (/auth, /studies, etc.)
 │   │   └── data/                    # Semillas realistas (I.E. Prudencia Daza, fuentes, usuarios semilla)
@@ -276,7 +276,7 @@ flowchart TD
 
 ---
 
-## 6. Simulación de Backend con Mock Service Worker (MSW v2)
+## 6. Simulación de Backend con Mock Service Worker (MSW v3)
 
 Para garantizar la autonomía del frontend, se configura MSW interceptando las rutas bajo `/api/v1/*`. MSW simula el comportamiento de sesión basado en cookie `HttpOnly`, manteniendo el estado de sesión activa en memoria y evaluando credenciales vía `withCredentials`:
 

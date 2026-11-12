@@ -22,7 +22,7 @@
 ## Fase 0 — Scaffolding, Tooling y Mock API
 
 - [x] **T300. Scaffolding del proyecto frontend.**
-  Inicializar la carpeta `frontend/` con Vite 6, React 18/19 y TypeScript 5 en modo estricto. Configurar `tsconfig.json` con alias de importación `@/*` y `vite.config.ts`.
+  Inicializar la carpeta `frontend/` con Vite 8, React 19 y TypeScript 7 en modo estricto. Configurar `tsconfig.json` con alias de importación `@/*` y `vite.config.ts`.
   *Verificación:* `cd frontend && npm run build` genera el bundle sin advertencias ni errores.
 
 - [x] **T301. Configuración de Tailwind CSS v4 y tokens de diseño.**
@@ -37,8 +37,8 @@
   Definir en `src/types/` las interfaces de entidades (`User`, `UserRole`, `Institution`, `GenerationSource`, `Study`, `SamplingDay`, `Shift`, `WasteBag`, `WasteGroup`) y el contrato de error de la Spec 003 (`ErrorResponse`, `FieldError`).
   *Verificación:* `npm run typecheck` valida los tipos sin inconsistencias.
 
-- [x] **T304. Mock Service Worker (MSW v2) con simulación de sesión por cookie.**
-  Instalar MSW v2 y configurar `src/mocks/browser.ts` y `src/mocks/handlers.ts`. Simular la autenticación mediante cookie de sesión `HttpOnly` en memoria evaluando `withCredentials` (sin tokens en LocalStorage). Cargar datos semilla realistas de la I.E. Prudencia Daza (fuentes `AU`, `BA`, `CAF`, `OF`, etc., usuarios docente y estudiante, estudio de ejemplo). Configurar interceptor para simular latencia de red y errores controlados (400, 401, 403, 404, 422).
+- [x] **T304. Mock Service Worker (MSW v3) con simulación de sesión por cookie.**
+  Instalar MSW v3 y configurar `src/mocks/browser.ts` y `src/mocks/handlers.ts`. Simular la autenticación mediante cookie de sesión `HttpOnly` en memoria evaluando `withCredentials` (sin tokens en LocalStorage). Cargar datos semilla realistas de la I.E. Prudencia Daza (fuentes `AU`, `BA`, `CAF`, `OF`, etc., usuarios docente y estudiante, estudio de ejemplo). Configurar interceptor para simular latencia de red y errores controlados (400, 401, 403, 404, 422).
   *Verificación:* En el navegador, las peticiones `fetch('/api/v1/auth/me', { credentials: 'include' })` y `fetch('/api/v1/institutions')` son interceptadas y devuelven los datos simulados con status 200 tras login.
 
 ---
