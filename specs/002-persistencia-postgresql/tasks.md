@@ -42,7 +42,7 @@ Reglas:
 - [x] **T07. Subcategorías, usuarios y cuadrillas.** `WasteCategoryRepository`, `UserRepository`, `CrewRepository` y sus implementaciones.
   *Verificación:* sus `*RepositoryIT` (CA-110).
 
-- [ ] **T08. Estudio.** `StudyRepository` (estudio con sus 8 días, reaperturas, fuentes participantes y conteos de pendientes).
+- [x] **T08. Estudio.** `StudyRepository` (estudio con sus 8 días, reaperturas, fuentes participantes y conteos de pendientes).
   *Verificación:* `StudyRepositoryIT` (CA-110; los conteos alimentan RN-016).
 
 ## Fase 3 — Repositorios de campo (Estefanía)
