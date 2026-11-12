@@ -39,7 +39,7 @@ Reglas:
 - [x] **T06. Institución y fuentes.** `InstitutionRepository`, `GenerationSourceRepository` y sus implementaciones JDBC (incluye la geometría `jsonb`).
   *Verificación:* `InstitutionRepositoryIT`, `GenerationSourceRepositoryIT` (CA-110, CA-104 desde la aplicación).
 
-- [ ] **T07. Subcategorías, usuarios y cuadrillas.** `WasteCategoryRepository`, `UserRepository`, `CrewRepository` y sus implementaciones.
+- [x] **T07. Subcategorías, usuarios y cuadrillas.** `WasteCategoryRepository`, `UserRepository`, `CrewRepository` y sus implementaciones.
   *Verificación:* sus `*RepositoryIT` (CA-110).
 
 - [ ] **T08. Estudio.** `StudyRepository` (estudio con sus 8 días, reaperturas, fuentes participantes y conteos de pendientes).
