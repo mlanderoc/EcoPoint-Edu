@@ -66,6 +66,7 @@ public final class StudyValidator {
      * @throws BusinessRuleException if the dates overlap with another study
      */
     public static void validateNoOverlap(CharacterizationStudy study, List<CharacterizationStudy> others) {
+        ValidationSupport.requireNonNull(study, "estudio", "El estudio no puede ser nulo.");
         if (others == null) {
             return;
         }
@@ -89,6 +90,7 @@ public final class StudyValidator {
      * @throws BusinessRuleException if the study is not planned, lacks dates or has no sources
      */
     public static void validateStartExecution(CharacterizationStudy study, int activeSources) {
+        ValidationSupport.requireNonNull(study, "estudio", "El estudio no puede ser nulo.");
         requireTransition(study, StudyStatus.EN_EJECUCION);
         if (!study.hasAllDatesScheduled()) {
             throw new BusinessRuleException("No se puede iniciar el estudio: faltan fechas por definir en "
@@ -111,6 +113,7 @@ public final class StudyValidator {
      * @throws QualityControlException if non-conforming quarterings remain
      */
     public static void validateClose(CharacterizationStudy study, int pendingRecords, int unresolvedQuarterings) {
+        ValidationSupport.requireNonNull(study, "estudio", "El estudio no puede ser nulo.");
         requireTransition(study, StudyStatus.CERRADO);
         if (pendingRecords > 0) {
             throw new BusinessRuleException("No se puede cerrar el estudio: quedan " + pendingRecords

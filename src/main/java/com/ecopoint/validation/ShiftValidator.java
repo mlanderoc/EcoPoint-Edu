@@ -77,6 +77,7 @@ public final class ShiftValidator {
      * @throws BusinessRuleException if the shift is closed or the study is not executing
      */
     public static void validateOpenForRegistration(SamplingShift shift, CharacterizationStudy study) {
+        ValidationSupport.requireNonNull(shift, "turno", "El turno no puede ser nulo.");
         requireStudyInExecution(study);
         if (!shift.isOpen()) {
             throw new BusinessRuleException("El turno " + shift.getCode()
@@ -109,6 +110,7 @@ public final class ShiftValidator {
      * @throws BusinessRuleException if the shift is closed or some sources are still pending
      */
     public static void validateCanClose(SamplingShift shift, Map<Long, String> participatingSources) {
+        ValidationSupport.requireNonNull(shift, "turno", "El turno no puede ser nulo.");
         if (!shift.isOpen()) {
             throw new BusinessRuleException("El turno " + shift.getCode() + " ya está cerrado.");
         }
@@ -136,6 +138,7 @@ public final class ShiftValidator {
      * @throws BusinessRuleException if the shift is open or the study is not executing
      */
     public static void validateReopen(SamplingShift shift, CharacterizationStudy study) {
+        ValidationSupport.requireNonNull(shift, "turno", "El turno no puede ser nulo.");
         requireStudyInExecution(study);
         if (shift.isOpen()) {
             throw new BusinessRuleException("El turno " + shift.getCode() + " ya está abierto.");

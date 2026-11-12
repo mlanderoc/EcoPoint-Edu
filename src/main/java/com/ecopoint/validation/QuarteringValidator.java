@@ -39,6 +39,7 @@ public final class QuarteringValidator {
      * @throws BusinessRuleException if the shift already has one
      */
     public static void validateNoExistingQuartering(SamplingShift shift) {
+        ValidationSupport.requireNonNull(shift, "turno", "El turno no puede ser nulo.");
         if (shift.hasQuartering()) {
             throw new BusinessRuleException("El turno " + shift.getCode() + " ya tiene un cuarteo registrado.");
         }
@@ -103,6 +104,7 @@ public final class QuarteringValidator {
      * @throws BusinessRuleException if a subcategory is unknown, inactive or repeated
      */
     public static void validateCategories(Quartering quartering, Map<Long, WasteCategory> catalog) {
+        ValidationSupport.requireNonNull(quartering, "cuarteo", "El cuarteo no puede ser nulo.");
         Set<Long> seen = new HashSet<>();
         for (QuarteringResult result : quartering.getResults()) {
             WasteCategory category = catalog == null ? null : catalog.get(result.getCategoryId());
@@ -126,6 +128,7 @@ public final class QuarteringValidator {
      * @throws com.ecopoint.exceptions.AccessDeniedException if the user lacks a required permission
      */
     public static void validatePermissions(Quartering quartering, User user) {
+        ValidationSupport.requireNonNull(quartering, "cuarteo", "El cuarteo no puede ser nulo.");
         AccessPolicy.require(user, Permission.REGISTER_QUARTERING);
         if (quartering.hasHazardousResults()) {
             AccessPolicy.require(user, Permission.REGISTER_HAZARDOUS_WASTE);
@@ -142,6 +145,7 @@ public final class QuarteringValidator {
      * @throws com.ecopoint.exceptions.AccessDeniedException if the user lacks the permission
      */
     public static void validateAnnul(Quartering quartering, User user) {
+        ValidationSupport.requireNonNull(quartering, "cuarteo", "El cuarteo no puede ser nulo.");
         AccessPolicy.require(user, Permission.ANNUL_QUARTERING);
         if (quartering.getQualityStatus() != QualityStatus.NO_CONFORME) {
             throw new BusinessRuleException("Solo se puede anular un cuarteo no conforme.");

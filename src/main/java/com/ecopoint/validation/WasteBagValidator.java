@@ -67,6 +67,7 @@ public final class WasteBagValidator {
      * @return true if the net weight or the density is not plausible
      */
     public static boolean isAtypical(WasteBag bag, CharacterizationSettings settings) {
+        ValidationSupport.requireNonNull(bag, "bolsa", "La bolsa no puede ser nula.");
         return !settings.isBagNetWeightPlausible(bag.getNetWeight())
                 || !settings.isBagDensityPlausible(bag.getDensity());
     }

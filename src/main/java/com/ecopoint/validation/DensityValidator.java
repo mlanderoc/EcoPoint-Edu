@@ -45,6 +45,7 @@ public final class DensityValidator {
      * @throws BusinessRuleException if the shift already has one
      */
     public static void validateNoExistingDensity(SamplingShift shift) {
+        ValidationSupport.requireNonNull(shift, "turno", "El turno no puede ser nulo.");
         if (shift.hasDensity()) {
             throw new BusinessRuleException("El turno " + shift.getCode() + " ya tiene una medición de densidad.");
         }
