@@ -85,7 +85,7 @@
   Vista `/admin/usuarios`. Formulario para registrar docentes y estudiantes. Si el correo institucional ya existe, capturar el error de API y mostrar el mensaje en rojo directamente bajo el campo correo.
   *Verificación:* `test('ca302_duplicateEmailDisplaysFieldError')` simula respuesta 400 con `fieldErrors: [{ field: 'email' }]` y confirma la marcación del campo.
 
-- [ ] **T313. Administración de cuadrillas y subcategorías (R-323, R-324).**
+- [x] **T313. Administración de cuadrillas y subcategorías (R-323, R-324).**
   Vistas `/admin/cuadrillas` (asignación de docente responsable obligatoria con alerta preventiva RN-085) y `/admin/subcategorias` (clasificación por grupos de color).
   *Verificación:* Pruebas de integración validando advertencia visual si falta el docente responsable en la cuadrilla.
 

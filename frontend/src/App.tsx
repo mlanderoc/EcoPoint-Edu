@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { AuthProvider, RequireAuth, RequireRole, LoginPage, useAuth } from '@/features/auth'
 import { AppLayout } from '@/components/layout'
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
-import { InstitutionsPage, SourcesPage, UsersPage } from '@/features/admin'
+import { InstitutionsPage, SourcesPage, UsersPage, CrewsPage, CategoriesPage } from '@/features/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -138,6 +138,22 @@ export function AppRoutes() {
             element={
               <RoutedAppLayout>
                 <UsersPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route
+            path="/admin/cuadrillas"
+            element={
+              <RoutedAppLayout>
+                <CrewsPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route
+            path="/admin/subcategorias"
+            element={
+              <RoutedAppLayout>
+                <CategoriesPage />
               </RoutedAppLayout>
             }
           />
