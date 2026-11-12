@@ -126,4 +126,9 @@ class AuthIT extends PostgresIntegrationTest {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.errorCode").value("ERR_FORBIDDEN"));
     }
+
+    @Test
+    void r130_apiDocumentationIsOffOutsideTheDevProfile() throws Exception {
+        mvc.perform(get("/v3/api-docs")).andExpect(status().isNotFound());
+    }
 }
