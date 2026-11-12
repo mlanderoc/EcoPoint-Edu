@@ -98,7 +98,7 @@ classDiagram
         Set~Long~ sourcesWithoutGeneration
         Quartering quartering
         DensityMeasurement density
-        nextLabelFor(String) BagLabel
+        addBag(WasteBag) BagLabel
         calculateTotalNetWeight() BigDecimal
         open() / close() / reopen()
     }
@@ -193,7 +193,7 @@ classDiagram
     Crew "1" --> "*" User
 ```
 
-`SamplingShift` es el **agregado** central: agrupa todo lo que ocurre en un turno. Por eso, como Experto en Información, sabe generar el rótulo siguiente, calcular su peso neto total y si se puede cerrar.
+`SamplingShift` es el **agregado** central: agrupa todo lo que ocurre en un turno. Por eso, como Experto en Información, sabe asignar el rótulo de cada bolsa nueva (`addBag`), calcular su peso neto total y si se puede cerrar.
 
 > Nota: el estudio tiene 8 días × 2 turnos = **16 turnos**. La spec 006 menciona "14 turnos", que corresponde a los días 2 a 8 que entran en los cálculos.
 
@@ -253,7 +253,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | `WasteCategoryValidator` | `validate(category)`, `validateUniqueName(category, Set<String> existingNames)`, `validateGroupChange(category, WasteGroup previousGroup, boolean hasResults)`, `validateDeletion(category, boolean hasResults)` | RN-041, RN-042 |
 | `StudyValidator` | `validate(study)`, `validateNoOverlap(study, List<CharacterizationStudy> others)`, `validateStartExecution(study, int activeSources)`, `validateClose(study, int pendingRecords, int unresolvedQuarterings)` | RN-010 a RN-016 |
 | `ShiftValidator` | `validateNewShift(study, day, type, existingShifts)`, `validatePopulation(population)`, `validateOpenForRegistration(shift, study)`, `validateCanRegisterBag(shift, study)`, `validateCanClose(shift, Map<Long, String> participatingSources)`, `validateReopen(shift, study)` | RN-020 a RN-025 |
-| `WasteBagValidator` | `validate(bag, shift, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 |
+| `WasteBagValidator` | `validate(bag, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 (las condiciones del turno las revisa `ShiftValidator`) |
 | `QuarteringValidator` | `validate(quartering, shift, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)` | RN-050, RN-051, RN-055 |
 | `DensityValidator` | `validate(measurement, shift)` | RN-057 |
 | `VerificationValidator` | `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062, RN-063 |

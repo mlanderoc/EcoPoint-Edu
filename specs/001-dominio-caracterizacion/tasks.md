@@ -61,7 +61,7 @@ Reglas:
 
 ## Fase 4 — Bolsas, cuarteo y densidad
 
-- [ ] **T13. Bolsas.** `WasteBag` y `WasteBagValidator`; generación del rótulo en `SamplingShift.nextLabelFor(...)`.
+- [x] **T13. Bolsas.** `WasteBag` y `WasteBagValidator`; generación del rótulo en `SamplingShift.nextLabelFor(...)`.
   *Verificación:* `WasteBagTest` (CA-032), `WasteBagValidatorTest` (CA-031, CA-033, RN-030), `SamplingShiftTest` (CA-030, RN-032).
 
 - [ ] **T14. Cuarteo.** Reescribir `Quartering` y `QuarteringResult`; reescribir `QuarteringValidator`.
