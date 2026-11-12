@@ -88,7 +88,7 @@ Reglas:
 - [x] **T20. Matriz de permisos.** `PermissionMatrixIT`: por cada permiso, una ruta representativa con cada rol (sección 7 del plan). *(Carlos)*
   *Verificación:* CA-203, CA-204 y CA-211.
 
-- [ ] **T21. OpenAPI.** `OpenApiConfig` con título, versión y descripción de la sesión; `OpenApiIT` con el perfil `dev`. *(Merlín)*
+- [x] **T21. OpenAPI.** `OpenApiConfig` con título, versión y descripción de la sesión; `OpenApiIT` con el perfil `dev`. *(Merlín)*
   *Verificación:* CA-212: el documento tiene las rutas de las secciones 5.1 a 5.3.
 
 - [ ] **T22. Ejemplos y documentación.** `docs/api/*.http` por recurso, README (cómo arrancar el backend y el frontend juntos) y `docs/layer-diagram.md` con las capas nuevas. *(Merlín)*
