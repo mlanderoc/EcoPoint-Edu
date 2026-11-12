@@ -16,6 +16,7 @@ import com.ecopoint.model.SamplingShift;
 import com.ecopoint.model.ShiftPopulation;
 import com.ecopoint.model.User;
 import com.ecopoint.model.VerifiableRecord;
+import com.ecopoint.model.VerificationStatus;
 import com.ecopoint.model.WasteBag;
 import com.ecopoint.persistence.AlertRepository;
 import com.ecopoint.persistence.CorrectionRepository;
@@ -44,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Double entry: verify a record against the paper form or correct it, keeping
@@ -114,6 +116,90 @@ public class VerificationService {
         return verifications.findPendingByStudy(studyId).stream()
                 .filter(pending -> shiftId == null || Objects.equals(pending.shiftId(), shiftId))
                 .toList();
+    }
+
+    /**
+     * Summarizes the data cleaning of a study by shift (R-424, CA-410).
+     *
+     * @param actor   user that asks; needs the verification permission
+     * @param studyId study id
+     * @return pending, verified and corrected records by shift, and whether the study can be closed
+     */
+    public VerificationSummary summary(User actor, Long studyId) {
+        AccessPolicy.require(actor, Permission.VERIFY_RECORDS);
+        if (studies.findById(studyId).isEmpty()) {
+            throw new ResourceNotFoundException("Estudio", studyId);
+        }
+        List<VerificationSummary.ShiftProgress> progress = shifts.findByStudy(studyId).stream()
+                .map(VerificationService::progressOf)
+                .toList();
+        int pending = progress.stream().mapToInt(VerificationSummary.ShiftProgress::pending).sum();
+        int verified = progress.stream().mapToInt(VerificationSummary.ShiftProgress::verified).sum();
+        int corrected = progress.stream().mapToInt(VerificationSummary.ShiftProgress::corrected).sum();
+        int nonConforming = (int) progress.stream()
+                .filter(VerificationSummary.ShiftProgress::nonConformingQuartering).count();
+        return new VerificationSummary(progress, pending, verified, corrected, nonConforming,
+                pending == 0 && nonConforming == 0);
+    }
+
+    /**
+     * Lists the verifiable records of a shift: population, bags, quartering and
+     * density (R-420, R-421).
+     *
+     * @param shiftId shift id
+     * @return records with their kind, in that order
+     */
+    public List<RecordView> shiftRecords(Long shiftId) {
+        SamplingShift shift = shifts.findById(shiftId).orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
+        List<RecordView> records = new ArrayList<>();
+        if (shift.getPopulation() != null) {
+            records.add(new RecordView(RecordKind.POPULATION, shift.getPopulation(), shift));
+        }
+        shift.getBags().forEach(bag -> records.add(new RecordView(RecordKind.BAG, bag, shift)));
+        if (shift.getQuartering() != null) {
+            records.add(new RecordView(RecordKind.QUARTERING, shift.getQuartering(), shift));
+        }
+        if (shift.getDensity() != null) {
+            records.add(new RecordView(RecordKind.DENSITY, shift.getDensity(), shift));
+        }
+        return records;
+    }
+
+    /**
+     * Finds one verifiable record with its shift, e.g. to open it from an alert (R-430).
+     *
+     * @param kind     kind of record
+     * @param recordId record id
+     * @return the record with its kind and shift
+     */
+    public RecordView record(RecordKind kind, Long recordId) {
+        Located located = locate(kind, recordId);
+        return new RecordView(kind, located.record(), located.shift());
+    }
+
+    private static VerificationSummary.ShiftProgress progressOf(SamplingShift shift) {
+        List<VerifiableRecord> records = new ArrayList<>();
+        if (shift.getPopulation() != null) {
+            records.add(shift.getPopulation());
+        }
+        records.addAll(shift.getBags());
+        if (shift.getQuartering() != null) {
+            records.add(shift.getQuartering());
+        }
+        if (shift.getDensity() != null) {
+            records.add(shift.getDensity());
+        }
+        Map<VerificationStatus, Long> byStatus = records.stream()
+                .collect(Collectors.groupingBy(item -> item.getVerification().getStatus(), Collectors.counting()));
+        boolean nonConforming = shift.getQuartering() != null
+                && shift.getQuartering().getQualityStatus() == QualityStatus.NO_CONFORME;
+        return new VerificationSummary.ShiftProgress(shift.getId(), shift.getDayNumber(), shift.getType(),
+                shift.getCode(), count(byStatus, VerificationStatus.PENDIENTE), count(byStatus, VerificationStatus.VERIFICADO),
+                count(byStatus, VerificationStatus.CORREGIDO), nonConforming);
+    }
+
+    private static int count(Map<VerificationStatus, Long> byStatus, VerificationStatus status) {
+        return byStatus.getOrDefault(status, 0L).intValue();
     }
 
     /**
