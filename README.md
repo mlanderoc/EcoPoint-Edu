@@ -34,7 +34,7 @@ Mientras no se complete la spec 003 no hay aplicación para usar desde el navega
    Cierra y vuelve a abrir la terminal para que la vea. Nunca escribas la contraseña en el código ni en un archivo del repositorio.
 3. **Crea la base con los datos de demostración** (desde la raíz del repositorio):
    ```powershell
-   .\sqlecrear-base.ps1          # PowerShell
+   .\sql\recrear-base.ps1          # PowerShell
    ./sql/recrear-base.sh            # Git Bash
    ```
    El mismo comando la vuelve a dejar como nueva cuando quieras.
