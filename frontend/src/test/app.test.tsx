@@ -1,20 +1,28 @@
+/**
+ * First screen of the application after the session check (Phase 0, updated
+ * for the field dashboard of T317).
+ *
+ * @author craulgomez
+ */
+
 import { render, screen } from '@testing-library/react'
 import { describe, it, expect } from 'vitest'
 import App from '@/App'
+import { resetMockState } from '@/mocks/handlers'
 
-describe('App Initial Render (Phase 0)', () => {
-  it('renders EcoPoint Edu title and institutional logo', async () => {
+describe('App initial render', () => {
+  it('renders the layout with the institutional logo and the field dashboard', async () => {
+    resetMockState('DOCENTE')
     render(<App />)
-    expect(await screen.findByText('EcoPoint Edu — Sistema de Muestreo')).toBeInTheDocument()
-    const logos = await screen.findAllByAltText('EcoPoint Edu Logo')
-    expect(logos.length).toBeGreaterThanOrEqual(1)
+
+    expect(await screen.findByRole('heading', { name: 'Registro en campo' })).toBeInTheDocument()
+    expect((await screen.findAllByAltText('EcoPoint Edu Logo')).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('displays the 4 waste groups from Res. 2184/2019', async () => {
+  it('shows the study in execution on the field dashboard', async () => {
+    resetMockState('DOCENTE')
     render(<App />)
-    expect((await screen.findAllByText('Blanco')).length).toBeGreaterThanOrEqual(1)
-    expect((await screen.findAllByText('Verde Orgánico')).length).toBeGreaterThanOrEqual(1)
-    expect((await screen.findAllByText('Negro')).length).toBeGreaterThanOrEqual(1)
-    expect((await screen.findAllByText('Sin color')).length).toBeGreaterThanOrEqual(1)
+
+    expect(await screen.findByText(/Estudio N.º 2/)).toBeInTheDocument()
   })
 })

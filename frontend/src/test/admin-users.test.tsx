@@ -57,7 +57,7 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
     expect(errorMessage).toHaveTextContent(/ya está registrado/i)
     expect(errorMessage).toHaveClass('text-red-600')
     expect(emailInput).toHaveClass('border-red-500')
-  }, 15000)
+  })
 
   it('allows registering a new user successfully', async () => {
     resetMockState('DOCENTE')
@@ -95,7 +95,7 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
     expect(await screen.findByText('Laura Pérez')).toBeInTheDocument()
     expect(screen.getByText('laura.perez@unicesar.edu.co')).toBeInTheDocument()
     expect(screen.getAllByText('Estudiante').length).toBeGreaterThan(0)
-  }, 15000)
+  })
 
   it('asks for an initial password of at least 8 characters before calling the API', async () => {
     resetMockState('DOCENTE')
@@ -118,5 +118,5 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
 
     expect(await screen.findByText(/al menos 8 caracteres/i)).toBeInTheDocument()
     expect(screen.queryByText('Mario Gómez')).not.toBeInTheDocument()
-  }, 15000)
+  })
 })

@@ -54,7 +54,7 @@ describe('Crews and Categories Administration (T313, R-323, R-324, RN-085)', () 
     const warning = await screen.findByText(/Alerta Preventiva RN-085/i)
     expect(warning).toBeInTheDocument()
     expect(screen.getByText(/no cuenta con un docente responsable asignado/i)).toBeInTheDocument()
-  }, 15000)
+  })
 
   it('validates teacher is required when creating a crew and saves successfully', async () => {
     resetMockState('DOCENTE')
@@ -94,7 +94,7 @@ describe('Crews and Categories Administration (T313, R-323, R-324, RN-085)', () 
 
     // Verify new crew appears
     expect(await screen.findByText('Cuadrilla Sábado C')).toBeInTheDocument()
-  }, 15000)
+  })
 
   it('renders categories grouped by color and allows creating a new subcategory (R-324)', async () => {
     resetMockState('DOCENTE')
@@ -136,5 +136,5 @@ describe('Crews and Categories Administration (T313, R-323, R-324, RN-085)', () 
 
     // Verify new subcategory is visible
     expect(await screen.findByText('Vidrio transparente')).toBeInTheDocument()
-  }, 15000)
+  })
 })
