@@ -43,6 +43,26 @@ public class VerificationInfo {
     }
 
     /**
+     * Rebuilds the verification data of a record read from the database
+     * (spec 002, plan R1). Only the persistence layer must use it.
+     *
+     * @param status     stored verification status
+     * @param enteredBy  user who typed the record
+     * @param enteredAt  when it was typed
+     * @param verifiedBy user who verified or corrected it, or null
+     * @param verifiedAt when it was verified or corrected, or null
+     * @return the rebuilt verification data
+     */
+    public static VerificationInfo restore(VerificationStatus status, Long enteredBy, LocalDateTime enteredAt,
+                                           Long verifiedBy, LocalDateTime verifiedAt) {
+        VerificationInfo info = new VerificationInfo(enteredBy, enteredAt);
+        info.status = status;
+        info.verifiedBy = verifiedBy;
+        info.verifiedAt = verifiedAt;
+        return info;
+    }
+
+    /**
      * Marks the record as matching the paper form (RN-062).
      *
      * @param userId identifier of the verifier
