@@ -72,7 +72,7 @@ Reglas:
 
 ## Fase 5 — Calidad, alertas y evidencias
 
-- [ ] **T16. Verificación y correcciones.** `VerificationValidator`.
+- [x] **T16. Verificación y correcciones.** `VerificationValidator`.
   *Verificación:* `VerificationValidatorTest`: CA-060, CA-061, CA-062; motivo obligatorio en la corrección.
 
 - [ ] **T17. Alertas.** Reescribir `Alert`; crear `AlertFactory`.
