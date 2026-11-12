@@ -74,7 +74,7 @@ Reglas:
 - [x] **T16. Cuarteo y densidad.** `QuarteringService` (calidad del 2 %, alerta si es NO_CONFORME, RN-056 para SIN_COLOR, anulación) y `DensityService`. *(Carlos)*
   *Verificación:* pruebas unitarias; cuarteo y resultados se guardan juntos o no se guarda nada.
 
-- [ ] **T17. Alertas.** `AlertService`: listar con filtros y paginación, atender con observación (RN-073). *(Carlos)*
+- [x] **T17. Alertas.** `AlertService`: listar con filtros y paginación, atender con observación (RN-073). *(Carlos)*
   *Verificación:* pruebas unitarias.
 
 - [ ] **T18. Verificación y evidencias.** `VerificationService` (RN-062: quien verifica es distinto de quien digitó; corrección con historial en una transacción) y `EvidenceService` (5 MB, JPG o PNG, carpeta local). *(Estefanía)*
