@@ -296,7 +296,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | CA-001 a CA-003 | `GenerationSourceValidatorTest`, `GeoPolygonTest` |
 | CA-010 a CA-014 | `CharacterizationStudyTest`, `StudyStatusTest`, `StudyValidatorTest` |
 | CA-020 a CA-023 | `SamplingShiftTest`, `ShiftValidatorTest` |
-| CA-030 a CA-033 | `BagLabelTest`, `SamplingShiftTest`, `WasteBagTest`, `WasteBagValidatorTest`, `AlertFactoryTest` |
+| CA-030 a CA-033 | `BagLabelTest`, `SamplingShiftTest`, `WasteBagTest`, `WasteBagValidatorTest`, `AlertTest` |
 | CA-050 a CA-056 | `QuarteringTest`, `QuarteringValidatorTest`, `AccessPolicyTest` |
 | CA-060 a CA-062 | `VerificationValidatorTest`, `VerificationInfoTest` |
 | CA-080, CA-081 | `UserValidatorTest`, `CrewValidatorTest` |

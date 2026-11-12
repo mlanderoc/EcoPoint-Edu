@@ -75,8 +75,8 @@ Reglas:
 - [x] **T16. Verificación y correcciones.** `VerificationValidator`.
   *Verificación:* `VerificationValidatorTest`: CA-060, CA-061, CA-062; motivo obligatorio en la corrección.
 
-- [ ] **T17. Alertas.** Reescribir `Alert`; crear `AlertFactory`.
-  *Verificación:* `AlertFactoryTest` (alerta de CA-033 y de CA-053), `AlertTest` (RN-073: nota obligatoria, no se atiende dos veces).
+- [x] **T17. Alertas.** Reescribir `Alert`; crear `AlertFactory`.
+  *Verificación:* `AlertTest`: alertas de CA-033 y CA-053, RN-072 (24 horas) y RN-073 (nota obligatoria, no se atiende dos veces).
 
 - [ ] **T18. Evidencias.** Reescribir `Evidence`; crear `EvidenceValidator`.
   *Verificación:* `EvidenceValidatorTest`: JPG y PNG ≤ 5 MB aceptados; otros formatos o > 5 MB rechazados.
