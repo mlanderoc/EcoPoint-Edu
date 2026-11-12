@@ -57,9 +57,13 @@ public final class WasteCategoryValidator {
      *
      * @param category      subcategory being created or edited
      * @param existingNames names of the other subcategories
+     * @throws InvalidDataException if the subcategory is null
      * @throws BusinessRuleException if the name is already taken
      */
     public static void validateUniqueName(WasteCategory category, Set<String> existingNames) {
+        if (category == null) {
+            throw new InvalidDataException("subcategoria", "La subcategoría de residuo no puede ser nula.");
+        }
         if (existingNames == null) {
             return;
         }
@@ -86,7 +90,8 @@ public final class WasteCategoryValidator {
         if (hasResults && previousGroup != category.getGroup()) {
             throw new BusinessRuleException("La subcategoría \"" + category.getName()
                     + "\" ya tiene resultados de cuarteo: no puede cambiar del grupo "
-                    + previousGroup.getDisplayName() + " a otro grupo.");
+                    + (previousGroup == null ? "sin grupo" : previousGroup.getDisplayName())
+                    + " a otro grupo.");
         }
     }
 

@@ -59,9 +59,13 @@ public final class GenerationSourceValidator {
      *
      * @param source        source being created or edited
      * @param existingCodes codes of the other sources of the same institution
+     * @throws InvalidDataException if the source is null
      * @throws BusinessRuleException if the code is already taken
      */
     public static void validateUniqueCode(GenerationSource source, Set<String> existingCodes) {
+        if (source == null) {
+            throw new InvalidDataException("fuente", "La fuente de generación no puede ser nula.");
+        }
         if (existingCodes != null && existingCodes.contains(source.getCode())) {
             throw new BusinessRuleException("Ya existe una fuente con el código " + source.getCode()
                     + " en esta institución.");

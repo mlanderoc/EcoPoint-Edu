@@ -56,9 +56,13 @@ public final class UserValidator {
      *
      * @param user           user being created or edited
      * @param existingEmails emails of the other users
+     * @throws InvalidDataException if the user is null
      * @throws BusinessRuleException if the email is already registered
      */
     public static void validateUniqueEmail(User user, Set<String> existingEmails) {
+        if (user == null) {
+            throw new InvalidDataException("usuario", "El usuario no puede ser nulo.");
+        }
         if (existingEmails == null) {
             return;
         }
