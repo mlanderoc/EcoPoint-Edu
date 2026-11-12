@@ -78,7 +78,7 @@ Reglas:
 - [x] **T17. Alertas.** Reescribir `Alert`; crear `AlertFactory`.
   *Verificación:* `AlertTest`: alertas de CA-033 y CA-053, RN-072 (24 horas) y RN-073 (nota obligatoria, no se atiende dos veces).
 
-- [ ] **T18. Evidencias.** Reescribir `Evidence`; crear `EvidenceValidator`.
+- [x] **T18. Evidencias.** Reescribir `Evidence`; crear `EvidenceValidator`.
   *Verificación:* `EvidenceValidatorTest`: JPG y PNG ≤ 5 MB aceptados; otros formatos o > 5 MB rechazados.
 
 ## Fase 6 — Cierre
