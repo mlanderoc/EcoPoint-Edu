@@ -27,8 +27,7 @@ Este archivo es la "constitución" del proyecto. Lo leen y lo cumplen **todos**:
 
 | Spec | Implementa | Revisa |
 | --- | --- | --- |
-| 001 Dominio, 002 Persistencia, 003 API, 007 Plano | Claude | Antigravity |
-| 004 Registro en campo, 005 Cuarteo y calidad, 006 Indicadores | Antigravity | Claude |
+| Todas (001 a 007) | Claude | Antigravity |
 
 ## 3. Stack tecnológico
 
