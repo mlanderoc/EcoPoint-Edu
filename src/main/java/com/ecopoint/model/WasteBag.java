@@ -79,8 +79,8 @@ public class WasteBag extends VerifiableRecord {
     }
 
     /**
-     * Assigns the label; only the shift does it, when the bag is added or when
-     * a second bag of the same source forces a sequence number (RN-031).
+     * Assigns the label; only the shift does it, when the bag is added (RN-031).
+     * Once assigned, the label never changes.
      *
      * @param newLabel label assigned by the shift
      */

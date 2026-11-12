@@ -145,9 +145,9 @@ public class SamplingShift {
 
     /**
      * Adds a bag to the shift and assigns its label {@code SOURCE-D<day>-<M|T>}
-     * (RN-031). When the source already has one bag without sequence, that bag
-     * becomes {@code -1} and the new one {@code -2}; later bags get the next
-     * number. The bag data and the population are checked beforehand by
+     * (RN-031). The first bag of a source keeps the label without sequence,
+     * because it is already written on the physical bag and on the paper form;
+     * the following bags get {@code -2}, {@code -3}... The bag data and the population are checked beforehand by
      * {@code WasteBagValidator} and {@code ShiftValidator}.
      *
      * @param bag bag to add
@@ -162,14 +162,7 @@ public class SamplingShift {
         }
         List<WasteBag> sameSource = getBagsFrom(bag.getSourceId());
         BagLabel base = BagLabel.of(bag.getSourceCode(), dayNumber, type);
-        if (sameSource.isEmpty()) {
-            bag.assignLabel(base);
-        } else {
-            if (sameSource.size() == 1 && sameSource.get(0).getLabel().sequence() == 0) {
-                sameSource.get(0).assignLabel(base.withSequence(1));
-            }
-            bag.assignLabel(base.withSequence(sameSource.size() + 1));
-        }
+        bag.assignLabel(sameSource.isEmpty() ? base : base.withSequence(sameSource.size() + 1));
         bags.add(bag);
         return bag.getLabel();
     }

@@ -59,7 +59,7 @@ class WasteBagTest {
     }
 
     @Test
-    void ca030_secondBagOfSameSourceNumbersBothBags() {
+    void ca030_firstBagKeepsItsLabelAndNextBagsAreNumbered() {
         SamplingShift shift = morningOfDayThree();
         WasteBag first = bag(1L, "AU", "5", "0.2", "0.05");
         WasteBag second = bag(1L, "AU", "6", "0.2", "0.05");
@@ -69,7 +69,7 @@ class WasteBagTest {
         shift.addBag(second);
         shift.addBag(third);
 
-        assertEquals("AU-D3-M-1", first.getLabelText());
+        assertEquals("AU-D3-M", first.getLabelText());
         assertEquals("AU-D3-M-2", second.getLabelText());
         assertEquals("AU-D3-M-3", third.getLabelText());
     }
