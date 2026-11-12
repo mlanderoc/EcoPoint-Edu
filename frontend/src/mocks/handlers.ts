@@ -9,12 +9,24 @@ import {
   mockShifts,
   mockBags,
 } from './data/seedData'
-import { CharacterizationStudy, GenerationSource, SamplingShift, User, WasteBag } from '@/types'
+import {
+  CharacterizationStudy,
+  Crew,
+  GenerationSource,
+  Institution,
+  SamplingShift,
+  User,
+  WasteBag,
+  WasteCategory,
+} from '@/types'
 
 // In-memory mutable state for the mock session
 let activeUser: User | null = mockUsers[0] // Default logged in as Docente for development convenience
+let institutionsState: Institution[] = [{ ...mockInstitution }]
 let usersState: User[] = [...mockUsers]
 let sourcesState: GenerationSource[] = [...mockSources]
+let crewsState: Crew[] = [...mockCrews]
+let categoriesState: WasteCategory[] = [...mockCategories]
 let studyState: CharacterizationStudy = { ...mockStudy }
 let shiftsState: SamplingShift[] = [...mockShifts]
 let bagsState: WasteBag[] = [...mockBags]
@@ -29,7 +41,7 @@ export const handlers = [
     const found = usersState.find(
       (u) =>
         u.email.toLowerCase() === email?.toLowerCase() &&
-        (password === 'Docente123*' || password === 'Estudiante123*')
+        password === 'EcoPoint2026'
     )
 
     if (!found) {
@@ -74,23 +86,55 @@ export const handlers = [
 
   // --- INSTITUTIONS & SOURCES ---
   http.get('/api/v1/institutions', () => {
-    return HttpResponse.json([mockInstitution], { status: 200 })
+    return HttpResponse.json(institutionsState, { status: 200 })
+  }),
+
+  http.post('/api/v1/institutions', async ({ request }) => {
+    const body = (await request.json()) as Omit<Institution, 'id'>
+    const newInst: Institution = {
+      ...body,
+      id: Date.now(),
+    }
+    institutionsState.push(newInst)
+    return HttpResponse.json(newInst, { status: 201 })
+  }),
+
+  http.put('/api/v1/institutions/:id', async ({ params, request }) => {
+    const id = Number(params.id)
+    const body = (await request.json()) as Partial<Institution>
+    const idx = institutionsState.findIndex((i) => i.id === id)
+    if (idx >= 0) {
+      institutionsState[idx] = { ...institutionsState[idx], ...body }
+      return HttpResponse.json(institutionsState[idx], { status: 200 })
+    }
+    return HttpResponse.json({ status: 404 }, { status: 404 })
   }),
 
   http.get('/api/v1/institutions/:id/sources', () => {
     return HttpResponse.json(sourcesState, { status: 200 })
   }),
 
-  http.post('/api/v1/institutions/:id/sources', async ({ request }) => {
+  http.post('/api/v1/institutions/:id/sources', async ({ params, request }) => {
     const body = (await request.json()) as Omit<GenerationSource, 'id'>
     const newSource: GenerationSource = {
       ...body,
       id: Date.now(),
-      institutionId: 1,
-      active: true,
+      institutionId: Number(params.id) || 1,
+      active: body.active !== undefined ? body.active : true,
     }
     sourcesState.push(newSource)
     return HttpResponse.json(newSource, { status: 201 })
+  }),
+
+  http.put('/api/v1/institutions/:id/sources/:sourceId', async ({ params, request }) => {
+    const sourceId = Number(params.sourceId)
+    const body = (await request.json()) as Partial<GenerationSource>
+    const idx = sourcesState.findIndex((s) => s.id === sourceId)
+    if (idx >= 0) {
+      sourcesState[idx] = { ...sourcesState[idx], ...body }
+      return HttpResponse.json(sourcesState[idx], { status: 200 })
+    }
+    return HttpResponse.json({ status: 404 }, { status: 404 })
   }),
 
   // --- USERS & CREWS ---
@@ -133,11 +177,32 @@ export const handlers = [
   }),
 
   http.get('/api/v1/crews', () => {
-    return HttpResponse.json(mockCrews, { status: 200 })
+    return HttpResponse.json(crewsState, { status: 200 })
+  }),
+
+  http.post('/api/v1/crews', async ({ request }) => {
+    const body = (await request.json()) as Omit<Crew, 'id'>
+    const newCrew: Crew = {
+      ...body,
+      id: Date.now(),
+    }
+    crewsState.push(newCrew)
+    return HttpResponse.json(newCrew, { status: 201 })
   }),
 
   http.get('/api/v1/waste-categories', () => {
-    return HttpResponse.json(mockCategories, { status: 200 })
+    return HttpResponse.json(categoriesState, { status: 200 })
+  }),
+
+  http.post('/api/v1/waste-categories', async ({ request }) => {
+    const body = (await request.json()) as Omit<WasteCategory, 'id'>
+    const newCategory: WasteCategory = {
+      ...body,
+      id: Date.now(),
+      active: true,
+    }
+    categoriesState.push(newCategory)
+    return HttpResponse.json(newCategory, { status: 201 })
   }),
 
   // --- CHARACTERIZATION STUDY ---
@@ -367,8 +432,11 @@ export function resetMockState(userRole?: 'DOCENTE' | 'ESTUDIANTE_UNIVERSITARIO'
   } else {
     activeUser = mockUsers.find((u) => u.role === (userRole || 'DOCENTE')) || mockUsers[0]
   }
+  institutionsState = [{ ...mockInstitution }]
   usersState = [...mockUsers]
   sourcesState = [...mockSources]
+  crewsState = [...mockCrews]
+  categoriesState = [...mockCategories]
   studyState = { ...mockStudy }
   shiftsState = [
     {

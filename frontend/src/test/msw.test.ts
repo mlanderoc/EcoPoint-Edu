@@ -5,7 +5,7 @@ describe('Mock Service Worker API Contracts (T304)', () => {
     const res = await fetch('/api/v1/auth/me', { credentials: 'include' })
     expect(res.status).toBe(200)
     const data = await res.json()
-    expect(data.email).toBe('docente@unicesar.edu.co')
+    expect(data.email).toBe('docente.demo@unicesar.edu.co')
     expect(data.role).toBe('DOCENTE')
   })
 
@@ -24,7 +24,7 @@ describe('Mock Service Worker API Contracts (T304)', () => {
       body: JSON.stringify({
         name: 'Carlos',
         lastName: 'Gómez',
-        email: 'docente@unicesar.edu.co', // Already exists
+        email: 'docente.demo@unicesar.edu.co', // Already exists
         role: 'DOCENTE',
       }),
     })

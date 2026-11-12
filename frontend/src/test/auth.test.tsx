@@ -52,9 +52,9 @@ describe('Authentication & Session Handling (T309, R-310, R-312)', () => {
     const passwordInput = screen.getByLabelText(/Contraseña/i)
     const submitButton = screen.getByRole('button', { name: /Iniciar Sesión/i })
 
-    // Fill valid credentials for Docente (docente@unicesar.edu.co / Docente123*)
-    await user.type(emailInput, 'docente@unicesar.edu.co')
-    await user.type(passwordInput, 'Docente123*')
+    // Fill valid credentials for Docente (docente.demo@unicesar.edu.co / EcoPoint2026)
+    await user.type(emailInput, 'docente.demo@unicesar.edu.co')
+    await user.type(passwordInput, 'EcoPoint2026')
     await user.click(submitButton)
 
     // Wait for success callback
@@ -63,7 +63,7 @@ describe('Authentication & Session Handling (T309, R-310, R-312)', () => {
     })
 
     const authenticatedUser = handleSuccess.mock.calls[0][0]
-    expect(authenticatedUser.email).toBe('docente@unicesar.edu.co')
+    expect(authenticatedUser.email).toBe('docente.demo@unicesar.edu.co')
     expect(authenticatedUser.role).toBe('DOCENTE')
     expect(meCalls).toBeGreaterThanOrEqual(1)
   })
@@ -153,7 +153,7 @@ describe('Authentication & Session Handling (T309, R-310, R-312)', () => {
     )
 
     expect(await screen.findByText('Autenticado')).toBeInTheDocument()
-    expect(screen.getByTestId('user-email')).toHaveTextContent('docente@unicesar.edu.co')
+    expect(screen.getByTestId('user-email')).toHaveTextContent('docente.demo@unicesar.edu.co')
     expect(screen.getByTestId('user-role')).toHaveTextContent('DOCENTE')
 
     const logoutButton = screen.getByRole('button', { name: /Cerrar sesión/i })
