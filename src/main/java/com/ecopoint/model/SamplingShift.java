@@ -3,8 +3,13 @@ package com.ecopoint.model;
 import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -24,6 +29,7 @@ public class SamplingShift {
     private final ShiftType type;
     private ShiftStatus status;
     private ShiftPopulation population;
+    private final List<WasteBag> bags;
     private final Set<Long> sourcesWithoutGeneration;
 
     /**
@@ -51,6 +57,7 @@ public class SamplingShift {
         this.dayNumber = dayNumber;
         this.type = type;
         this.status = ShiftStatus.ABIERTO;
+        this.bags = new ArrayList<>();
         this.sourcesWithoutGeneration = new HashSet<>();
     }
 
@@ -107,6 +114,10 @@ public class SamplingShift {
      */
     public void markSourceWithoutGeneration(Long sourceId) {
         requireOpen();
+        if (hasBagsFrom(sourceId)) {
+            throw new BusinessRuleException("La fuente ya tiene bolsas en el turno " + getCode()
+                    + ": no se puede marcar como sin generación.");
+        }
         sourcesWithoutGeneration.add(sourceId);
     }
 
@@ -129,7 +140,72 @@ public class SamplingShift {
      * @return true if the source does not block closing the shift
      */
     public boolean isSourceCovered(Long sourceId) {
-        return sourcesWithoutGeneration.contains(sourceId);
+        return sourcesWithoutGeneration.contains(sourceId) || hasBagsFrom(sourceId);
+    }
+
+    /**
+     * Adds a bag to the shift and assigns its label {@code SOURCE-D<day>-<M|T>}
+     * (RN-031). When the source already has one bag without sequence, that bag
+     * becomes {@code -1} and the new one {@code -2}; later bags get the next
+     * number. The bag data and the population are checked beforehand by
+     * {@code WasteBagValidator} and {@code ShiftValidator}.
+     *
+     * @param bag bag to add
+     * @return the label assigned to the new bag
+     * @throws BusinessRuleException if the shift is closed or the source is marked without generation
+     */
+    public BagLabel addBag(WasteBag bag) {
+        requireOpen();
+        if (sourcesWithoutGeneration.contains(bag.getSourceId())) {
+            throw new BusinessRuleException("La fuente " + bag.getSourceCode()
+                    + " está marcada sin generación en el turno " + getCode() + ": quite la marca primero.");
+        }
+        List<WasteBag> sameSource = getBagsFrom(bag.getSourceId());
+        BagLabel base = BagLabel.of(bag.getSourceCode(), dayNumber, type);
+        if (sameSource.isEmpty()) {
+            bag.assignLabel(base);
+        } else {
+            if (sameSource.size() == 1 && sameSource.get(0).getLabel().sequence() == 0) {
+                sameSource.get(0).assignLabel(base.withSequence(1));
+            }
+            bag.assignLabel(base.withSequence(sameSource.size() + 1));
+        }
+        bags.add(bag);
+        return bag.getLabel();
+    }
+
+    /**
+     * Returns the bags of one source in this shift, in the order they were added.
+     *
+     * @param sourceId identifier of the source
+     * @return list of bags (empty if none)
+     */
+    public List<WasteBag> getBagsFrom(Long sourceId) {
+        return bags.stream().filter(bag -> Objects.equals(bag.getSourceId(), sourceId)).toList();
+    }
+
+    /**
+     * Indicates whether a source already has bags in this shift.
+     *
+     * @param sourceId identifier of the source
+     * @return true if at least one bag comes from that source
+     */
+    public boolean hasBagsFrom(Long sourceId) {
+        return bags.stream().anyMatch(bag -> Objects.equals(bag.getSourceId(), sourceId));
+    }
+
+    /**
+     * Calculates the total net weight of the shift: the sum of the net
+     * weights of all its bags. It is the base of the quartering (RN-051).
+     *
+     * @return total net weight in kg with 2 decimals
+     */
+    public BigDecimal calculateTotalNetWeight() {
+        return bags.stream()
+                .map(WasteBag::getNetWeight)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(2, RoundingMode.HALF_UP);
     }
 
     /**
@@ -189,6 +265,15 @@ public class SamplingShift {
 
     public ShiftPopulation getPopulation() {
         return population;
+    }
+
+    /**
+     * Returns all the bags of the shift.
+     *
+     * @return unmodifiable list of bags
+     */
+    public List<WasteBag> getBags() {
+        return Collections.unmodifiableList(bags);
     }
 
     /**
