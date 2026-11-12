@@ -19,7 +19,7 @@ Reglas:
 
 ## Fase 1 — Esquema y semilla
 
-- [ ] **T01. Esquema.** `sql/001_schema.sql`: tipos `ENUM`, las 20 tablas del plan (sección 3.2) con sus PK, FK, `UNIQUE`, `CHECK`, columnas generadas, *trigger* de solo inserción en `CORRECCION`, comentarios de política de borrado y las 2 vistas. Empieza borrando todo lo que exista.
+- [x] **T01. Esquema.** `sql/001_schema.sql`: tipos `ENUM`, las 20 tablas del plan (sección 3.2) con sus PK, FK, `UNIQUE`, `CHECK`, columnas generadas, *trigger* de solo inserción en `CORRECCION`, comentarios de política de borrado y las 2 vistas. Empieza borrando todo lo que exista.
   *Verificación:* se ejecuta dos veces seguidas con `psql` sin errores.
 
 - [ ] **T02. Semilla.** `sql/002_seed.sql`: las 15+ subcategorías (R-040), la I.E. Prudencia Daza con sus 8 fuentes ficticias y polígonos provisionales (R-041), un docente y un estudiante de demostración (R-042), un estudio CERRADO completo (R-043) y un estudio EN_EJECUCION a medio llenar (R-044).
