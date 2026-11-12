@@ -70,5 +70,5 @@ Reglas:
 - [x] **T15. Documentación.** `docs/base-de-datos.md` con el diagrama Mermaid de tablas y relaciones, el propósito de cada tabla y las decisiones de diseño (R-060). README: instalar PostgreSQL, definir las variables y recrear la base (R-053). Actualizar `docs/layer-diagram.md`.
   *Verificación:* los diagramas se ven en GitHub.
 
-- [ ] **T16. Revisión final y PR.** Revisar la trazabilidad (CA-100 a CA-110), `git grep` de contraseñas (CA-109), `./mvnw verify` en verde. Revisión de Antigravity y PR a `develop`.
+- [x] **T16. Revisión final y PR.** Revisar la trazabilidad (CA-100 a CA-110), `git grep` de contraseñas (CA-109), `./mvnw verify` en verde. Revisión de Antigravity y PR a `develop`.
   *Verificación:* `./mvnw verify` en BUILD SUCCESS; PR abierto.
