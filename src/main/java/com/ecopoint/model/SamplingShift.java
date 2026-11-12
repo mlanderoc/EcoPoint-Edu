@@ -30,6 +30,7 @@ public class SamplingShift {
     private ShiftStatus status;
     private ShiftPopulation population;
     private final List<WasteBag> bags;
+    private Quartering quartering;
     private final Set<Long> sourcesWithoutGeneration;
 
     /**
@@ -188,6 +189,30 @@ public class SamplingShift {
     }
 
     /**
+     * Indicates whether the shift already has its quartering (RN-050).
+     *
+     * @return true if the quartering was registered
+     */
+    public boolean hasQuartering() {
+        return quartering != null;
+    }
+
+    /**
+     * Registers the quartering of the shift; a shift has at most one (RN-050).
+     * The sample data are checked beforehand by {@code QuarteringValidator}.
+     *
+     * @param newQuartering quartering of the shift
+     * @throws BusinessRuleException if the shift is closed or already has a quartering
+     */
+    public void registerQuartering(Quartering newQuartering) {
+        requireOpen();
+        if (hasQuartering()) {
+            throw new BusinessRuleException("El turno " + getCode() + " ya tiene un cuarteo registrado.");
+        }
+        this.quartering = newQuartering;
+    }
+
+    /**
      * Calculates the total net weight of the shift: the sum of the net
      * weights of all its bags. It is the base of the quartering (RN-051).
      *
@@ -258,6 +283,10 @@ public class SamplingShift {
 
     public ShiftPopulation getPopulation() {
         return population;
+    }
+
+    public Quartering getQuartering() {
+        return quartering;
     }
 
     /**
