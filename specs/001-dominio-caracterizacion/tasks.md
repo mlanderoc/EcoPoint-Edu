@@ -53,7 +53,7 @@ Reglas:
 - [x] **T10. Estudio de caracterización.** `CharacterizationStudy`, `SamplingDay` y `StudyValidator`.
   *Verificación:* `CharacterizationStudyTest` (CA-010, `overlaps`), `StudyValidatorTest` (CA-011, CA-012, CA-014, RN-015).
 
-- [ ] **T11. Verificación (base común).** `VerificationInfo`, `VerifiableRecord` (abstracta), `Correction`.
+- [x] **T11. Verificación (base común).** `VerificationInfo`, `VerifiableRecord` (abstracta), `Correction`.
   *Verificación:* `VerificationInfoTest`: un registro nuevo queda PENDIENTE; `markVerified` y `markCorrected` guardan usuario y fecha.
 
 - [ ] **T12. Turnos y población.** `ShiftPopulation`, `SamplingShift` y `ShiftValidator`.
