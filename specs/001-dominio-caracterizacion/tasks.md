@@ -64,7 +64,7 @@ Reglas:
 - [x] **T13. Bolsas.** `WasteBag` y `WasteBagValidator`; generación del rótulo en `SamplingShift.nextLabelFor(...)`.
   *Verificación:* `WasteBagTest` (CA-032), `WasteBagValidatorTest` (CA-031, CA-033, RN-030), `SamplingShiftTest` (CA-030, RN-032).
 
-- [ ] **T14. Cuarteo.** Reescribir `Quartering` y `QuarteringResult`; reescribir `QuarteringValidator`.
+- [x] **T14. Cuarteo.** Reescribir `Quartering` y `QuarteringResult`; reescribir `QuarteringValidator`.
   *Verificación:* `QuarteringTest` (CA-052, CA-053, CA-054, `annul`), `QuarteringValidatorTest` (CA-050, CA-051, CA-055, CA-056, RN-055).
 
 - [ ] **T15. Densidad.** `DensityMeasurement` y `DensityValidator`.

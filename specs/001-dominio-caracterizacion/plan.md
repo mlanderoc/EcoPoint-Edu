@@ -126,7 +126,7 @@ classDiagram
     class Quartering {
         BigDecimal shiftNetWeight
         BigDecimal sampleWeight
-        boolean fullSample
+        isFullSample() boolean
         QualityStatus qualityStatus
         List~QuarteringResult~ results
         calculateTotalClassifiedWeight() BigDecimal
@@ -254,7 +254,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | `StudyValidator` | `validate(study)`, `validateNoOverlap(study, List<CharacterizationStudy> others)`, `validateStartExecution(study, int activeSources)`, `validateClose(study, int pendingRecords, int unresolvedQuarterings)` | RN-010 a RN-016 |
 | `ShiftValidator` | `validateNewShift(study, day, type, existingShifts)`, `validatePopulation(population)`, `validateOpenForRegistration(shift, study)`, `validateCanRegisterBag(shift, study)`, `validateCanClose(shift, Map<Long, String> participatingSources)`, `validateReopen(shift, study)` | RN-020 a RN-025 |
 | `WasteBagValidator` | `validate(bag, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 (las condiciones del turno las revisa `ShiftValidator`) |
-| `QuarteringValidator` | `validate(quartering, shift, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)` | RN-050, RN-051, RN-055 |
+| `QuarteringValidator` | `validate(quartering, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)`, `validatePermissions(quartering, user)`, `validateAnnul(quartering, user)` | RN-050 a RN-056 |
 | `DensityValidator` | `validate(measurement, shift)` | RN-057 |
 | `VerificationValidator` | `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062, RN-063 |
 | `UserValidator` | `validate(user)`, `validateUniqueEmail(user, Set<String> existingEmails)` | RN-084 |
