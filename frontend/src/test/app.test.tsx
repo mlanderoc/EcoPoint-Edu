@@ -12,9 +12,9 @@ describe('App Initial Render (Phase 0)', () => {
 
   it('displays the 4 waste groups from Res. 2184/2019', () => {
     render(<App />)
-    expect(screen.getByText('Blanco')).toBeInTheDocument()
-    expect(screen.getByText('Verde Orgánico')).toBeInTheDocument()
-    expect(screen.getByText('Negro')).toBeInTheDocument()
-    expect(screen.getByText('Sin color')).toBeInTheDocument()
+    expect(screen.getAllByText('Blanco').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Verde Orgánico').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Negro').length).toBeGreaterThanOrEqual(1)
+    expect(screen.getAllByText('Sin color').length).toBeGreaterThanOrEqual(1)
   })
 })

@@ -45,15 +45,15 @@
 
 ## Fase 1 — Sistema de Diseño, Componentes Base y Layout Adaptativo
 
-- [ ] **T305. Componentes atómicos accesibles con touch target ≥ 48 px (R-300, R-301, R-302).**
+- [x] **T305. Componentes atómicos accesibles con touch target ≥ 48 px (R-300, R-301, R-302).**
   Crear componentes UI reutilizables en `src/components/ui/`: `Button` (con variantes, estado `loading` con spinner y altura mínima 48 px), `Input` (soporte `inputMode="decimal"`, formateo de coma/punto, manejo de error en borde rojo), `Select`, `Card`, `Modal` (accesible con Radix UI Dialog) y `AlertBadge`.
   *Verificación:* Pruebas unitarias en Vitest confirmando dimensiones mínimas $\ge 48\text{ px}$ y aceptación de separador decimal punto y coma.
 
-- [ ] **T306. Badges y chips de grupos de residuos (R-304).**
+- [x] **T306. Badges y chips de grupos de residuos (R-304).**
   Crear `WasteGroupBadge` y `WasteGroupChip` que representen los 4 grupos de la Res. 2184/2019 (Blanco, Verde Orgánico `#27AE60`, Negro, Sin color), asegurando que siempre incluyan el nombre textual visible junto al color y que se usen exclusivamente como chips informativos, nunca como botones.
   *Verificación:* Pruebas unitarias validando que el texto de cada grupo de residuo esté presente en el DOM y con contraste WCAG adecuado.
 
-- [ ] **T307. Layout principal adaptativo y menú según rol (R-311, CA-300, CA-307).**
+- [x] **T307. Layout principal adaptativo y menú según rol (R-311, CA-300, CA-307).**
   Crear `AppLayout`, `Header` con datos del usuario actual y botón de cierre de sesión, `Sidebar` para pantallas de escritorio/tableta y `BottomNav` para dispositivos móviles (< 768 px, optimizado para 360 px sin scroll horizontal).
   *Verificación:* `test('ca307_mobile360ViewportNoHorizontalScroll')` verifica que no exista desplazamiento horizontal en viewport de 360 px y que los botones de navegación sean accesibles.
 
