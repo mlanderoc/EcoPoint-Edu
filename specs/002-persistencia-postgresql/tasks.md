@@ -36,7 +36,7 @@ Reglas:
 - [x] **T05. Traducción de errores.** Utilidad que convierte `DataAccessException` en `PersistenceException` con la operación en español (R-021).
   *Verificación:* prueba con una consulta inválida.
 
-- [ ] **T06. Institución y fuentes.** `InstitutionRepository`, `GenerationSourceRepository` y sus implementaciones JDBC (incluye la geometría `jsonb`).
+- [x] **T06. Institución y fuentes.** `InstitutionRepository`, `GenerationSourceRepository` y sus implementaciones JDBC (incluye la geometría `jsonb`).
   *Verificación:* `InstitutionRepositoryIT`, `GenerationSourceRepositoryIT` (CA-110, CA-104 desde la aplicación).
 
 - [ ] **T07. Subcategorías, usuarios y cuadrillas.** `WasteCategoryRepository`, `UserRepository`, `CrewRepository` y sus implementaciones.
