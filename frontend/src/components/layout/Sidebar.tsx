@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export interface NavItem {
   label: string
@@ -28,11 +29,26 @@ export interface SidebarProps {
 }
 
 export function Sidebar({
-  role = 'ESTUDIANTE_UNIVERSITARIO',
+  role: roleProp,
   currentPath = '/campo',
   onNavigate,
   className,
 }: SidebarProps) {
+  let authRole: UserRole | undefined
+  try {
+    const auth = useAuth()
+    authRole = auth.role ?? undefined
+  } catch {
+    // Outside AuthProvider
+  }
+
+  const role = roleProp ?? authRole
+
+  // Without role or session, do not render menu
+  if (!role) {
+    return null
+  }
+
   // Navigation structure adhering strictly to CA-300 and RN-081
   const isDocente = role === 'DOCENTE'
 

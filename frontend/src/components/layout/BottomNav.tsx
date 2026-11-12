@@ -2,6 +2,7 @@ import React from 'react'
 import { ClipboardList, Calendar, Bell, UserCheck, Settings, ShoppingBag } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 
 export interface BottomNavProps {
   role?: UserRole
@@ -10,10 +11,25 @@ export interface BottomNavProps {
 }
 
 export function BottomNav({
-  role = 'ESTUDIANTE_UNIVERSITARIO',
+  role: roleProp,
   currentPath = '/campo',
   onNavigate,
 }: BottomNavProps) {
+  let authRole: UserRole | undefined
+  try {
+    const auth = useAuth()
+    authRole = auth.role ?? undefined
+  } catch {
+    // Outside AuthProvider
+  }
+
+  const role = roleProp ?? authRole
+
+  // Without role or session, do not render bottom navigation
+  if (!role) {
+    return null
+  }
+
   const isDocente = role === 'DOCENTE'
 
   // Items per role strictly respecting CA-300

@@ -69,7 +69,7 @@
   Crear `AuthContext`, hook `useAuth` y la vista `/login` con formulario de correo y contraseña. Al autenticar con éxito, sincronizar con `GET /api/v1/auth/me`. Soporte para el aviso "Su sesión expiró" tras recibir error 401.
   *Verificación:* `test('loginFormSuccessAndSessionHandling')` valida el inicio de sesión exitoso y la sincronización con `/auth/me`.
 
-- [ ] **T310. Guardas de ruta por rol y visibilidad condicional (CA-300, R-311).**
+- [x] **T310. Guardas de ruta por rol y visibilidad condicional (CA-300, R-311).**
   Implementar `RequireAuth`, `RequireRole` y `RequirePermission`. Restringir vistas administrativas y de configuración únicamente al rol `DOCENTE`. En el rol `ESTUDIANTE_UNIVERSITARIO`, ocultar los enlaces de administración y deshabilitar/ocultar botones de abrir y cerrar turnos, dejando la arquitectura preparada para las acciones de campo avanzadas (Specs 005/006).
   *Verificación:* `test('ca300_studentMenuAndButtonsRestricted')` confirma que el estudiante no ve opciones administrativas ni botones de turno.
 

@@ -11,7 +11,7 @@ import { apiClient, ApiError, onUnauthorized } from '@/services/apiClient'
 
 describe('HTTP apiClient (T308, R-303)', () => {
   it('performs successful GET request returning parsed data', async () => {
-    const result = await apiClient.get<{ id: number; name: string }>('/api/v1/institutions')
+    const result = await apiClient.get<Array<{ id: number; name: string }>>('/api/v1/institutions')
     expect(Array.isArray(result)).toBe(true)
     expect(result[0].name).toContain('I.E. Prudencia Daza')
   })
