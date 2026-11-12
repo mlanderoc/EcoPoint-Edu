@@ -12,6 +12,7 @@ public class InvalidDataException extends EcoPointException {
     public static final String ERROR_CODE = "ERR_INVALID_DATA";
 
     private final String fieldName;
+    private final String problemDescription;
 
     /**
      * Constructs an InvalidDataException specifying the invalid field and reason.
@@ -22,6 +23,7 @@ public class InvalidDataException extends EcoPointException {
     public InvalidDataException(String fieldName, String problemDescription) {
         super("Dato inválido en el campo '" + fieldName + "': " + problemDescription, ERROR_CODE);
         this.fieldName = fieldName;
+        this.problemDescription = problemDescription;
     }
 
     /**
@@ -32,6 +34,7 @@ public class InvalidDataException extends EcoPointException {
     public InvalidDataException(String message) {
         super(message, ERROR_CODE);
         this.fieldName = "general";
+        this.problemDescription = message;
     }
 
     /**
@@ -41,5 +44,15 @@ public class InvalidDataException extends EcoPointException {
      */
     public String getFieldName() {
         return fieldName;
+    }
+
+    /**
+     * Returns the reason why the value is invalid, without the field prefix of the message.
+     * The API uses it to report the error next to the field (spec 003, CA-205).
+     *
+     * @return reason in Spanish
+     */
+    public String getProblemDescription() {
+        return problemDescription;
     }
 }

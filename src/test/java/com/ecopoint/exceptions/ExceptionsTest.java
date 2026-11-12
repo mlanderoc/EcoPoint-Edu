@@ -49,4 +49,21 @@ class ExceptionsTest {
                 exception.getMessage());
         assertInstanceOf(EcoPointException.class, exception);
     }
+
+    @Test
+    void ca205_invalidDataExceptionKeepsTheReasonWithoutTheFieldPrefix() {
+        InvalidDataException exception = new InvalidDataException("tara", "La tara no puede superar el peso bruto.");
+
+        assertEquals("tara", exception.getFieldName());
+        assertEquals("La tara no puede superar el peso bruto.", exception.getProblemDescription());
+        assertEquals("Dato inválido en el campo 'tara': La tara no puede superar el peso bruto.", exception.getMessage());
+    }
+
+    @Test
+    void ca205_generalInvalidDataExceptionUsesTheWholeMessageAsReason() {
+        InvalidDataException exception = new InvalidDataException("El archivo no es un GeoJSON válido.");
+
+        assertEquals("general", exception.getFieldName());
+        assertEquals("El archivo no es un GeoJSON válido.", exception.getProblemDescription());
+    }
 }

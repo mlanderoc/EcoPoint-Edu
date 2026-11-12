@@ -23,7 +23,7 @@ Reglas:
 
 ## Fase 1 — Seguridad y errores
 
-- [ ] **T02. Motivo del error sin prefijo.** `InvalidDataException.getProblemDescription()`, con prueba unitaria. *(Merlín)*
+- [x] **T02. Motivo del error sin prefijo.** `InvalidDataException.getProblemDescription()`, con prueba unitaria. *(Merlín)*
   *Verificación:* las pruebas actuales de `exceptions` y `validation` siguen pasando.
 
 - [ ] **T03. Contraseñas en el repositorio.** `UserRepository.findPasswordHashByEmail` y `updatePasswordHash` con su implementación JDBC y prueba de integración. *(Merlín)*
