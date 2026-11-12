@@ -29,7 +29,7 @@ Reglas:
 - [x] **T03. Contraseñas en el repositorio.** `UserRepository.findPasswordHashByEmail` y `updatePasswordHash` con su implementación JDBC y prueba de integración. *(Merlín)*
   *Verificación:* `CatalogAndPeopleRepositoryIT` cubre los dos métodos.
 
-- [ ] **T04. Formato de error.** `ClockConfig` y la configuración de JSON (fechas ISO y decimales sin notación científica) *(Merlín)*. DTO `ApiError`, `FieldErrorDto` y `PageResponse`; `ApiExceptionHandler` con la tabla de la sección 4.2 del plan, el diccionario de campos y el identificador en el log para los 500. *(Carlos)*
+- [x] **T04. Formato de error.** `ClockConfig` y la configuración de JSON (fechas ISO y decimales sin notación científica) *(Merlín)*. DTO `ApiError`, `FieldErrorDto` y `PageResponse`; `ApiExceptionHandler` con la tabla de la sección 4.2 del plan, el diccionario de campos y el identificador en el log para los 500. *(Carlos)*
   *Verificación:* `@WebMvcTest` con un controlador de prueba: un caso por fila de la tabla; CA-208 (500 sin SQL ni traza).
 
 - [ ] **T05. Configuración de seguridad.** `SecurityConfig` (sesión, CSRF con `CookieCsrfTokenRepository`, CORS, rutas públicas: login y csrf), `EcoPointUserDetails`, `EcoPointUserDetailsService`, `BCryptPasswordEncoder`, respuestas JSON para 401 y 403. *(Merlín)*
