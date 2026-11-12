@@ -98,8 +98,16 @@ Dónde va cada regla:
 - Ramas: `main` ← `develop` ← `feature/NNN-nombre` (una rama por spec) o `fix/nombre`.
 - **Prohibido** hacer commit directo a `main` o `develop`, usar `git push --force` y aprobar el PR propio.
 - Mensajes de commit en **español**, con prefijo: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`. Ejemplo: `feat: agregar cálculo de densidad en WasteBag`.
-- **Autoría:** el autor de cada commit es un integrante del equipo (el usuario de git configurado). Los agentes de IA **no** se ponen como autores ni coautores: nada de líneas `Co-Authored-By` ni firmas de IA en commits o PR.
-- Commits pequeños: idealmente uno por tarea de `tasks.md`.
+- **Autoría:** el **autor** de cada commit es el integrante responsable de lo que cambia, según el reparto de [`src/TEAM.md`](src/TEAM.md). Se indica con `git commit --author="Nombre <correo>"`:
+
+  | Lo que cambia el commit | Autor |
+  | --- | --- |
+  | `exceptions`, `pom.xml`, Maven Wrapper, `docs/`, `specs/`, `AGENTS.md` | `Merlín Yelenis Landero Cuello <mlandero@unicesar.edu.co>` |
+  | `model` y sus pruebas | `Estefanía Márquez Martínez <estefaniamarquez@unicesar.edu.co>` |
+  | `validation` y sus pruebas, interfaz | `Carlos Gomez <craulgomez@unicesar.edu.co>` |
+
+  Si una tarea toca varios paquetes, se divide en **un commit por responsable**. Los agentes de IA **no** se ponen como autores ni coautores: nada de líneas `Co-Authored-By` ni firmas de IA en commits o PR.
+- Commits pequeños: idealmente uno por tarea de `tasks.md` y por responsable.
 - Títulos y descripciones de PR en español, con la spec y las tareas que cubre.
 
 ## 8. Lo que no se toca
