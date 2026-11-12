@@ -49,7 +49,7 @@ Reglas:
 - [x] **T09. Servicios de institución y fuentes.** `InstitutionService` y `GenerationSourceService` (RN-001 a RN-005, permisos). *(Estefanía)*
   *Verificación:* pruebas unitarias, incluido el 403 para el estudiante y la fuente con bolsas que solo se desactiva.
 
-- [ ] **T10. Servicios de usuarios, cuadrillas y subcategorías.** `UserService` (contraseña con BCrypt, correo único RN-084), `CrewService` (RN-085, en una transacción) y `WasteCategoryService`. *(Estefanía)*
+- [x] **T10. Servicios de usuarios, cuadrillas y subcategorías.** `UserService` (contraseña con BCrypt, correo único RN-084), `CrewService` (RN-085, en una transacción) y `WasteCategoryService`. *(Estefanía)*
   *Verificación:* pruebas unitarias de cada regla.
 
 - [ ] **T11. Rutas de administración.** Controladores y DTO de `institutions`, `sources`, `users`, `crews` y `waste-categories`, con paginación de usuarios. `PasswordStorageIT`. *(Carlos)*
