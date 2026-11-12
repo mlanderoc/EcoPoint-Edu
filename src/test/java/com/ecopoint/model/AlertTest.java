@@ -112,6 +112,16 @@ class AlertTest {
     }
 
     @Test
+    void r1_attendedAlertIsRestoredAndCannotBeAttendedAgain() {
+        Alert alert = Alert.restore(3L, AlertType.VALOR_ATIPICO, "Bolsa", 9L, "Valor atípico", AT,
+                true, 1L, AT.plusHours(2), "Se repesó");
+
+        assertTrue(alert.isAttended());
+        assertEquals("Se repesó", alert.getAttendNote());
+        assertThrows(BusinessRuleException.class, () -> alert.attend(STUDENT, "Otra vez", AT));
+    }
+
+    @Test
     void rn073_alertIsNotAttendedTwice() {
         Alert alert = pendingAlert();
         alert.attend(STUDENT, "Se repesó", AT);
