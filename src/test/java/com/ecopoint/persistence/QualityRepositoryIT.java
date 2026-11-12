@@ -127,4 +127,12 @@ class QualityRepositoryIT extends PostgresIntegrationTest {
         assertThrows(PersistenceException.class, () -> evidence.save(new Evidence(null, EvidenceTarget.BAG, 1L,
                 "evidencias/grande.jpg", "image/jpeg", 6_000_000, null, teacher.getId(), AT)));
     }
+
+    @Test
+    void t17_alertsAreListedByTheStudyOfTheirRecord() {
+        Long closed = jdbc.queryForObject("SELECT id FROM ESTUDIO WHERE estado = 'CERRADO'", Long.class);
+
+        assertEquals(2, alerts.findByStudy(closed).size());
+        assertTrue(alerts.findByStudy(executingStudy).isEmpty());
+    }
 }
