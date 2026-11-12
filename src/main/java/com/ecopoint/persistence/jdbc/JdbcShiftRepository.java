@@ -56,15 +56,18 @@ public class JdbcShiftRepository implements ShiftRepository {
     public SamplingShift save(SamplingShift shift) {
         DataAccessTranslator.execute("guardar el turno " + shift.getCode(), () -> {
             if (shift.getId() == null) {
-                shift.setId(jdbc.queryForObject("INSERT INTO TURNO (id_estudio, numero_dia, tipo, estado, cerrado_en) "
-                                + "VALUES (:estudio, :dia, CAST(:tipo AS tipo_turno), CAST(:estado AS estado_turno), "
+                shift.setId(jdbc.queryForObject("INSERT INTO TURNO (id_estudio, numero_dia, tipo, estado, id_cuadrilla, cerrado_en) "
+                                + "VALUES (:estudio, :dia, CAST(:tipo AS tipo_turno), CAST(:estado AS estado_turno), :cuadrilla, "
                                 + "CASE WHEN :estado = 'CERRADO' THEN now() END) RETURNING id",
                         new MapSqlParameterSource("estudio", shift.getStudyId())
                                 .addValue("dia", shift.getDayNumber())
                                 .addValue("tipo", shift.getType().name())
-                                .addValue("estado", shift.getStatus().name()), Long.class));
+                                .addValue("estado", shift.getStatus().name())
+                                .addValue("cuadrilla", shift.getCrewId()), Long.class));
             } else {
                 writeStatus(shift.getId(), shift.getStatus());
+                jdbc.update("UPDATE TURNO SET id_cuadrilla = :cuadrilla WHERE id = :id",
+                        new MapSqlParameterSource("id", shift.getId()).addValue("cuadrilla", shift.getCrewId()));
             }
             savePopulation(shift);
             MapSqlParameterSource byShift = new MapSqlParameterSource("turno", shift.getId());
@@ -80,14 +83,14 @@ public class JdbcShiftRepository implements ShiftRepository {
     @Override
     public Optional<SamplingShift> findById(Long id) {
         return DataAccessTranslator.execute("buscar el turno " + id,
-                () -> jdbc.queryForList("SELECT id, id_estudio, numero_dia, tipo, estado FROM TURNO WHERE id = :id",
+                () -> jdbc.queryForList("SELECT id, id_estudio, numero_dia, tipo, estado, id_cuadrilla FROM TURNO WHERE id = :id",
                         new MapSqlParameterSource("id", id)).stream().findFirst().map(this::toShift));
     }
 
     @Override
     public List<SamplingShift> findByStudy(Long studyId) {
         return DataAccessTranslator.execute("listar los turnos del estudio " + studyId,
-                () -> jdbc.queryForList("SELECT id, id_estudio, numero_dia, tipo, estado FROM TURNO "
+                () -> jdbc.queryForList("SELECT id, id_estudio, numero_dia, tipo, estado, id_cuadrilla FROM TURNO "
                                 + "WHERE id_estudio = :estudio ORDER BY numero_dia, tipo",
                         new MapSqlParameterSource("estudio", studyId)).stream().map(this::toShift).toList());
     }
@@ -133,9 +136,12 @@ public class JdbcShiftRepository implements ShiftRepository {
                 byShift, FieldRecordMappers.POPULATION).stream().findFirst().orElse(null);
         LinkedHashSet<Long> withoutGeneration = new LinkedHashSet<>(jdbc.queryForList(
                 "SELECT id_fuente FROM TURNO_SIN_GENERACION WHERE id_turno = :turno ORDER BY id_fuente", byShift, Long.class));
-        return SamplingShift.restore(id, ((Number) row.get("id_estudio")).longValue(),
+        SamplingShift shift = SamplingShift.restore(id, ((Number) row.get("id_estudio")).longValue(),
                 ((Number) row.get("numero_dia")).intValue(), ShiftType.valueOf(row.get("tipo").toString()),
                 ShiftStatus.valueOf(row.get("estado").toString()), population, bags.findByShift(id),
                 quarterings.findByShift(id).orElse(null), densities.findByShift(id).orElse(null), withoutGeneration);
+        Object crew = row.get("id_cuadrilla");
+        shift.assignCrew(crew == null ? null : ((Number) crew).longValue());
+        return shift;
     }
 }

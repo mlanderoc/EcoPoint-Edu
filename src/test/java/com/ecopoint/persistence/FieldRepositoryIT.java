@@ -2,6 +2,7 @@ package com.ecopoint.persistence;
 
 import com.ecopoint.exceptions.PersistenceException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.DensityMeasurement;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Institution;
@@ -32,6 +33,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -55,6 +57,7 @@ class FieldRepositoryIT extends PostgresIntegrationTest {
     @Autowired private GenerationSourceRepository sources;
     @Autowired private UserRepository users;
     @Autowired private WasteCategoryRepository categories;
+    @Autowired private CrewRepository crews;
 
     private Long studyId;
     private Long studentId;
@@ -208,5 +211,21 @@ class FieldRepositoryIT extends PostgresIntegrationTest {
         assertTrue(list.stream().allMatch(SamplingShift::hasQuartering));
         assertTrue(list.stream().allMatch(SamplingShift::hasDensity));
         assertEquals(1, list.stream().filter(s -> s.getQuartering().getQualityStatus() == QualityStatus.ANULADO).count());
+    }
+
+    @Test
+    void r341_shiftKeepsTheCrewThatWorksIt() {
+        User teacher = users.save(new User(null, "Oriana", "Jurado", "oriana.crew@unicesar.edu.co", UserRole.DOCENTE,
+                institutions.findAll().get(0).getId()));
+        Crew crew = crews.save(new Crew(null, "Cuadrilla A", teacher));
+        SamplingShift shift = new SamplingShift(null, studyId, 4, ShiftType.TARDE);
+        shift.assignCrew(crew.getId());
+        shifts.save(shift);
+
+        assertEquals(crew.getId(), shifts.findById(shift.getId()).orElseThrow().getCrewId());
+
+        shift.assignCrew(null);
+        shifts.save(shift);
+        assertNull(shifts.findById(shift.getId()).orElseThrow().getCrewId());
     }
 }

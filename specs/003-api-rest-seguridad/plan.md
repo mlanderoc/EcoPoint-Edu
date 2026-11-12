@@ -133,7 +133,7 @@ Todas las rutas empiezan con `/api/v1`. "Permiso" es el de RN-081 que exige el s
 | `GET /studies/{id}/shifts` | Sesión | Los 16 turnos posibles: los que existen con su estado y avance, y los que no, con `status: null` ("no iniciado") |
 | `POST /studies/{id}/shifts` | `MANAGE_SHIFTS` | Abrir turno: `dayNumber`, `type`, `crewId` |
 | `GET /shifts/{id}` | Sesión | Turno con población, resumen por fuente (con bolsas, sin generación o pendiente), cuarteo y densidad |
-| `POST /shifts/{id}/close`, `POST /shifts/{id}/reopen` | `MANAGE_SHIFTS` | RN-024; la reapertura exige motivo |
+| `POST /shifts/{id}/close`, `POST /shifts/{id}/reopen` | `MANAGE_SHIFTS` | RN-024 y RN-025 (la reapertura solo con el estudio en ejecución) |
 | `GET`, `PUT /shifts/{id}/population` | Escribir: `REGISTER_POPULATION` | `students`, `teachers`, `staff`. Transacción |
 | `GET /shifts/{id}/bags?page&size` | Sesión | |
 | `POST /shifts/{id}/bags` | `REGISTER_BAGS` | `sourceId`, `grossWeight`, `tare`, `volume`. Responde la bolsa con rótulo, neto, densidad y si es atípica (RN-037). Si es atípica, crea su alerta en la misma transacción |
