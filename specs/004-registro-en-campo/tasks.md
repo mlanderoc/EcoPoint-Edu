@@ -65,7 +65,7 @@
   Crear `src/services/apiClient.ts` con Axios o Fetch configurado con `withCredentials: true` para envío de cookies de sesión `HttpOnly` (sin manejo de tokens en LocalStorage). Normalizar las respuestas con el formato de la Spec 003 (`{ timestamp, status, errorCode, message, path, fieldErrors }`) y notificar vencimiento de sesión ante error 401.
   *Verificación:* Pruebas unitarias de cliente HTTP verificando la propagación de mensajes en español y la lista de `fieldErrors`.
 
-- [ ] **T309. Contexto de autenticación y pantalla de inicio de sesión (R-310, R-312).**
+- [x] **T309. Contexto de autenticación y pantalla de inicio de sesión (R-310, R-312).**
   Crear `AuthContext`, hook `useAuth` y la vista `/login` con formulario de correo y contraseña. Al autenticar con éxito, sincronizar con `GET /api/v1/auth/me`. Soporte para el aviso "Su sesión expiró" tras recibir error 401.
   *Verificación:* `test('loginFormSuccessAndSessionHandling')` valida el inicio de sesión exitoso y la sincronización con `/auth/me`.
 

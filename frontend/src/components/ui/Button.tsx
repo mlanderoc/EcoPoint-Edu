@@ -5,6 +5,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'primary' | 'secondary' | 'danger' | 'outline' | 'ghost'
   size?: 'default' | 'sm' | 'lg'
   loading?: boolean
+  isLoading?: boolean
   fullWidth?: boolean
 }
 
@@ -15,6 +16,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variant = 'primary',
       size = 'default',
       loading = false,
+      isLoading = false,
       fullWidth = false,
       disabled,
       children,
@@ -22,6 +24,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const isButtonLoading = loading || isLoading
     const baseStyles =
       'inline-flex items-center justify-center font-bold tracking-wide rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer active:scale-[0.98]'
 
@@ -48,7 +51,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     return (
       <button
         ref={ref}
-        disabled={disabled || loading}
+        disabled={disabled || isButtonLoading}
         className={cn(
           baseStyles,
           sizeStyles[size],
@@ -58,7 +61,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         )}
         {...props}
       >
-        {loading && (
+        {isButtonLoading && (
           <svg
             className="animate-spin -ml-1 mr-2 h-4 w-4 text-current"
             fill="none"

@@ -1,17 +1,27 @@
+/**
+ * AlertBanner atomic component.
+ *
+ * @author craulgomez
+ */
+
 import React from 'react'
-import { AlertCircle, AlertTriangle, CheckCircle, Info } from 'lucide-react'
+import { AlertCircle, AlertTriangle, CheckCircle, Info, X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export interface AlertBannerProps extends React.HTMLAttributes<HTMLDivElement> {
   variant?: 'warning' | 'danger' | 'info' | 'success'
   title?: string
-  children: React.ReactNode
+  message?: React.ReactNode
+  children?: React.ReactNode
+  onDismiss?: () => void
 }
 
 export function AlertBanner({
   variant = 'info',
   title,
+  message,
   children,
+  onDismiss,
   className,
   ...props
 }: AlertBannerProps) {
@@ -42,8 +52,18 @@ export function AlertBanner({
       {icons[variant]}
       <div className="flex-1">
         {title && <p className="font-bold mb-0.5">{title}</p>}
-        <div>{children}</div>
+        <div>{message || children}</div>
       </div>
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label="Cerrar notificación"
+          className="text-slate-400 hover:text-slate-600 p-1 -mr-1 -mt-1 rounded-md transition-colors"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      )}
     </div>
   )
 }

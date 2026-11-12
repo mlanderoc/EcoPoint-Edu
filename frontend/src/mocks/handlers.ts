@@ -361,8 +361,12 @@ export const handlers = [
 ]
 
 // Reset helper for tests
-export function resetMockState(userRole: 'DOCENTE' | 'ESTUDIANTE_UNIVERSITARIO' = 'DOCENTE') {
-  activeUser = mockUsers.find((u) => u.role === userRole) || mockUsers[0]
+export function resetMockState(userRole?: 'DOCENTE' | 'ESTUDIANTE_UNIVERSITARIO' | null) {
+  if (userRole === null) {
+    activeUser = null
+  } else {
+    activeUser = mockUsers.find((u) => u.role === (userRole || 'DOCENTE')) || mockUsers[0]
+  }
   usersState = [...mockUsers]
   sourcesState = [...mockSources]
   studyState = { ...mockStudy }
@@ -375,4 +379,8 @@ export function resetMockState(userRole: 'DOCENTE' | 'ESTUDIANTE_UNIVERSITARIO' 
     },
   ]
   bagsState = [...mockBags]
+}
+
+export function setActiveUser(user: User | null) {
+  activeUser = user
 }
