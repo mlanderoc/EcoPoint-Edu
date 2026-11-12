@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { AuthProvider, RequireAuth, RequireRole, LoginPage, useAuth } from '@/features/auth'
 import { AppLayout } from '@/components/layout'
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
-import { InstitutionsPage, SourcesPage } from '@/features/admin'
+import { InstitutionsPage, SourcesPage, UsersPage } from '@/features/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -130,6 +130,14 @@ export function AppRoutes() {
             element={
               <RoutedAppLayout>
                 <SourcesPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route
+            path="/admin/usuarios"
+            element={
+              <RoutedAppLayout>
+                <UsersPage />
               </RoutedAppLayout>
             }
           />

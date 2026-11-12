@@ -81,7 +81,7 @@
   Vistas `/admin/instituciones` y `/admin/fuentes`. Listado, creación y edición de fuentes con código (ej. `AU`), nombre, tipo (Aulas, Oficinas, etc.) y estado activo/inactivo.
   *Verificación:* Pruebas de integración validando el listado y alta de fuentes vinculadas a una institución.
 
-- [ ] **T312. Administración de usuarios y validación de correo único (R-322, CA-302).**
+- [x] **T312. Administración de usuarios y validación de correo único (R-322, CA-302).**
   Vista `/admin/usuarios`. Formulario para registrar docentes y estudiantes. Si el correo institucional ya existe, capturar el error de API y mostrar el mensaje en rojo directamente bajo el campo correo.
   *Verificación:* `test('ca302_duplicateEmailDisplaysFieldError')` simula respuesta 400 con `fieldErrors: [{ field: 'email' }]` y confirma la marcación del campo.
 
