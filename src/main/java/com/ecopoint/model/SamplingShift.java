@@ -31,6 +31,7 @@ public class SamplingShift {
     private ShiftPopulation population;
     private final List<WasteBag> bags;
     private Quartering quartering;
+    private DensityMeasurement density;
     private final Set<Long> sourcesWithoutGeneration;
 
     /**
@@ -213,6 +214,30 @@ public class SamplingShift {
     }
 
     /**
+     * Indicates whether the shift already has its density measurement (RN-057).
+     *
+     * @return true if the measurement was registered
+     */
+    public boolean hasDensity() {
+        return density != null;
+    }
+
+    /**
+     * Registers the density measurement of the shift; a shift has at most one
+     * (RN-057). The values are checked beforehand by {@code DensityValidator}.
+     *
+     * @param measurement density measurement of the shift
+     * @throws BusinessRuleException if the shift is closed or already has a measurement
+     */
+    public void registerDensity(DensityMeasurement measurement) {
+        requireOpen();
+        if (hasDensity()) {
+            throw new BusinessRuleException("El turno " + getCode() + " ya tiene una medición de densidad.");
+        }
+        this.density = measurement;
+    }
+
+    /**
      * Calculates the total net weight of the shift: the sum of the net
      * weights of all its bags. It is the base of the quartering (RN-051).
      *
@@ -287,6 +312,10 @@ public class SamplingShift {
 
     public Quartering getQuartering() {
         return quartering;
+    }
+
+    public DensityMeasurement getDensity() {
+        return density;
     }
 
     /**
