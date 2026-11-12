@@ -248,7 +248,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | --- | --- | --- |
 | `InstitutionValidator` | `validate(institution)` | Nombre, dirección y zoom del mapa (0 a 22) |
 | `GenerationSourceValidator` | `validate(source)`, `validateUniqueCode(source, Set<String> existingCodes)`, `validateDeletion(source, boolean hasBags)`, `validateAvailableForRegistration(source)` | RN-001 a RN-005 |
-| `WasteCategoryValidator` | `validate(category)`, `validateUniqueName(category, Set<String> existingNames)`, `validateGroupChange(category, boolean hasResults)` | RN-041, RN-042 |
+| `WasteCategoryValidator` | `validate(category)`, `validateUniqueName(category, Set<String> existingNames)`, `validateGroupChange(category, WasteGroup previousGroup, boolean hasResults)`, `validateDeletion(category, boolean hasResults)` | RN-041, RN-042 |
 | `StudyValidator` | `validate(study)`, `validateNoOverlap(study, List<CharacterizationStudy> others)`, `validateStartExecution(study, int activeSources)`, `validateClose(study, int pendingRecords, int unresolvedQuarterings)` | RN-010 a RN-016 |
 | `ShiftValidator` | `validatePopulation(population)`, `validateCanRegisterBag(shift)`, `validateCanClose(shift, Set<Long> participatingSourceIds)` | RN-020 a RN-024 |
 | `WasteBagValidator` | `validate(bag, shift, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 |

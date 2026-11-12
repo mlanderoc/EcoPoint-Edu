@@ -1,46 +1,98 @@
 package com.ecopoint.model;
 
+import java.util.Locale;
+
 /**
- * Represents a solid waste classification category associated with one of the
- * official container colors of Resolution 2184 of 2019.
+ * Waste subcategory used to classify a quartering sample (paper, cardboard,
+ * PET plastic, food waste, batteries...). Every subcategory belongs to exactly
+ * one {@link WasteGroup} of Resolution 2184 of 2019 (RN-040 to RN-042).
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
 public class WasteCategory {
 
-    private int idWaste;
+    private Long id;
     private String name;
+    private WasteGroup group;
     private String description;
-    private String associatedColor;
+    private boolean active;
 
     /**
-     * Default constructor.
+     * Creates an empty, active subcategory.
      */
     public WasteCategory() {
+        this.active = true;
     }
 
     /**
-     * Constructs a WasteCategory with all attributes.
+     * Creates an active subcategory.
      *
-     * @param idWaste         unique identifier of the waste category
-     * @param name            name of the waste category (e.g., Plástico PET, Orgánicos)
-     * @param description     detailed description of the waste category
-     * @param associatedColor official regulatory color (BLANCO, VERDE, NEGRO)
+     * @param id          identifier, or null if not saved yet
+     * @param name        subcategory name, e.g. "Cartón"
+     * @param group       waste group it belongs to
+     * @param description optional description
      */
-    public WasteCategory(int idWaste, String name, String description, String associatedColor) {
-        this.idWaste = idWaste;
+    public WasteCategory(Long id, String name, WasteGroup group, String description) {
+        this();
+        this.id = id;
         this.name = name;
+        this.group = group;
         this.description = description;
-        this.associatedColor = associatedColor;
     }
 
-    public int getIdWaste() {
-        return idWaste;
+    /**
+     * Normalizes a subcategory name to compare it with others: trims spaces
+     * and ignores upper and lower case, so "Cartón" and " cartón " are the
+     * same name (RN-041).
+     *
+     * @param name name to normalize
+     * @return normalized name, or an empty string if the name is null
+     */
+    public static String normalizeName(String name) {
+        return name == null ? "" : name.trim().toLowerCase(Locale.ROOT);
     }
 
-    public void setIdWaste(int idWaste) {
-        this.idWaste = idWaste;
+    /**
+     * Indicates whether the subcategory holds hazardous or special waste
+     * (Sin color group, RN-056).
+     *
+     * @return true if its group is SIN_COLOR
+     */
+    public boolean isHazardous() {
+        return group != null && group.isHazardous();
+    }
+
+    /**
+     * Indicates whether the subcategory counts toward the recoverable fraction.
+     *
+     * @return true if its group is BLANCO or VERDE
+     */
+    public boolean isRecoverable() {
+        return group != null && group.isRecoverable();
+    }
+
+    /**
+     * Deactivates the subcategory: it keeps its history but is not offered in
+     * new quarterings (RN-042).
+     */
+    public void deactivate() {
+        this.active = false;
+    }
+
+    /**
+     * Activates the subcategory again.
+     */
+    public void activate() {
+        this.active = true;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -51,6 +103,14 @@ public class WasteCategory {
         this.name = name;
     }
 
+    public WasteGroup getGroup() {
+        return group;
+    }
+
+    public void setGroup(WasteGroup group) {
+        this.group = group;
+    }
+
     public String getDescription() {
         return description;
     }
@@ -59,11 +119,7 @@ public class WasteCategory {
         this.description = description;
     }
 
-    public String getAssociatedColor() {
-        return associatedColor;
-    }
-
-    public void setAssociatedColor(String associatedColor) {
-        this.associatedColor = associatedColor;
+    public boolean isActive() {
+        return active;
     }
 }

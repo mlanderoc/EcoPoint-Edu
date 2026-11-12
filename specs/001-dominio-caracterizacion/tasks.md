@@ -42,7 +42,7 @@ Reglas:
 - [x] **T07. Institución y fuentes.** Reescribir `Institution`; crear `GenerationSource` y `GenerationSourceValidator`.
   *Verificación:* `GenerationSourceValidatorTest`: CA-001, CA-002, CA-003; RN-005 (fuente inactiva).
 
-- [ ] **T08. Residuos.** Reescribir `WasteCategory` (subcategoría con `WasteGroup`); crear `WasteCategoryValidator`.
+- [x] **T08. Residuos.** Reescribir `WasteCategory` (subcategoría con `WasteGroup`); crear `WasteCategoryValidator`.
   *Verificación:* `WasteCategoryValidatorTest`: RN-041 (nombre único) y RN-042 (no cambia de grupo si tiene resultados).
 
 - [ ] **T09. Usuarios y cuadrillas.** Reescribir `User` (rol enum) y `UserValidator`; crear `Crew`, `CrewValidator` y `AccessPolicy`.
