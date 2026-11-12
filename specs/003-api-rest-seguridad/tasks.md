@@ -77,7 +77,7 @@ Reglas:
 - [x] **T17. Alertas.** `AlertService`: listar con filtros y paginación, atender con observación (RN-073). *(Carlos)*
   *Verificación:* pruebas unitarias.
 
-- [ ] **T18. Verificación y evidencias.** `VerificationService` (RN-062: quien verifica es distinto de quien digitó; corrección con historial en una transacción) y `EvidenceService` (5 MB, JPG o PNG, carpeta local). *(Estefanía)*
+- [x] **T18. Verificación y evidencias.** `VerificationService` (RN-062: quien verifica es distinto de quien digitó; corrección con historial en una transacción) y `EvidenceService` (5 MB, JPG o PNG, carpeta local). *(Estefanía)*
   *Verificación:* pruebas unitarias; la corrección guarda el valor anterior.
 
 - [ ] **T19. Rutas de la sección 5.3.** Controladores y DTO de cuarteo, densidad, verificaciones, historial, evidencias y alertas. *(Carlos)*
