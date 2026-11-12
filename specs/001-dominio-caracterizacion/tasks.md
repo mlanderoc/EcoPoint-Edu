@@ -89,5 +89,5 @@ Reglas:
 - [x] **T20. Documentación.** Rehacer `docs/class-diagrama.md` con el modelo nuevo (Mermaid), actualizar `docs/exception-hierarchy-diagram.md` con las 2 excepciones nuevas, y poner una nota en el `README.md`: "En reestructuración; ver `specs/`".
   *Verificación:* los diagramas se ven en GitHub.
 
-- [ ] **T21. Revisión final y PR.** Revisar la tabla de trazabilidad del plan (sección 8): cada CA tiene su prueba y todas pasan. Abrir el PR a `develop` con el resumen y la lista de CA cubiertos. Revisa: Antigravity.
+- [x] **T21. Revisión final y PR.** Revisar la tabla de trazabilidad del plan (sección 8): cada CA tiene su prueba y todas pasan. Abrir el PR a `develop` con el resumen y la lista de CA cubiertos. Revisa: Antigravity.
   *Verificación:* `./mvnw test` en BUILD SUCCESS; PR abierto.
