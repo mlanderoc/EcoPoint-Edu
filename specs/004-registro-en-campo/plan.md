@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **BORRADOR — pendiente de revisión** |
+| Estado | **APROBADO** (11 nov 2026) |
 | Spec | [spec.md](spec.md) (aprobada) |
 | Redacta / implementa | Antigravity |
 | Revisa | Claude y equipo |
