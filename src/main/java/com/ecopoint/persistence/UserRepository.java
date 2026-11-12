@@ -7,8 +7,9 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Storage contract for users (spec 002, R-050). Password hashes are handled by
- * the security layer of spec 003.
+ * Storage contract for users (spec 002, R-050). The password hash is read and
+ * written only through its own methods and never travels inside {@link User}
+ * (spec 003, decision T5).
  *
  * @author mlanderoc
  * @version 1.0
@@ -68,4 +69,22 @@ public interface UserRepository {
      * @param userId user id
      */
     void deactivate(Long userId);
+
+    /**
+     * Returns the BCrypt hash of the password of the user with that email,
+     * ignoring upper and lower case. Used only to authenticate (spec 003, R-120).
+     *
+     * @param email email address
+     * @return the hash, or empty if the email does not exist or has no password yet
+     */
+    Optional<String> findPasswordHashByEmail(String email);
+
+    /**
+     * Replaces the BCrypt hash of the password of a user (spec 003, R-120).
+     *
+     * @param userId       user id
+     * @param passwordHash new BCrypt hash, never the plain password
+     * @throws com.ecopoint.exceptions.ResourceNotFoundException if the user does not exist
+     */
+    void updatePasswordHash(Long userId, String passwordHash);
 }

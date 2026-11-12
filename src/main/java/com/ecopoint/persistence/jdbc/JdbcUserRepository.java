@@ -1,5 +1,6 @@
 package com.ecopoint.persistence.jdbc;
 
+import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
 import com.ecopoint.persistence.UserRepository;
@@ -109,5 +110,23 @@ public class JdbcUserRepository implements UserRepository {
         DataAccessTranslator.execute("desactivar el usuario " + userId,
                 () -> jdbc.update("UPDATE USUARIO SET activo = FALSE WHERE id = :id",
                         new MapSqlParameterSource("id", userId)));
+    }
+
+    @Override
+    public Optional<String> findPasswordHashByEmail(String email) {
+        return DataAccessTranslator.execute("consultar la credencial del usuario",
+                () -> jdbc.queryForList("SELECT clave_hash FROM USUARIO WHERE lower(correo) = lower(btrim(:correo)) "
+                        + "AND clave_hash IS NOT NULL", new MapSqlParameterSource("correo", email), String.class)
+                        .stream().findFirst());
+    }
+
+    @Override
+    public void updatePasswordHash(Long userId, String passwordHash) {
+        int updated = DataAccessTranslator.execute("cambiar la contraseña del usuario " + userId,
+                () -> jdbc.update("UPDATE USUARIO SET clave_hash = :hash WHERE id = :id",
+                        new MapSqlParameterSource("hash", passwordHash).addValue("id", userId)));
+        if (updated == 0) {
+            throw new ResourceNotFoundException("Usuario", userId);
+        }
     }
 }

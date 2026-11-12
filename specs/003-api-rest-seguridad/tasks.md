@@ -26,7 +26,7 @@ Reglas:
 - [x] **T02. Motivo del error sin prefijo.** `InvalidDataException.getProblemDescription()`, con prueba unitaria. *(Merlín)*
   *Verificación:* las pruebas actuales de `exceptions` y `validation` siguen pasando.
 
-- [ ] **T03. Contraseñas en el repositorio.** `UserRepository.findPasswordHashByEmail` y `updatePasswordHash` con su implementación JDBC y prueba de integración. *(Merlín)*
+- [x] **T03. Contraseñas en el repositorio.** `UserRepository.findPasswordHashByEmail` y `updatePasswordHash` con su implementación JDBC y prueba de integración. *(Merlín)*
   *Verificación:* `CatalogAndPeopleRepositoryIT` cubre los dos métodos.
 
 - [ ] **T04. Formato de error.** DTO `ApiError`, `FieldErrorDto` y `PageResponse`; `ApiExceptionHandler` con la tabla de la sección 4.2 del plan, el diccionario de campos y el identificador en el log para los 500. *(Carlos)*

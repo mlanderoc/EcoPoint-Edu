@@ -1,6 +1,7 @@
 package com.ecopoint.persistence;
 
 import com.ecopoint.exceptions.PersistenceException;
+import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.Crew;
 import com.ecopoint.model.Institution;
 import com.ecopoint.model.User;
@@ -136,5 +137,24 @@ class CatalogAndPeopleRepositoryIT extends PostgresIntegrationTest {
         assertTrue(found.hasResponsibleTeacher());
         assertEquals(List.of(laura.getId()), found.getMembers().stream().map(User::getId).toList());
         assertEquals(1, crews.findByInstitution(institutionId).size());
+    }
+
+    @Test
+    void ca210_passwordHashIsStoredAndReadOnlyThroughItsOwnMethods() {
+        User saved = teacher();
+        assertTrue(users.findPasswordHashByEmail("oriana@unicesar.edu.co").isEmpty());
+
+        users.updatePasswordHash(saved.getId(), "$2a$10$hashDePruebaQueNoEsUnaContrasena0000000000000000000000");
+
+        assertEquals("$2a$10$hashDePruebaQueNoEsUnaContrasena0000000000000000000000",
+                users.findPasswordHashByEmail(" ORIANA@unicesar.edu.co").orElseThrow());
+        users.save(saved);
+        assertTrue(users.findPasswordHashByEmail("oriana@unicesar.edu.co").isPresent(),
+                "Guardar el usuario no debe borrar su contraseña");
+    }
+
+    @Test
+    void ca210_changingThePasswordOfAMissingUserIsReported() {
+        assertThrows(ResourceNotFoundException.class, () -> users.updatePasswordHash(999_999L, "$2a$10$x"));
     }
 }
