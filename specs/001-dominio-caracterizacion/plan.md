@@ -252,7 +252,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | `GenerationSourceValidator` | `validate(source)`, `validateUniqueCode(source, Set<String> existingCodes)`, `validateDeletion(source, boolean hasBags)`, `validateAvailableForRegistration(source)` | RN-001 a RN-005 |
 | `WasteCategoryValidator` | `validate(category)`, `validateUniqueName(category, Set<String> existingNames)`, `validateGroupChange(category, WasteGroup previousGroup, boolean hasResults)`, `validateDeletion(category, boolean hasResults)` | RN-041, RN-042 |
 | `StudyValidator` | `validate(study)`, `validateNoOverlap(study, List<CharacterizationStudy> others)`, `validateStartExecution(study, int activeSources)`, `validateClose(study, int pendingRecords, int unresolvedQuarterings)` | RN-010 a RN-016 |
-| `ShiftValidator` | `validatePopulation(population)`, `validateCanRegisterBag(shift)`, `validateCanClose(shift, Set<Long> participatingSourceIds)` | RN-020 a RN-024 |
+| `ShiftValidator` | `validateNewShift(study, day, type, existingShifts)`, `validatePopulation(population)`, `validateOpenForRegistration(shift, study)`, `validateCanRegisterBag(shift, study)`, `validateCanClose(shift, Map<Long, String> participatingSources)`, `validateReopen(shift, study)` | RN-020 a RN-025 |
 | `WasteBagValidator` | `validate(bag, shift, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 |
 | `QuarteringValidator` | `validate(quartering, shift, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)` | RN-050, RN-051, RN-055 |
 | `DensityValidator` | `validate(measurement, shift)` | RN-057 |

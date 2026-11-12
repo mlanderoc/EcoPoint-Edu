@@ -56,7 +56,7 @@ Reglas:
 - [x] **T11. Verificación (base común).** `VerificationInfo`, `VerifiableRecord` (abstracta), `Correction`.
   *Verificación:* `VerificationInfoTest`: un registro nuevo queda PENDIENTE; `markVerified` y `markCorrected` guardan usuario y fecha.
 
-- [ ] **T12. Turnos y población.** `ShiftPopulation`, `SamplingShift` y `ShiftValidator`.
+- [x] **T12. Turnos y población.** `ShiftPopulation`, `SamplingShift` y `ShiftValidator`.
   *Verificación:* `SamplingShiftTest` y `ShiftValidatorTest`: CA-020, CA-021, CA-022, CA-023; RN-021 (no se registra en un turno cerrado).
 
 ## Fase 4 — Bolsas, cuarteo y densidad
