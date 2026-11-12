@@ -21,23 +21,23 @@
 
 ## Fase 0 — Scaffolding, Tooling y Mock API
 
-- [ ] **T300. Scaffolding del proyecto frontend.**
+- [x] **T300. Scaffolding del proyecto frontend.**
   Inicializar la carpeta `frontend/` con Vite 6, React 18/19 y TypeScript 5 en modo estricto. Configurar `tsconfig.json` con alias de importación `@/*` y `vite.config.ts`.
   *Verificación:* `cd frontend && npm run build` genera el bundle sin advertencias ni errores.
 
-- [ ] **T301. Configuración de Tailwind CSS v4 y tokens de diseño.**
+- [x] **T301. Configuración de Tailwind CSS v4 y tokens de diseño.**
   Instalar y configurar Tailwind CSS v4 con `@tailwindcss/vite`. Definir la paleta de colores del logo de EcoPoint Edu (Verde Eco `#1E8449`, Verde Pino `#0F3D23`, Hoja `#8BC34A`, Azul del texto 'Edu' `#2F5DA8`), badges de la Res. 2184/2019 (Blanco, Verde Orgánico `#27AE60`, Negro, Sin color) y variables CSS para alto contraste solar.
   *Verificación:* Componente de prueba visualiza correctamente los colores institucionales y clases de utilidad de Tailwind v4.
 
-- [ ] **T302. Infraestructura de pruebas con Vitest y Testing Library.**
+- [x] **T302. Infraestructura de pruebas con Vitest y Testing Library.**
   Configurar Vitest, `@testing-library/react`, `@testing-library/jest-dom` y `jsdom`. Crear un test básico de humo.
   *Verificación:* `npm test` ejecuta y pasa la prueba inicial en verde.
 
-- [ ] **T303. Tipos TypeScript del dominio y contratos de la API.**
+- [x] **T303. Tipos TypeScript del dominio y contratos de la API.**
   Definir en `src/types/` las interfaces de entidades (`User`, `UserRole`, `Institution`, `GenerationSource`, `Study`, `SamplingDay`, `Shift`, `WasteBag`, `WasteGroup`) y el contrato de error de la Spec 003 (`ErrorResponse`, `FieldError`).
   *Verificación:* `npm run typecheck` valida los tipos sin inconsistencias.
 
-- [ ] **T304. Mock Service Worker (MSW v2) con simulación de sesión por cookie.**
+- [x] **T304. Mock Service Worker (MSW v2) con simulación de sesión por cookie.**
   Instalar MSW v2 y configurar `src/mocks/browser.ts` y `src/mocks/handlers.ts`. Simular la autenticación mediante cookie de sesión `HttpOnly` en memoria evaluando `withCredentials` (sin tokens en LocalStorage). Cargar datos semilla realistas de la I.E. Prudencia Daza (fuentes `AU`, `BA`, `CAF`, `OF`, etc., usuarios docente y estudiante, estudio de ejemplo). Configurar interceptor para simular latencia de red y errores controlados (400, 401, 403, 404, 422).
   *Verificación:* En el navegador, las peticiones `fetch('/api/v1/auth/me', { credentials: 'include' })` y `fetch('/api/v1/institutions')` son interceptadas y devuelven los datos simulados con status 200 tras login.
 
