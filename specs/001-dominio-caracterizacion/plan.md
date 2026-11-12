@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **APROBADO** (11 nov 2026) — R1 pendiente de confirmar |
+| Estado | **APROBADO** (11 nov 2026) |
 | Spec | [spec.md](spec.md) (aprobada) |
 | Redacta / implementa | Claude |
 | Revisa | Antigravity y equipo |
@@ -80,6 +80,7 @@ classDiagram
         getEndDate() LocalDate
         overlaps(CharacterizationStudy) boolean
         changeStatus(StudyStatus)
+        reopen(Long, String, LocalDateTime)
     }
     class SamplingDay {
         int dayNumber
@@ -97,7 +98,7 @@ classDiagram
         Set~Long~ sourcesWithoutGeneration
         Quartering quartering
         DensityMeasurement density
-        nextLabelFor(String) BagLabel
+        addBag(WasteBag) BagLabel
         calculateTotalNetWeight() BigDecimal
         open() / close() / reopen()
     }
@@ -125,7 +126,7 @@ classDiagram
     class Quartering {
         BigDecimal shiftNetWeight
         BigDecimal sampleWeight
-        boolean fullSample
+        isFullSample() boolean
         QualityStatus qualityStatus
         List~QuarteringResult~ results
         calculateTotalClassifiedWeight() BigDecimal
@@ -158,16 +159,13 @@ classDiagram
         String lastName
         String email
         UserRole role
-        boolean minor
-        ConsentRecord consent
-        canOperate() boolean
     }
     class Crew {
         Long id
         String name
-        Long responsibleUserId
+        User responsible
         List~User~ members
-        hasAdult() boolean
+        hasResponsibleTeacher() boolean
     }
     class Alert {
         AlertType type
@@ -195,7 +193,7 @@ classDiagram
     Crew "1" --> "*" User
 ```
 
-`SamplingShift` es el **agregado** central: agrupa todo lo que ocurre en un turno. Por eso, como Experto en Información, sabe generar el rótulo siguiente, calcular su peso neto total y si se puede cerrar.
+`SamplingShift` es el **agregado** central: agrupa todo lo que ocurre en un turno. Por eso, como Experto en Información, sabe asignar el rótulo de cada bolsa nueva (`addBag`), calcular su peso neto total y si se puede cerrar.
 
 > Nota: el estudio tiene 8 días × 2 turnos = **16 turnos**. La spec 006 menciona "14 turnos", que corresponde a los días 2 a 8 que entran en los cálculos.
 
@@ -210,7 +208,7 @@ classDiagram
 | `StudyStatus` | PLANIFICADO, EN_EJECUCION, EN_DEPURACION, CERRADO | `canTransitionTo(StudyStatus)`: solo avanza un paso; además CERRADO → EN_DEPURACION (RN-017) |
 | `VerificationStatus` | PENDIENTE, VERIFICADO, CORREGIDO | — |
 | `QualityStatus` | CONFORME, NO_CONFORME, ANULADO | — |
-| `UserRole` | COORDINADOR, DOCENTE, ESTUDIANTE_UNIVERSITARIO, ESTUDIANTE_COLEGIO | `hasPermission(Permission)` con la matriz RN-081; `isAdultRole()` |
+| `UserRole` | DOCENTE, ESTUDIANTE_UNIVERSITARIO (D9) | `hasPermission(Permission)` con la matriz RN-081; `canSuperviseCrew()` (RN-085) |
 | `Permission` | Una constante por fila de la matriz RN-081 (ej. `MANAGE_ADMINISTRATION`, `REGISTER_BAGS`, `REGISTER_HAZARDOUS_WASTE`, `VERIFY_RECORDS`…) | — |
 | `AlertType` | CUARTEO_NO_CONFORME, VALOR_ATIPICO, VERIFICACION_PENDIENTE | — |
 | `EvidenceTarget` | SHIFT, BAG, QUARTERING | — |
@@ -227,9 +225,9 @@ Objetos inmutables (`record` de Java 17) con su propia validación en el constru
 | `GeoPolygon` | `List<GeoPoint> vertices` | Cerrado, ≥ 3 vértices distintos (RN-004) |
 | `BagLabel` | `sourceCode`, `dayNumber`, `shiftType`, `sequence` (0 = sin consecutivo) | `toString()` → `AU-D3-M` o `AU-D3-M-2` (RN-031) |
 | `CharacterizationSettings` | Rango de submuestra (45–55 kg), tolerancia (2 %), peso neto máximo por bolsa (50 kg), densidad mínima y máxima (20–1 000 kg/m³) | `defaults()` con esos valores (D8, RN-037, RN-052) |
-| `ConsentRecord` | `guardianName`, `consentDate` | Ambos obligatorios (RN-082) |
+| `StudyReopening` | `userId`, `reason`, `at` | Registro de cada reapertura de un estudio cerrado (RN-017) |
 
-### 4.4 Verificación y correcciones (RN-060 a RN-064)
+### 4.4 Verificación y correcciones (RN-060 a RN-063)
 
 - `VerificationInfo`: `status`, `enteredBy` (id de usuario), `enteredAt`, `verifiedBy`, `verifiedAt`. Métodos `markVerified(Long userId, LocalDateTime at)` y `markCorrected(Long userId, LocalDateTime at)`.
 - `VerifiableRecord` (clase **abstracta**): base de `ShiftPopulation`, `WasteBag`, `Quartering` y `DensityMeasurement`. Contiene `id` y `VerificationInfo`. Así las cuatro se verifican igual (polimorfismo) y la bandeja de verificación de la spec 005 las trata como una sola lista.
@@ -250,22 +248,23 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 
 | Clase | Métodos principales | Reglas |
 | --- | --- | --- |
-| `GenerationSourceValidator` | `validate(source)`, `validateUniqueCode(source, Set<String> existingCodes)` | RN-001 a RN-004 |
-| `WasteCategoryValidator` | `validate(category)`, `validateUniqueName(category, Set<String> existingNames)`, `validateGroupChange(category, boolean hasResults)` | RN-041, RN-042 |
+| `InstitutionValidator` | `validate(institution)` | Nombre, dirección y zoom del mapa (0 a 22) |
+| `GenerationSourceValidator` | `validate(source)`, `validateUniqueCode(source, Set<String> existingCodes)`, `validateDeletion(source, boolean hasBags)`, `validateAvailableForRegistration(source)` | RN-001 a RN-005 |
+| `WasteCategoryValidator` | `validate(category)`, `validateUniqueName(category, Set<String> existingNames)`, `validateGroupChange(category, WasteGroup previousGroup, boolean hasResults)`, `validateDeletion(category, boolean hasResults)` | RN-041, RN-042 |
 | `StudyValidator` | `validate(study)`, `validateNoOverlap(study, List<CharacterizationStudy> others)`, `validateStartExecution(study, int activeSources)`, `validateClose(study, int pendingRecords, int unresolvedQuarterings)` | RN-010 a RN-016 |
-| `ShiftValidator` | `validatePopulation(population)`, `validateCanRegisterBag(shift)`, `validateCanClose(shift, Set<Long> participatingSourceIds)` | RN-020 a RN-024 |
-| `WasteBagValidator` | `validate(bag, shift, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 |
-| `QuarteringValidator` | `validate(quartering, shift, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)` | RN-050, RN-051, RN-055 |
-| `DensityValidator` | `validate(measurement, shift)` | RN-057 |
-| `VerificationValidator` | `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062 a RN-064 |
-| `UserValidator` | `validate(user)`, `validateUniqueEmail(user, Set<String> existingEmails)`, `validateCanOperate(user)` | RN-082 a RN-084 |
+| `ShiftValidator` | `validateNewShift(study, day, type, existingShifts)`, `validatePopulation(population)`, `validateOpenForRegistration(shift, study)`, `validateCanRegisterBag(shift, study)`, `validateCanClose(shift, Map<Long, String> participatingSources)`, `validateReopen(shift, study)` | RN-020 a RN-025 |
+| `WasteBagValidator` | `validate(bag, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 (las condiciones del turno las revisa `ShiftValidator`) |
+| `QuarteringValidator` | `validate(quartering, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)`, `validatePermissions(quartering, user)`, `validateAnnul(quartering, user)` | RN-050 a RN-056 |
+| `DensityValidator` | `validate(measurement)`, `validateNoExistingDensity(shift)` | RN-057 |
+| `VerificationValidator` | `validateStudyAllowsVerification(study)`, `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062, RN-063 |
+| `UserValidator` | `validate(user)`, `validateUniqueEmail(user, Set<String> existingEmails)` | RN-084 |
 | `CrewValidator` | `validate(crew)` | RN-085 |
 | `EvidenceValidator` | `validate(evidence)` | RN-090 |
 | `AccessPolicy` | `require(User user, Permission permission)` | RN-081; lanza `AccessDeniedException` |
 
 **El control del 2 % (RN-052) no es un rechazo.** El cuarteo NO_CONFORME **se guarda** y genera una alerta, para que la cuadrilla repese. Por eso `Quartering.evaluateQuality(...)` devuelve el estado y no lanza excepción. `QualityControlException` se usa solo cuando se intenta una acción que exige un cuarteo conforme, como cerrar el estudio con un cuarteo no conforme sin resolver.
 
-**RN-056** (residuos peligrosos solo los registra un docente o coordinador) se valida con `AccessPolicy.require(user, Permission.REGISTER_HAZARDOUS_WASTE)` cuando un resultado del cuarteo pertenece al grupo SIN_COLOR.
+**RN-056** (residuos peligrosos solo con el permiso correspondiente; hoy lo tienen los dos roles) se valida con `AccessPolicy.require(user, Permission.REGISTER_HAZARDOUS_WASTE)` cuando un resultado del cuarteo pertenece al grupo SIN_COLOR.
 
 ## 6. Excepciones nuevas
 
@@ -297,7 +296,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | CA-001 a CA-003 | `GenerationSourceValidatorTest`, `GeoPolygonTest` |
 | CA-010 a CA-014 | `CharacterizationStudyTest`, `StudyStatusTest`, `StudyValidatorTest` |
 | CA-020 a CA-023 | `SamplingShiftTest`, `ShiftValidatorTest` |
-| CA-030 a CA-033 | `BagLabelTest`, `SamplingShiftTest`, `WasteBagTest`, `WasteBagValidatorTest`, `AlertFactoryTest` |
+| CA-030 a CA-033 | `BagLabelTest`, `SamplingShiftTest`, `WasteBagTest`, `WasteBagValidatorTest`, `AlertTest` |
 | CA-050 a CA-056 | `QuarteringTest`, `QuarteringValidatorTest`, `AccessPolicyTest` |
 | CA-060 a CA-062 | `VerificationValidatorTest`, `VerificationInfoTest` |
 | CA-080, CA-081 | `UserValidatorTest`, `CrewValidatorTest` |
@@ -308,7 +307,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 
 | # | Tema | Propuesta |
 | --- | --- | --- |
-| R1 | **Rótulo al agregar una segunda bolsa.** CA-030 dice que al registrar la segunda bolsa de la misma fuente y turno, los rótulos quedan `AU-D3-M-1` y `AU-D3-M-2`. Pero la primera bolsa ya fue rotulada a mano como `AU-D3-M`, y cambiarle el rótulo en el sistema haría que no coincida con la bolsa física ni con la planilla. | Que la primera conserve `AU-D3-M` y las siguientes sean `AU-D3-M-2`, `AU-D3-M-3`. **Requiere ajustar CA-030; confirmar con el equipo.** Mientras no se confirme, se implementa como dice la spec. |
+| R1 | Rótulo al agregar una segunda bolsa de la misma fuente y turno. | **Decidido (11 nov 2026):** la primera conserva `AU-D3-M` y las siguientes son `AU-D3-M-2`, `AU-D3-M-3`. Se ajustaron RN-031 y CA-030. |
 | R2 | Borrar el código viejo deja el proyecto sin aplicación ejecutable hasta la spec 003. | Se acepta (D11). El tag `v1-modelo-anterior` conserva la versión Swing. |
 | R3 | `@author` en el JavaDoc de las clases nuevas. | **Decidido:** según el reparto de paquetes de `src/TEAM.md` (sección 10). |
 

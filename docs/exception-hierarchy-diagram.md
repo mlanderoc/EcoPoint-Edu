@@ -1,8 +1,8 @@
 # Exception Hierarchy Diagram — EcoPoint Edu
 
-This document details the custom exception hierarchy implemented in the `com.ecopoint.exceptions` package.
+This document details the custom exception hierarchy of the `com.ecopoint.exceptions` package. Every rejection of a domain rule throws one of these exceptions with a message in Spanish (CA-090); the REST layer (spec 003) translates each one into an HTTP status.
 
-## 1. Exception Inheritance Hierarchy
+## 1. Exception inheritance hierarchy
 
 ```mermaid
 classDiagram
@@ -35,6 +35,17 @@ classDiagram
         +BusinessRuleException(String message, String errorCode)
     }
 
+    class QualityControlException {
+        +String ERROR_CODE = "ERR_QUALITY_CONTROL"$
+        +QualityControlException(String message)
+    }
+
+    class AccessDeniedException {
+        +String ERROR_CODE = "ERR_FORBIDDEN"$
+        +AccessDeniedException(String message)
+        +AccessDeniedException(String roleName, String actionDescription)
+    }
+
     class ResourceNotFoundException {
         +String ERROR_CODE = "ERR_NOT_FOUND"$
         -String resourceType
@@ -53,17 +64,23 @@ classDiagram
     RuntimeException <|-- EcoPointException
     EcoPointException <|-- InvalidDataException
     EcoPointException <|-- BusinessRuleException
+    BusinessRuleException <|-- QualityControlException
+    EcoPointException <|-- AccessDeniedException
     EcoPointException <|-- ResourceNotFoundException
     EcoPointException <|-- PersistenceException
 ```
 
 ---
 
-## 2. Exception Classification and Trigger Matrix
+## 2. Classification and trigger matrix
 
-| Exception Class | Error Code | Primary Trigger Scenarios in EcoPoint Edu |
-| :--- | :---: | :--- |
-| **`InvalidDataException`** | `ERR_INVALID_DATA` | • Required fields are `null` or blank.<br>• User `firstName`, `lastName`, or `role` contains numbers or special symbols.<br>• User `email` is missing the `@` symbol or has an invalid domain.<br>• Map coordinates (`coordX`, `coordY`) are outside `[0.00, 100.00]`.<br>• Container capacity or quartering weights are $\le 0$.<br>• Inspection fill level is not in `{VACIO, BAJO, MEDIO, ALTO, DESBORDADO}`.<br>• Evidence file path does not end in `.jpg`, `.jpeg`, `.png`, or `.webp`. |
-| **`BusinessRuleException`** | `ERR_BUSINESS_RULE` | • Attempting to register a `User` with an email address that already exists.<br>• Attempting to register a duplicate `Zone` name inside the same `Institution`.<br>• Registering an `EcologicalPoint` without the exact 3 containers required by Resolution 2184 of 2019 (`BLANCO`, `VERDE`, `NEGRO`).<br>• Submitting a `Quartering` where `sampleWeight > initialWeight`.<br>• Submitting a `Quartering` where the sum of classified weights exceeds `sampleWeight`.<br>• Attempting to register more than one `Quartering` for the same `InspectionRecord`.<br>• Attempting to mark an already attended `Alert` as attended again. |
-| **`ResourceNotFoundException`** | `ERR_NOT_FOUND` | • Searching for a `User`, `Institution`, `Zone`, `EcologicalPoint`, `InspectionDay`, `InspectionRecord`, `Quartering`, or `Alert` by an ID or email that does not exist. |
-| **`PersistenceException`** | `ERR_PERSISTENCE` | • Failures occurring during data storage or retrieval operations. |
+| Exception | Error code | HTTP (spec 003) | Examples in the characterization domain |
+| :--- | :---: | :---: | :--- |
+| **`InvalidDataException`** | `ERR_INVALID_DATA` | 400 | Source code `au` or `AULAS12` (CA-001); tare greater than gross weight (CA-031); population of zero people (CA-021); weights with more than 2 decimals; latitude 95 (CA-003); photo larger than 5 MB (RN-090) |
+| **`BusinessRuleException`** | `ERR_BUSINESS_RULE` | 422 | Duplicated source code (CA-002); bag without shift population (CA-022); study skipping a status (CA-013); sample outside 45–55 kg (CA-050); verifying a record you typed (CA-060); deleting a source with bags (RN-005) |
+| **`QualityControlException`** | `ERR_QUALITY_CONTROL` | 422 | Closing a study with a non-conforming quartering still unresolved (RN-016) |
+| **`AccessDeniedException`** | `ERR_FORBIDDEN` | 403 | A university student trying to open or close a shift (CA-204) or to create a study (CA-203); an inactive user |
+| **`ResourceNotFoundException`** | `ERR_NOT_FOUND` | 404 | Thrown by the service layer when a study, shift, bag or user id does not exist |
+| **`PersistenceException`** | `ERR_PERSISTENCE` | 500 | Database failures in the persistence layer (spec 002); the user only sees a generic message |
+
+The non-conforming quartering itself is **not** an exception: it is saved with status `NO_CONFORME` and raises an alert, so the crew can re-weigh (RN-052, RN-070).

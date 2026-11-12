@@ -1,402 +1,271 @@
-# Class Diagram — EcoPoint Edu Architecture
+# Class Diagram — EcoPoint Edu Domain (spec 001)
 
-This document presents the Unified Modeling Language (UML) class diagram for **EcoPoint Edu**, integrating the Domain Model (`com.ecopoint.model`), Custom Exceptions (`com.ecopoint.exceptions`), Stateless Validators (`com.ecopoint.validation`), Protected Variations Persistence (`com.ecopoint.persistence`), Business Services (`com.ecopoint.service`), and Java Swing User Interface (`com.ecopoint.ui`).
+This document presents the UML class diagram of the **solid waste characterization domain** of EcoPoint Edu, built in spec 001: the domain model (`com.ecopoint.model`), the stateless validators (`com.ecopoint.validation`) and the exception hierarchy (`com.ecopoint.exceptions`).
 
-## 1. Integrated UML Class Diagram
+Persistence (spec 002), REST API (spec 003) and web screens (specs 004 to 007) are not part of this diagram yet.
+
+> The previous model (ecological points, Swing UI and flat files) is kept in the git tag `v1-modelo-anterior`.
+
+## 1. Domain model
 
 ```mermaid
 classDiagram
-    direction TB
+    direction LR
 
-    %% ==========================================
-    %% PACKAGE: com.ecopoint.exceptions
-    %% ==========================================
-    namespace com_ecopoint_exceptions {
-        class EcoPointException {
-            <<abstract>>
-            -String errorCode
-            #EcoPointException(String message)
-            #EcoPointException(String message, String errorCode)
-            #EcoPointException(String message, String errorCode, Throwable cause)
-            +getErrorCode() String
-        }
-
-        class InvalidDataException {
-            -String fieldName
-            +InvalidDataException(String fieldName, String problemDescription)
-            +InvalidDataException(String message)
-            +getFieldName() String
-        }
-
-        class BusinessRuleException {
-            +BusinessRuleException(String message)
-            +BusinessRuleException(String message, String errorCode)
-        }
-
-        class ResourceNotFoundException {
-            -String resourceType
-            -Object resourceId
-            +ResourceNotFoundException(String resourceType, Object resourceId)
-            +getResourceType() String
-            +getResourceId() Object
-        }
-
-        class PersistenceException {
-            +PersistenceException(String operationContext, Throwable cause)
-            +PersistenceException(String message)
-        }
+    class Institution {
+        -Long id
+        -String name
+        -String address
+        -GeoPoint mapCenter
+        -int mapZoom
+        -CharacterizationSettings settings
+        +hasMapCenter() boolean
+    }
+    class GenerationSource {
+        -Long id
+        -Long institutionId
+        -String code
+        -String name
+        -SourceType type
+        -GeoPolygon geometry
+        -boolean active
+        +isValidCode(String)$ boolean
+        +hasGeometry() boolean
+        +isAvailableForRegistration() boolean
+        +deactivate()
+    }
+    class CharacterizationStudy {
+        -Long id
+        -Long institutionId
+        -StudyStatus status
+        -List~SamplingDay~ days
+        -List~StudyReopening~ reopenings
+        +scheduleDates(List~LocalDate~)
+        +isDayExcluded(int) boolean
+        +getIncludedDayNumbers() List~Integer~
+        +getStartDate() LocalDate
+        +getEndDate() LocalDate
+        +overlaps(CharacterizationStudy) boolean
+        +changeStatus(StudyStatus)
+        +reopen(Long, String, LocalDateTime)
+    }
+    class SamplingDay {
+        -int dayNumber
+        -LocalDate date
+        +isExcluded() boolean
+        +isScheduled() boolean
+    }
+    class SamplingShift {
+        -Long id
+        -Long studyId
+        -int dayNumber
+        -ShiftType type
+        -ShiftStatus status
+        -ShiftPopulation population
+        -List~WasteBag~ bags
+        -Quartering quartering
+        -DensityMeasurement density
+        -Set~Long~ sourcesWithoutGeneration
+        +getCode() String
+        +registerPopulation(ShiftPopulation)
+        +addBag(WasteBag) BagLabel
+        +markSourceWithoutGeneration(Long)
+        +isSourceCovered(Long) boolean
+        +calculateTotalNetWeight() BigDecimal
+        +registerQuartering(Quartering)
+        +registerDensity(DensityMeasurement)
+        +close()
+        +reopen()
+    }
+    class VerifiableRecord {
+        <<abstract>>
+        -Long id
+        -VerificationInfo verification
+        +getRecordType()* String
+        +isPendingVerification() boolean
+    }
+    class VerificationInfo {
+        -VerificationStatus status
+        -Long enteredBy
+        -LocalDateTime enteredAt
+        -Long verifiedBy
+        -LocalDateTime verifiedAt
+        +markVerified(Long, LocalDateTime)
+        +markCorrected(Long, LocalDateTime)
+        +wasEnteredBy(Long) boolean
+    }
+    class ShiftPopulation {
+        -int students
+        -int teachers
+        -int staff
+        +getTotal() int
+    }
+    class WasteBag {
+        -Long sourceId
+        -String sourceCode
+        -BagLabel label
+        -BigDecimal grossWeight
+        -BigDecimal tare
+        -BigDecimal volume
+        -boolean atypical
+        +getNetWeight() BigDecimal
+        +getDensity() BigDecimal
+        +getLabelText() String
+    }
+    class Quartering {
+        -Long shiftId
+        -BigDecimal shiftNetWeight
+        -BigDecimal sampleWeight
+        -List~QuarteringResult~ results
+        -QualityStatus qualityStatus
+        +isFullSample() boolean
+        +calculateTotalClassifiedWeight() BigDecimal
+        +calculateDifferencePercent() BigDecimal
+        +evaluateQuality(BigDecimal) QualityStatus
+        +calculateCompositionPercentages()
+        +calculateGroupComposition() Map
+        +hasHazardousResults() boolean
+        +annul(String, Long, LocalDateTime)
+    }
+    class QuarteringResult {
+        -Long categoryId
+        -String categoryName
+        -WasteGroup group
+        -BigDecimal weight
+        -BigDecimal percentage
+        +calculatePercentageOver(BigDecimal) BigDecimal
+    }
+    class DensityMeasurement {
+        -Long shiftId
+        -BigDecimal containerVolume
+        -BigDecimal netWeight
+        +getDensity() BigDecimal
+    }
+    class WasteCategory {
+        -Long id
+        -String name
+        -WasteGroup group
+        -boolean active
+        +normalizeName(String)$ String
+        +isHazardous() boolean
+        +isRecoverable() boolean
+    }
+    class User {
+        -Long id
+        -String firstName
+        -String lastName
+        -String email
+        -UserRole role
+        -Long institutionId
+        -boolean active
+        +getFullName() String
+        +hasPermission(Permission) boolean
+    }
+    class Crew {
+        -Long id
+        -String name
+        -User responsible
+        -List~User~ members
+        +hasResponsibleTeacher() boolean
+        +addMember(User) boolean
+    }
+    class Alert {
+        -AlertType type
+        -String targetType
+        -Long targetId
+        -String description
+        -boolean attended
+        +attend(User, String, LocalDateTime)
+    }
+    class AlertFactory {
+        <<utility>>
+        +forNonConformingQuartering(Quartering, String, LocalDateTime)$ Alert
+        +forAtypicalBag(WasteBag, LocalDateTime)$ Alert
+        +forPendingVerification(SamplingShift, int, LocalDateTime)$ Alert
+    }
+    class Correction {
+        <<record>>
+        recordType, recordId, field
+        oldValue, newValue, reason
+        userId, at
+    }
+    class Evidence {
+        -EvidenceTarget target
+        -Long targetId
+        -String filePath
+        -String mimeType
+        -long sizeBytes
     }
 
-    EcoPointException <|-- InvalidDataException
-    EcoPointException <|-- BusinessRuleException
-    EcoPointException <|-- ResourceNotFoundException
-    EcoPointException <|-- PersistenceException
-
-    %% ==========================================
-    %% PACKAGE: com.ecopoint.model
-    %% ==========================================
-    namespace com_ecopoint_model {
-        class Institution {
-            -int idInstitution
-            -String name
-            -String address
-        }
-
-        class Zone {
-            -int idZone
-            -int idInstitution
-            -String name
-            -String description
-        }
-
-        class EcologicalPoint {
-            -int idPoint
-            -int idZone
-            -String location
-            -String status
-            -String initialStatus
-            -BigDecimal coordX
-            -BigDecimal coordY
-            -String observations
-            -List~Container~ containers
-            +addContainer(Container container) void
-            +hasMandatoryThreeColors() boolean
-        }
-
-        class Container {
-            -int idPoint
-            -int idContainer
-            -String wasteType
-            -String color
-            -BigDecimal capacity
-            +isRegulatoryColor() boolean
-        }
-
-        class User {
-            -int idUser
-            -String firstName
-            -String lastName
-            -String email
-            -String role
-            +getFullName() String
-        }
-
-        class InspectionDay {
-            -int idDay
-            -LocalDate date
-            -String observations
-            -List~InspectionRecord~ inspectionRecords
-            +addInspectionRecord(InspectionRecord record) void
-        }
-
-        class InspectionRecord {
-            -int idRecord
-            -int idDay
-            -int idPoint
-            -int idUser
-            -LocalDate captureDate
-            -String pointStatus
-            -String observations
-            -List~ContainerDetail~ containerDetails
-            -List~Evidence~ evidences
-            -Quartering quartering
-            +hasCriticalIncidents() boolean
-        }
-
-        class ContainerDetail {
-            -int idContainerDetail
-            -int idRecord
-            -int idPoint
-            -int idContainer
-            -String fillLevel
-            -String containerCondition
-            -String signageCondition
-            -boolean improperSeparation
-            -String observations
-            +requiresOverflowAlert() boolean
-            +requiresImproperSeparationAlert() boolean
-        }
-
-        class Alert {
-            -int idAlert
-            -int idContainerDetail
-            -String type
-            -boolean attended
-            -String description
-            -LocalDateTime generatedAt
-            +markAsAttended() void
-        }
-
-        class Evidence {
-            -int idEvidence
-            -int idRecord
-            -String filePath
-            -String description
-            -LocalDateTime uploadedAt
-        }
-
-        class WasteCategory {
-            -int idWaste
-            -String name
-            -String description
-            -String associatedColor
-        }
-
-        class Quartering {
-            -int idQuartering
-            -int idRecord
-            -BigDecimal initialWeight
-            -BigDecimal sampleWeight
-            -String observations
-            -List~QuarteringResult~ results
-            +calculateTotalClassifiedWeight() BigDecimal
-            +calculateSampleLoss() BigDecimal
-            +calculateCompositionPercentages() void
-        }
-
-        class QuarteringResult {
-            -int idQuartering
-            -int idResult
-            -int idWaste
-            -BigDecimal weight
-            -int quantity
-            -BigDecimal percentage
-            +calculatePercentageOver(BigDecimal sampleWeight) BigDecimal
-        }
-    }
-
-    Institution "1" *-- "0..*" Zone : contains
-    Zone "1" *-- "0..*" EcologicalPoint : locates
-    EcologicalPoint "1" *-- "3" Container : has
-    InspectionDay "1" *-- "0..*" InspectionRecord : includes
-    EcologicalPoint "1" <-- "0..*" InspectionRecord : inspected-in
-    User "1" <-- "0..*" InspectionRecord : captured-by
-    InspectionRecord "1" *-- "3" ContainerDetail : evaluates
-    ContainerDetail "1" --> "0..*" Alert : triggers
-    InspectionRecord "1" *-- "0..*" Evidence : attaches
-    InspectionRecord "1" *-- "0..1" Quartering : originates
-    Quartering "1" *-- "1..*" QuarteringResult : produces
-    WasteCategory "1" <-- "0..*" QuarteringResult : classifies
-
-    %% ==========================================
-    %% PACKAGE: com.ecopoint.persistence
-    %% ==========================================
-    namespace com_ecopoint_persistence {
-        class UserRepository {
-            <<interface>>
-            +save(User user) User
-            +findById(int idUser) User
-            +findByEmail(String email) User
-            +findAll() List~User~
-            +deleteById(int idUser) boolean
-        }
-
-        class InstitutionRepository {
-            <<interface>>
-            +save(Institution institution) Institution
-            +findById(int idInstitution) Institution
-            +findAll() List~Institution~
-            +deleteById(int idInstitution) boolean
-        }
-
-        class ZoneRepository {
-            <<interface>>
-            +save(Zone zone) Zone
-            +findById(int idZone) Zone
-            +findAll() List~Zone~
-            +deleteById(int idZone) boolean
-        }
-
-        class EcologicalPointRepository {
-            <<interface>>
-            +save(EcologicalPoint point) EcologicalPoint
-            +findById(int idPoint) EcologicalPoint
-            +findAll() List~EcologicalPoint~
-            +deleteById(int idPoint) boolean
-        }
-
-        class InspectionRepository {
-            <<interface>>
-            +saveDay(InspectionDay day) InspectionDay
-            +findDayById(int idDay) InspectionDay
-            +findAllDays() List~InspectionDay~
-            +saveRecord(InspectionRecord record) InspectionRecord
-            +findRecordById(int idRecord) InspectionRecord
-            +findAllRecords() List~InspectionRecord~
-        }
-
-        class QuarteringRepository {
-            <<interface>>
-            +save(Quartering quartering) Quartering
-            +findById(int idQuartering) Quartering
-            +findAll() List~Quartering~
-            +deleteById(int idQuartering) boolean
-        }
-
-        class AlertRepository {
-            <<interface>>
-            +save(Alert alert) Alert
-            +findById(int idAlert) Alert
-            +findAll() List~Alert~
-            +deleteById(int idAlert) boolean
-        }
-
-        class FileUserRepository
-        class FileInstitutionRepository
-        class FileZoneRepository
-        class FileEcologicalPointRepository
-        class FileInspectionRepository
-        class FileQuarteringRepository
-        class FileAlertRepository
-    }
-
-    UserRepository <|.. FileUserRepository
-    InstitutionRepository <|.. FileInstitutionRepository
-    ZoneRepository <|.. FileZoneRepository
-    EcologicalPointRepository <|.. FileEcologicalPointRepository
-    InspectionRepository <|.. FileInspectionRepository
-    QuarteringRepository <|.. FileQuarteringRepository
-    AlertRepository <|.. FileAlertRepository
-
-    %% ==========================================
-    %% PACKAGE: com.ecopoint.validation
-    %% ==========================================
-    namespace com_ecopoint_validation {
-        class UserValidator {
-            +validateUserData(User user)$ void
-            +validateUniqueEmail(String email, List~User~ existingUsers)$ void
-            +validateUniqueEmailForUpdate(int currentUserId, String email, List~User~ existingUsers)$ void
-        }
-
-        class EcologicalPointValidator {
-            +validateInstitutionData(Institution institution)$ void
-            +validateZoneData(Zone zone, List~Zone~ existingZones)$ void
-            +validateEcologicalPointData(EcologicalPoint point)$ void
-            +validateCoordinates(BigDecimal coordX, BigDecimal coordY)$ void
-            +validateRegulatoryContainers(List~Container~ containers)$ void
-        }
-
-        class InspectionValidator {
-            +validateInspectionDayData(InspectionDay day)$ void
-            +validateInspectionRecordData(InspectionRecord record)$ void
-        }
-
-        class QuarteringValidator {
-            +validateQuarteringData(Quartering quartering)$ void
-            +validateWeightCoherence(Quartering quartering)$ void
-            +validateUniqueQuarteringPerRecord(int idRecord, List~Quartering~ existingQuarterings)$ void
-        }
-    }
-
-    %% ==========================================
-    %% PACKAGE: com.ecopoint.service
-    %% ==========================================
-    namespace com_ecopoint_service {
-        class UserService {
-            -UserRepository userRepository
-            +authenticateByEmail(String email) User
-            +registerUser(User user) User
-            +updateUser(User user) User
-            +deleteUser(int idUser) void
-            +listAllUsers() List~User~
-        }
-
-        class EcologicalPointService {
-            -InstitutionRepository institutionRepository
-            -ZoneRepository zoneRepository
-            -EcologicalPointRepository pointRepository
-            +registerInstitution(Institution institution) Institution
-            +registerZone(Zone zone) Zone
-            +registerEcologicalPoint(EcologicalPoint point) EcologicalPoint
-            +updateEcologicalPoint(EcologicalPoint point) EcologicalPoint
-            +deleteEcologicalPoint(int idPoint) void
-        }
-
-        class AlertService {
-            -AlertRepository alertRepository
-            +evaluateAndGenerateAutomaticAlerts(InspectionRecord record) List~Alert~
-            +markAlertAsAttended(int idAlert) Alert
-            +listPendingAlerts() List~Alert~
-        }
-
-        class InspectionService {
-            -EcologicalPointService pointService
-            -UserService userService
-            -AlertService alertService
-            -InspectionRepository inspectionRepository
-            +createInspectionDay(InspectionDay day) InspectionDay
-            +registerPointInspection(InspectionRecord record) InspectionRecord
-        }
-
-        class QuarteringService {
-            -InspectionService inspectionService
-            -QuarteringRepository quarteringRepository
-            +registerQuartering(Quartering quartering) Quartering
-            +calculateConsolidatedStatistics() Map~String, BigDecimal~
-        }
-    }
-
-    %% ==========================================
-    %% PACKAGE: com.ecopoint.ui
-    %% ==========================================
-    namespace com_ecopoint_ui {
-        class LoginFrame
-        class MainFrame
-        class DashboardAndAlertsPanel
-        class CampusAndPointPanel
-        class InspectionManagementPanel
-        class QuarteringManagementPanel
-        class UserManagementPanel
-    }
-
-    LoginFrame --> MainFrame : launches
-    MainFrame *-- DashboardAndAlertsPanel
-    MainFrame *-- CampusAndPointPanel
-    MainFrame *-- InspectionManagementPanel
-    MainFrame *-- QuarteringManagementPanel
-    MainFrame *-- UserManagementPanel
-
-    UserService --> UserRepository : Protected Variations
-    EcologicalPointService --> InstitutionRepository : Protected Variations
-    EcologicalPointService --> ZoneRepository : Protected Variations
-    EcologicalPointService --> EcologicalPointRepository : Protected Variations
-    InspectionService --> InspectionRepository : Protected Variations
-    QuarteringService --> QuarteringRepository : Protected Variations
-    AlertService --> AlertRepository : Protected Variations
-
-    UserService --> UserValidator : delegates
-    EcologicalPointService --> EcologicalPointValidator : delegates
-    InspectionService --> InspectionValidator : delegates
-    QuarteringService --> QuarteringValidator : delegates
+    Institution "1" --> "*" GenerationSource
+    Institution "1" --> "*" CharacterizationStudy
+    CharacterizationStudy "1" *-- "8" SamplingDay
+    CharacterizationStudy "1" --> "16" SamplingShift
+    SamplingShift "1" *-- "0..1" ShiftPopulation
+    SamplingShift "1" *-- "*" WasteBag
+    SamplingShift "1" *-- "0..1" Quartering
+    SamplingShift "1" *-- "0..1" DensityMeasurement
+    Quartering "1" *-- "*" QuarteringResult
+    QuarteringResult ..> WasteCategory
+    WasteBag ..> GenerationSource
+    VerifiableRecord <|-- ShiftPopulation
+    VerifiableRecord <|-- WasteBag
+    VerifiableRecord <|-- Quartering
+    VerifiableRecord <|-- DensityMeasurement
+    VerifiableRecord *-- VerificationInfo
+    Correction ..> VerifiableRecord
+    Crew "1" --> "*" User
+    AlertFactory ..> Alert : creates
 ```
 
----
+### Value objects and enums
 
-## 2. GRASP and SOLID Principles Traceability
+| Type | Kind | Purpose |
+| --- | --- | --- |
+| `GeoPoint`, `GeoPolygon` | record | WGS84 coordinates and closed polygons of the sources (RN-004) |
+| `BagLabel` | record | Bag label `AU-D3-M`, `AU-D3-M-2` (RN-031) |
+| `CharacterizationSettings` | record | Sample range 45–55 kg, 2 % tolerance, bag plausibility limits (D8, RN-037) |
+| `StudyReopening` | record | Who reopened a closed study, why and when (RN-017) |
+| `WasteGroup` | enum | BLANCO, VERDE, NEGRO, SIN_COLOR (Res. 2184 de 2019) |
+| `StudyStatus` | enum | PLANIFICADO → EN_EJECUCION → EN_DEPURACION → CERRADO |
+| `UserRole`, `Permission` | enum | DOCENTE and ESTUDIANTE_UNIVERSITARIO; permission matrix RN-081 |
+| `SourceType`, `ShiftType`, `ShiftStatus`, `VerificationStatus`, `QualityStatus`, `AlertType`, `EvidenceTarget` | enum | Closed lists of the domain |
 
-| Pattern / Principle | Category | Applied Classes | Architectural Justification |
-| :--- | :---: | :--- | :--- |
-| **Protected Variations & Dependency Inversion (DIP)** | GRASP / SOLID | `UserRepository`, `EcologicalPointRepository`, `InspectionRepository`, `QuarteringRepository`, `AlertRepository` and `File*Repository` | Services depend exclusively on repository interfaces (`*Repository`), isolating the business logic and Swing UI from the underlying flat-file storage (`data/*.txt`) and enabling zero-impact migration to a relational database. |
-| **Information Expert** | GRASP | `Quartering`, `QuarteringResult`, `ContainerDetail`, `EcologicalPoint`, `User` | Domain models compute derived metrics directly from their encapsulated state (`calculateCompositionPercentages()`, `requiresOverflowAlert()`, `hasMandatoryThreeColors()`). |
-| **Pure Fabrication & Single Responsibility (SRP)** | GRASP / SOLID | `*Validator`, `FileStorageHelper`, `File*Repository` | Validation rules and flat-file I/O operations are extracted into dedicated classes so domain entities and services remain cohesive. |
-| **Open/Closed (OCP) & Liskov Substitution (LSP)** | SOLID | `EcoPointException` hierarchy & `*Repository` implementations | Any repository implementation (`File*Repository` or future `Jdbc*Repository`) and any `EcoPointException` subclass can be substituted transparently without altering client contracts. |
+## 2. Validators
+
+All validators are `final`, stateless classes with a private constructor and `static` methods. Data about other objects (existing codes, other studies, participating sources) is received as parameters, because the domain does not query the database.
+
+```mermaid
+classDiagram
+    direction LR
+    class AccessPolicy { +require(User, Permission)$ +can(User, Permission)$ boolean }
+    class InstitutionValidator { +validate(Institution)$ }
+    class GenerationSourceValidator { +validate()$ +validateUniqueCode()$ +validateDeletion()$ +validateAvailableForRegistration()$ }
+    class WasteCategoryValidator { +validate()$ +validateUniqueName()$ +validateGroupChange()$ +validateDeletion()$ }
+    class UserValidator { +validate()$ +validateUniqueEmail()$ }
+    class CrewValidator { +validate()$ }
+    class StudyValidator { +validate()$ +validateNoOverlap()$ +validateStartExecution()$ +validateClose()$ }
+    class ShiftValidator { +validateNewShift()$ +validatePopulation()$ +validateCanRegisterBag()$ +validateCanClose()$ +validateReopen()$ }
+    class WasteBagValidator { +validate()$ +isAtypical()$ boolean }
+    class QuarteringValidator { +validate()$ +validateCategories()$ +validateNoExistingQuartering()$ +validatePermissions()$ +validateAnnul()$ }
+    class DensityValidator { +validate()$ +validateNoExistingDensity()$ }
+    class VerificationValidator { +validateStudyAllowsVerification()$ +validateVerifier()$ +validateCorrection()$ }
+    class EvidenceValidator { +validate()$ }
+    QuarteringValidator ..> AccessPolicy
+    VerificationValidator ..> AccessPolicy
+```
+
+## 3. GRASP and SOLID traceability
+
+| Principle | Where | Why |
+| --- | --- | --- |
+| **Information Expert** | `WasteBag.getNetWeight()`, `Quartering.evaluateQuality()`, `SamplingShift.calculateTotalNetWeight()`, `CharacterizationStudy.overlaps()` | Each calculation lives in the class that owns the data |
+| **Creator** | `SamplingShift.addBag()` assigns the `BagLabel`; `AlertFactory` creates `Alert` | The aggregate that contains or records the object creates it |
+| **Pure Fabrication** | All `*Validator` classes and `AccessPolicy` | Validation rules do not belong to any single entity |
+| **Low Coupling** | `model` imports only `exceptions`; `validation` imports only `model` and `exceptions` | Layers can change and be tested in isolation |
+| **High Cohesion** | One validator per aggregate (study, shift, bag, quartering…) | Each class has one focused job |
+| **Polymorphism** | `VerifiableRecord` (abstract) with `ShiftPopulation`, `WasteBag`, `Quartering`, `DensityMeasurement` | The verification inbox treats every record the same way |
+| **SRP** | `VerificationInfo` only handles double registration; `CharacterizationSettings` only holds parameters | One reason to change per class |
+| **OCP** | New verifiable records extend `VerifiableRecord`; new permissions are added to `Permission` and `UserRole` | Behavior is extended without modifying existing classes |
+| **LSP** | Any `VerifiableRecord` subclass can replace the base type in `VerificationValidator` | Subclasses keep the base contract |
+| **DIP** | Services (specs 002–003) will depend on repository interfaces | High-level policy does not depend on storage details |

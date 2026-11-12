@@ -29,8 +29,8 @@ Todos los RF del plan de reestructuración, en lo que toca a almacenamiento. En 
 ## 4. Historias de usuario
 
 - **HU-010.** Como integrante del equipo, quiero reconstruir la base de datos desde cero con dos scripts, para tener el mismo entorno en todos los computadores y en la sustentación.
-- **HU-011.** Como coordinador, quiero que la base de datos rechace datos inválidos aunque alguien se salte la aplicación, para que la línea base sea confiable.
-- **HU-012.** Como coordinador, quiero que un cuarteo se guarde completo o no se guarde, para no quedar con resultados a medias.
+- **HU-011.** Como docente, quiero que la base de datos rechace datos inválidos aunque alguien se salte la aplicación, para que la línea base sea confiable.
+- **HU-012.** Como docente, quiero que un cuarteo se guarde completo o no se guarde, para no quedar con resultados a medias.
 - **HU-013.** Como profe evaluador, quiero ver datos de ejemplo realistas, para probar el sistema sin capturar 8 días de muestreo.
 
 ## 5. Requisitos

@@ -1,37 +1,61 @@
 # EcoPoint Edu
 
-Sistema de información para el registro, caracterización y análisis de residuos sólidos en puntos ecológicos de instituciones educativas (colegios, escuelas y universidades), alineado con la **Resolución 2184 de 2019** (código de colores **Blanco**, **Verde** y **Negro**) y el **Método del Cuarteo**.
+Aplicación web para la **caracterización de residuos sólidos en instituciones educativas**. Sistematiza el protocolo de muestreo del póster *Caracterización participativa de los residuos sólidos en la I.E. Prudencia Daza, Valledupar*: estudio de 8 días, turnos de mañana y tarde, fuentes de generación, pesaje de bolsas, cuarteo, densidad, control de calidad del 2 %, doble registro e indicadores de línea base. Aplica la **Resolución 2184 de 2019** (grupos Blanco, Verde, Negro y Sin color).
+
+Proyecto de aula de **Programación de Computadores III**, Universidad Popular del Cesar. Equipo: [`src/TEAM.md`](src/TEAM.md).
+
+> **Estado: en reestructuración.** El proyecto se está reconstruyendo con *Spec Driven Development*. La versión anterior (escritorio en Swing, archivos planos y auditoría de puntos ecológicos) está guardada en el tag [`v1-modelo-anterior`](../../tree/v1-modelo-anterior).
 
 ---
 
-## 1. Arquitectura del Sistema
+## 1. Avance
 
-El proyecto está implementado en **Java 17+** bajo una arquitectura desacoplada por capas que aplica principios **GRASP** y **SOLID**:
+| Spec | Contenido | Estado |
+| --- | --- | --- |
+| [001](specs/001-dominio-caracterizacion/spec.md) | Dominio de caracterización: modelo, validadores y excepciones (Java puro) | Terminada, en revisión |
+| [002](specs/002-persistencia-postgresql/spec.md) | Persistencia en PostgreSQL | Pendiente |
+| [003](specs/003-api-rest-seguridad/spec.md) | API REST y seguridad (Spring Boot) | Pendiente |
+| [004](specs/004-registro-en-campo/spec.md) a [007](specs/007-plano-interactivo-fuentes/spec.md) | Pantallas web (React), indicadores, reportes y plano interactivo | Pendiente |
 
-* **`com.ecopoint.exceptions`**: Jerarquía de excepciones personalizadas no verificadas (`RuntimeException`) encabezada por `EcoPointException` y sus subclases `InvalidDataException`, `BusinessRuleException`, `ResourceNotFoundException` y `PersistenceException`.
-* **`com.ecopoint.model`**: Las 13 clases del modelo de dominio (`Institution`, `Zone`, `EcologicalPoint`, `Container`, `User`, `InspectionDay`, `InspectionRecord`, `ContainerDetail`, `Alert`, `Evidence`, `WasteCategory`, `Quartering`, `QuarteringResult`) con encapsulamiento estricto y métodos **Experto en Información**.
-* **`com.ecopoint.validation`**: Validadores dedicados sin estado (`UserValidator`, `EcologicalPointValidator`, `InspectionValidator`, `QuarteringValidator`) que verifican formato de datos y reglas de negocio antes de procesar cualquier operación.
-* **`com.ecopoint.persistence` (Variaciones Protegidas & DIP)**: Define interfaces de repositorio (`UserRepository`, `InstitutionRepository`, `ZoneRepository`, `EcologicalPointRepository`, `InspectionRepository`, `QuarteringRepository`, `AlertRepository`) e implementaciones actuales sobre **archivos planos UTF-8** (`data/*.txt`). Gracias al principio de **Variaciones Protegidas**, el sistema puede migrar a una base de datos relacional sin modificar los servicios ni la interfaz gráfica.
-* **`com.ecopoint.service`**: Servicios de negocio (`UserService`, `EcologicalPointService`, `InspectionService`, `AlertService`, `QuarteringService`) con soporte de inicio de sesión, CRUD completo, disparo automático de alertas y cálculo de estadísticas generales.
-* **`com.ecopoint.ui` y `com.ecopoint.Main`**: Interfaz gráfica de escritorio en **Java Swing** con la paleta de colores oficial del logo de **EcoPoint Edu**, inicio de sesión, administración CRUD de usuarios, zonas y puntos con mapa interactivo en porcentaje (`%`), registro de inspecciones, calculadora del Método del Cuarteo y tablero de estadísticas/alertas.
+Mientras no se completen las specs 002 y 003 no hay aplicación para ejecutar: por ahora el proyecto es el dominio con sus pruebas.
 
----
+## 2. Cómo empezar
 
-## 2. Documentación Técnica y Diagramas (en Inglés)
+1. Lee [`AGENTS.md`](AGENTS.md): reglas del proyecto (arquitectura, convenciones, Git y autoría).
+2. Lee [`specs/README.md`](specs/README.md): índice de specs, decisiones del equipo y glosario.
 
-* [Diagrama de Clases UML y Trazabilidad GRASP/SOLID (`docs/class-diagrama.md`)](docs/class-diagrama.md)
-* [Diagrama de Capas y Dependencias (`docs/layer-diagram.md`)](docs/layer-diagram.md)
-* [Diagrama de Jerarquía de Excepciones (`docs/exception-hierarchy-diagram.md`)](docs/exception-hierarchy-diagram.md)
-* [Equipo de Desarrollo y Roles (`src/TEAM.md`)](src/TEAM.md)
+## 3. Compilar y probar
 
----
-
-## 3. Compilación y Ejecución de la Demostración Gráfica
-
-Para compilar y ejecutar la aplicación desde la raíz del repositorio:
+Requiere **Java 17 o superior**. No hace falta instalar Maven: el proyecto trae el Maven Wrapper.
 
 ```bash
-mvn clean compile exec:java
+# Git Bash, Linux o macOS
+./mvnw test
+
+# PowerShell o CMD en Windows
+mvnw.cmd test
 ```
 
-O ejecutando directamente la clase principal [`com.ecopoint.Main`](src/main/java/com/ecopoint/Main.java) desde tu IDE (NetBeans, IntelliJ IDEA, Eclipse o VS Code). Al iniciar por primera vez, el sistema crea automáticamente la carpeta `data/` con archivos planos precargados para la demostración.
+Debe terminar en `BUILD SUCCESS` con todas las pruebas en verde.
+
+## 4. Arquitectura
+
+```
+Frontend (React)  →  controller (API REST /api/v1)  →  service  →  validation  →  model
+                                                        service  →  persistence  →  PostgreSQL
+exceptions: transversal
+```
+
+| Paquete | Contenido | Spec |
+| --- | --- | --- |
+| `com.ecopoint.exceptions` | Jerarquía `EcoPointException` y sus 6 subclases | 001 |
+| `com.ecopoint.model` | Estudio, días, turnos, fuentes, bolsas, cuarteo, densidad, verificación, usuarios, alertas | 001 |
+| `com.ecopoint.validation` | Validadores sin estado y `AccessPolicy` (permisos por rol) | 001 |
+| `com.ecopoint.persistence` | Repositorios sobre PostgreSQL | 002 |
+| `com.ecopoint.service`, `com.ecopoint.controller` | Servicios y API REST | 003 |
+
+## 5. Documentación técnica (en inglés)
+
+* [Diagrama de clases y trazabilidad GRASP/SOLID](docs/class-diagrama.md)
+* [Diagrama de capas y dependencias](docs/layer-diagram.md)
+* [Jerarquía de excepciones](docs/exception-hierarchy-diagram.md)

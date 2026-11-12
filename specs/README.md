@@ -62,7 +62,7 @@ Decisiones D1–D9 del plan de reestructuración, confirmadas el 11 nov 2026:
 | D6 | Rótulo de bolsa **FUENTE-DÍA-TURNO** (ej. `AU-D3-M`), generado por el sistema. |
 | D7 | Reportes exportables en **PDF y Excel**. |
 | D8 | Submuestra de cuarteo en un **rango configurable**, por defecto **45 a 55 kg**. |
-| D9 | Los **estudiantes menores** registran pesajes; **no** validan datos ni registran residuos peligrosos. |
+| D9 | Solo hay **dos roles**: **DOCENTE**, con todos los permisos, y **ESTUDIANTE_UNIVERSITARIO**, con todo excepto administrar, crear estudios o cambiar su estado, y abrir o cerrar turnos. **No hay estudiantes de colegio ni menores de edad** en el sistema (ajustado el 11 nov 2026). |
 | — | Plano con **latitud/longitud (WGS84) y MapLibre GL JS**, no coordenadas en %. |
 | D10 | Toda la persistencia en **PostgreSQL 16+, instalado localmente** por cada integrante. Nada de archivos planos. El esquema se diseña desde cero; el script del modelo anterior no se usa. |
 | D11 | El código del modelo anterior (Swing, repositorios de archivos, puntos ecológicos) se **elimina al empezar** la spec 001. Antes se marca con un tag de git para poder consultarlo. |
@@ -104,7 +104,7 @@ El documento *Requerimiento Técnico Integrador – EcoPoint Edu* (UPC, oct 2026
 | Doble registro | Cada dato se anota en papel y en el aplicativo; luego se cotejan. |
 | Depuración | Revisión y corrección de los datos antes de calcular la línea base. |
 | Línea base | Conjunto de indicadores que describe los residuos de la institución al cerrar el estudio. |
-| Cuadrilla | Grupo mixto de universidad y colegio que hace el muestreo. |
+| Cuadrilla | Grupo de estudiantes universitarios con un docente responsable que hace el muestreo. |
 | PAE | Programa de Alimentación Escolar. |
 | PRAE | Proyecto Ambiental Escolar. |
 | EPP | Elementos de protección personal. |

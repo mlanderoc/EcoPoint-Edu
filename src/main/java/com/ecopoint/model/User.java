@@ -1,65 +1,107 @@
 package com.ecopoint.model;
 
+import java.util.Locale;
+
 /**
- * Represents a person registered in the EcoPoint Edu system who participates
- * in field inspections or institutional environmental monitoring.
- * 
- * The {@code role} attribute is purely descriptive to indicate the person's
- * institutional position (e.g., Estudiante, Docente, Inspector Ambiental, Coordinador)
- * and does not enforce system access permissions.
+ * Person who uses the system: a teacher (DOCENTE) or a university student
+ * (ESTUDIANTE_UNIVERSITARIO). The role decides what the user may do (RN-080,
+ * RN-081). Passwords and login belong to the security layer (spec 003).
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
-
 public class User {
 
-    private int idUser;
+    private Long id;
     private String firstName;
     private String lastName;
     private String email;
-    private String role;
+    private UserRole role;
+    private Long institutionId;
+    private boolean active;
 
     /**
-     * Default constructor.
+     * Creates an empty, active user.
      */
     public User() {
+        this.active = true;
     }
 
     /**
-     * Constructs a User with all attributes.
+     * Creates an active user.
      *
-     * @param idUser    unique identifier of the user
-     * @param firstName user's first name(s)
-     * @param lastName  user's last name(s)
-     * @param email     unique institutional or personal email address
-     * @param role      descriptive institutional role (e.g., Estudiante, Docente, Inspector)
+     * @param id            identifier, or null if not saved yet
+     * @param firstName     first name
+     * @param lastName      last name
+     * @param email         email address, unique in the system (RN-084)
+     * @param role          user role
+     * @param institutionId institution the user works with
      */
-    public User(int idUser, String firstName, String lastName, String email, String role) {
-        this.idUser = idUser;
+    public User(Long id, String firstName, String lastName, String email, UserRole role, Long institutionId) {
+        this();
+        this.id = id;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.role = role;
+        this.institutionId = institutionId;
     }
 
     /**
-     * Returns the full formatted name of the user (GRASP Information Expert).
+     * Normalizes an email address to compare it with others: trims spaces and
+     * ignores upper and lower case (RN-084).
      *
-     * @return concatenated first name and last name
+     * @param email email to normalize
+     * @return normalized email, or an empty string if the email is null
+     */
+    public static String normalizeEmail(String email) {
+        return email == null ? "" : email.trim().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Returns the full name of the user.
+     *
+     * @return first name and last name separated by a space, without extra spaces
+     *         when one of them is missing
      */
     public String getFullName() {
-        String first = (firstName != null) ? firstName.trim() : "";
-        String last = (lastName != null) ? lastName.trim() : "";
+        String first = firstName == null ? "" : firstName.trim();
+        String last = lastName == null ? "" : lastName.trim();
         return (first + " " + last).trim();
     }
 
-    public int getIdUser() {
-        return idUser;
+    /**
+     * Indicates whether the user may perform an action: the user must be
+     * active and the role must hold the permission (RN-081).
+     *
+     * @param permission permission to check
+     * @return true if the active user's role grants the permission
+     */
+    public boolean hasPermission(Permission permission) {
+        return active && role != null && role.hasPermission(permission);
     }
 
-    public void setIdUser(int idUser) {
-        this.idUser = idUser;
+    /**
+     * Deactivates the user; a deactivated user keeps the history of what it
+     * registered but can no longer act.
+     */
+    public void deactivate() {
+        this.active = false;
+    }
+
+    /**
+     * Activates the user again.
+     */
+    public void activate() {
+        this.active = true;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getFirstName() {
@@ -86,11 +128,23 @@ public class User {
         this.email = email;
     }
 
-    public String getRole() {
+    public UserRole getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public Long getInstitutionId() {
+        return institutionId;
+    }
+
+    public void setInstitutionId(Long institutionId) {
+        this.institutionId = institutionId;
+    }
+
+    public boolean isActive() {
+        return active;
     }
 }

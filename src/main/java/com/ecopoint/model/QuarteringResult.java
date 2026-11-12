@@ -4,91 +4,84 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Represents the weighing and composition result for a specific {@link WasteCategory}
- * within a {@link Quartering} procedure.
- * Computes its own percentage relative to the quartering sample weight
- * following the GRASP Information Expert pattern.
+ * Weight of one waste subcategory inside the quartering sample, and its share
+ * of the classified total (RN-053, RN-055).
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
 public class QuarteringResult {
 
-    private static final BigDecimal ONE_HUNDRED = new BigDecimal("100.00");
+    private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
 
-    private int idQuartering;
-    private int idResult;
-    private int idWaste;
+    private final Long categoryId;
+    private final String categoryName;
+    private final WasteGroup group;
     private BigDecimal weight;
-    private int quantity;
     private BigDecimal percentage;
 
     /**
-     * Default constructor.
-     */
-    public QuarteringResult() {
-    }
-
-    /**
-     * Constructs a QuarteringResult with all attributes.
+     * Creates a result for a subcategory.
      *
-     * @param idQuartering identifier of the parent quartering procedure
-     * @param idResult     sequential result identifier
-     * @param idWaste      identifier of the classified waste category
-     * @param weight       measured weight in kilograms
-     * @param quantity     counted item quantity
-     * @param percentage   calculated composition percentage over the sample weight
+     * @param categoryId   subcategory identifier
+     * @param categoryName subcategory name, e.g. "Cartón"
+     * @param group        waste group of the subcategory
+     * @param weight       weight of the subcategory in the sample, in kg
      */
-    public QuarteringResult(int idQuartering, int idResult, int idWaste,
-                            BigDecimal weight, int quantity, BigDecimal percentage) {
-        this.idQuartering = idQuartering;
-        this.idResult = idResult;
-        this.idWaste = idWaste;
+    public QuarteringResult(Long categoryId, String categoryName, WasteGroup group, BigDecimal weight) {
+        this.categoryId = categoryId;
+        this.categoryName = categoryName;
+        this.group = group;
         this.weight = weight;
-        this.quantity = quantity;
-        this.percentage = percentage;
     }
 
     /**
-     * Calculates and updates the composition percentage of this category relative
-     * to the given sample weight: {@code (weight * 100) / sampleWeight}, rounded
-     * to 2 decimal places using {@link RoundingMode#HALF_UP} (GRASP Information Expert).
+     * Creates a result from a waste subcategory of the catalog.
      *
-     * @param sampleWeight total weight of the quartering sample
-     * @return calculated percentage rounded to 2 decimal places
+     * @param category subcategory being weighed
+     * @param weight   weight in kg
+     * @return the result
      */
-    public BigDecimal calculatePercentageOver(BigDecimal sampleWeight) {
-        if (weight == null || sampleWeight == null || sampleWeight.compareTo(BigDecimal.ZERO) <= 0) {
+    public static QuarteringResult of(WasteCategory category, BigDecimal weight) {
+        return new QuarteringResult(category.getId(), category.getName(), category.getGroup(), weight);
+    }
+
+    /**
+     * Calculates and stores the share of this subcategory over a total, as a
+     * percentage with 2 decimals (GRASP Information Expert).
+     *
+     * @param total total weight the percentage refers to, in kg
+     * @return the calculated percentage, or zero if the total is zero
+     */
+    public BigDecimal calculatePercentageOver(BigDecimal total) {
+        if (weight == null || total == null || total.signum() == 0) {
             this.percentage = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-            return this.percentage;
+        } else {
+            this.percentage = weight.multiply(ONE_HUNDRED).divide(total, 2, RoundingMode.HALF_UP);
         }
-        this.percentage = weight.multiply(ONE_HUNDRED)
-                .divide(sampleWeight, 2, RoundingMode.HALF_UP);
-        return this.percentage;
+        return percentage;
     }
 
-    public int getIdQuartering() {
-        return idQuartering;
+    /**
+     * Indicates whether this result holds hazardous waste (Sin color group)
+     * with a weight greater than zero (RN-056).
+     *
+     * @return true for a weighed hazardous subcategory
+     */
+    public boolean isHazardousWithWeight() {
+        return group != null && group.isHazardous() && weight != null && weight.signum() > 0;
     }
 
-    public void setIdQuartering(int idQuartering) {
-        this.idQuartering = idQuartering;
+    public Long getCategoryId() {
+        return categoryId;
     }
 
-    public int getIdResult() {
-        return idResult;
+    public String getCategoryName() {
+        return categoryName;
     }
 
-    public void setIdResult(int idResult) {
-        this.idResult = idResult;
-    }
-
-    public int getIdWaste() {
-        return idWaste;
-    }
-
-    public void setIdWaste(int idWaste) {
-        this.idWaste = idWaste;
+    public WasteGroup getGroup() {
+        return group;
     }
 
     public BigDecimal getWeight() {
@@ -99,19 +92,7 @@ public class QuarteringResult {
         this.weight = weight;
     }
 
-    public int getQuantity() {
-        return quantity;
-    }
-
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }
-
     public BigDecimal getPercentage() {
         return percentage;
-    }
-
-    public void setPercentage(BigDecimal percentage) {
-        this.percentage = percentage;
     }
 }

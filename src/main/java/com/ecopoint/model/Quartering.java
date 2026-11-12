@@ -1,137 +1,217 @@
 package com.ecopoint.model;
 
+import com.ecopoint.exceptions.BusinessRuleException;
+import com.ecopoint.exceptions.InvalidDataException;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 /**
- * Represents a solid waste characterization procedure using the Quartering Method
- * (Método del Cuarteo) associated with a field {@link InspectionRecord}.
- * Acts as the GRASP Information Expert for computing total classified weight,
- * physical handling loss (merma), and composition percentages across its
- * {@link QuarteringResult} items.
+ * Quartering of one shift (NMX-AA-015): a sample of about 50 kg classified by
+ * waste subcategory (RN-050 to RN-055). It is the Information Expert for the
+ * classified total, the 2 % quality control and the physical composition.
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
-public class Quartering {
+public class Quartering extends VerifiableRecord {
 
-    private int idQuartering;
-    private int idRecord;
-    private BigDecimal initialWeight;
+    private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
+    private static final int SCALE = 2;
+
+    private final Long shiftId;
+    private final BigDecimal shiftNetWeight;
     private BigDecimal sampleWeight;
-    private String observations;
-    private List<QuarteringResult> results;
+    private final List<QuarteringResult> results;
+    private QualityStatus qualityStatus;
+    private String annulReason;
+    private Long annulledBy;
+    private LocalDateTime annulledAt;
 
     /**
-     * Default constructor initializing the results list.
-     */
-    public Quartering() {
-        this.results = new ArrayList<>();
-    }
-
-    /**
-     * Constructs a Quartering instance with its main attributes.
+     * Creates the quartering of a shift.
      *
-     * @param idQuartering  unique identifier of the quartering procedure
-     * @param idRecord      identifier of the originating inspection record
-     * @param initialWeight total initial waste weight collected before homogenization (kg)
-     * @param sampleWeight  weight of the final quartered sample selected for characterization (kg)
-     * @param observations  technical notes about the quartering execution
+     * @param id             identifier, or null if not saved yet
+     * @param shiftId        shift the sample comes from
+     * @param shiftNetWeight total net weight of the shift when the sample was taken, in kg
+     * @param sampleWeight   weight of the quartered sample, in kg
+     * @param verification   who typed the quartering and when
      */
-    public Quartering(int idQuartering, int idRecord, BigDecimal initialWeight,
-                      BigDecimal sampleWeight, String observations) {
-        this.idQuartering = idQuartering;
-        this.idRecord = idRecord;
-        this.initialWeight = initialWeight;
+    public Quartering(Long id, Long shiftId, BigDecimal shiftNetWeight, BigDecimal sampleWeight,
+                      VerificationInfo verification) {
+        super(id, verification);
+        this.shiftId = shiftId;
+        this.shiftNetWeight = shiftNetWeight;
         this.sampleWeight = sampleWeight;
-        this.observations = observations;
         this.results = new ArrayList<>();
     }
 
     /**
-     * Adds a classified category result to this quartering procedure.
+     * Adds the weight of one subcategory to the sample.
      *
-     * @param result quartering result item to add
+     * @param result subcategory result
      */
     public void addResult(QuarteringResult result) {
         if (result != null) {
-            result.setIdQuartering(this.idQuartering);
-            this.results.add(result);
+            results.add(result);
         }
     }
 
     /**
-     * Calculates the sum of weights of all classified waste categories
-     * (GRASP Information Expert).
+     * Indicates whether the whole waste of the shift was classified because it
+     * weighed less than the minimum sample (RN-051).
      *
-     * @return sum of category weights rounded to 2 decimal places
+     * @return true if the sample weight equals the net weight of the shift
+     */
+    public boolean isFullSample() {
+        return sampleWeight != null && shiftNetWeight != null && sampleWeight.compareTo(shiftNetWeight) == 0;
+    }
+
+    /**
+     * Calculates the sum of the weights of all classified subcategories.
+     *
+     * @return classified total in kg with 2 decimals
      */
     public BigDecimal calculateTotalClassifiedWeight() {
-        BigDecimal total = BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
-        if (results == null) {
-            return total;
-        }
-        for (QuarteringResult result : results) {
-            if (result != null && result.getWeight() != null) {
-                total = total.add(result.getWeight());
-            }
-        }
-        return total.setScale(2, RoundingMode.HALF_UP);
+        return results.stream()
+                .map(QuarteringResult::getWeight)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     /**
-     * Calculates the physical sample loss (merma) defined as
-     * {@code sampleWeight - totalClassifiedWeight} (GRASP Information Expert).
+     * Calculates the absolute difference between the classified total and the
+     * sample weight (RN-052).
      *
-     * @return non-negative sample loss in kilograms
+     * @return difference in kg with 2 decimals
      */
-    public BigDecimal calculateSampleLoss() {
+    public BigDecimal calculateDifferenceKg() {
         if (sampleWeight == null) {
-            return BigDecimal.ZERO.setScale(2, RoundingMode.HALF_UP);
+            return BigDecimal.ZERO.setScale(SCALE, RoundingMode.HALF_UP);
         }
-        return sampleWeight.subtract(calculateTotalClassifiedWeight())
-                .setScale(2, RoundingMode.HALF_UP);
+        return calculateTotalClassifiedWeight().subtract(sampleWeight).abs().setScale(SCALE, RoundingMode.HALF_UP);
     }
 
     /**
-     * Computes and assigns the composition percentage for each {@link QuarteringResult}
-     * over {@code sampleWeight} (GRASP Information Expert).
+     * Calculates the difference between the classified total and the sample,
+     * as a percentage of the sample (RN-052).
+     *
+     * @return difference in percent with 2 decimals
+     */
+    public BigDecimal calculateDifferencePercent() {
+        if (sampleWeight == null || sampleWeight.signum() == 0) {
+            return BigDecimal.ZERO.setScale(SCALE, RoundingMode.HALF_UP);
+        }
+        return calculateDifferenceKg().multiply(ONE_HUNDRED).divide(sampleWeight, SCALE, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Applies the 2 % quality control (RN-052): the quartering is CONFORME when
+     * the difference is within the tolerance, otherwise NO_CONFORME. Without a
+     * valid sample weight it cannot be checked, so it is NO_CONFORME. An annulled
+     * quartering keeps its status.
+     *
+     * @param tolerancePercent maximum allowed difference, in percent
+     * @return the resulting quality status
+     */
+    public QualityStatus evaluateQuality(BigDecimal tolerancePercent) {
+        if (qualityStatus == QualityStatus.ANULADO) {
+            return qualityStatus;
+        }
+        if (sampleWeight == null || sampleWeight.signum() <= 0 || tolerancePercent == null) {
+            this.qualityStatus = QualityStatus.NO_CONFORME;
+            return qualityStatus;
+        }
+        BigDecimal allowedKg = sampleWeight.multiply(tolerancePercent);
+        boolean withinTolerance = calculateDifferenceKg().multiply(ONE_HUNDRED).compareTo(allowedKg) <= 0;
+        this.qualityStatus = withinTolerance ? QualityStatus.CONFORME : QualityStatus.NO_CONFORME;
+        return qualityStatus;
+    }
+
+    /**
+     * Calculates the composition of every subcategory over the classified
+     * total, so the composition always adds up to 100 % (RN-053).
      */
     public void calculateCompositionPercentages() {
-        if (results == null || sampleWeight == null) {
-            return;
+        BigDecimal total = calculateTotalClassifiedWeight();
+        results.forEach(result -> result.calculatePercentageOver(total));
+    }
+
+    /**
+     * Calculates the composition of the four waste groups over the classified
+     * total (RN-054). Groups without results appear with 0.00 %.
+     *
+     * @return percentage of each group, with 2 decimals
+     */
+    public Map<WasteGroup, BigDecimal> calculateGroupComposition() {
+        BigDecimal total = calculateTotalClassifiedWeight();
+        Map<WasteGroup, BigDecimal> composition = new EnumMap<>(WasteGroup.class);
+        for (WasteGroup group : WasteGroup.values()) {
+            BigDecimal groupWeight = results.stream()
+                    .filter(result -> result.getGroup() == group && result.getWeight() != null)
+                    .map(QuarteringResult::getWeight)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            BigDecimal percent = total.signum() == 0
+                    ? BigDecimal.ZERO.setScale(SCALE, RoundingMode.HALF_UP)
+                    : groupWeight.multiply(ONE_HUNDRED).divide(total, SCALE, RoundingMode.HALF_UP);
+            composition.put(group, percent);
         }
-        for (QuarteringResult result : results) {
-            if (result != null) {
-                result.calculatePercentageOver(this.sampleWeight);
-            }
+        return composition;
+    }
+
+    /**
+     * Indicates whether the sample contains weighed hazardous waste, which
+     * requires the hazardous-waste permission (RN-056).
+     *
+     * @return true if any Sin color subcategory has weight
+     */
+    public boolean hasHazardousResults() {
+        return results.stream().anyMatch(QuarteringResult::isHazardousWithWeight);
+    }
+
+    /**
+     * Annuls a non-conforming quartering with a written reason, so it no longer
+     * blocks closing the study and does not count for the indicators (RN-052).
+     * The permission of the user is checked by the caller.
+     *
+     * @param reason reason for the annulment
+     * @param userId user who annuls it
+     * @param at     date and time of the annulment
+     * @throws BusinessRuleException if the quartering is not non-conforming
+     * @throws InvalidDataException  if the reason is missing
+     */
+    public void annul(String reason, Long userId, LocalDateTime at) {
+        if (qualityStatus != QualityStatus.NO_CONFORME) {
+            throw new BusinessRuleException("Solo se puede anular un cuarteo no conforme.");
         }
+        if (reason == null || reason.isBlank()) {
+            throw new InvalidDataException("motivo", "Debe escribir el motivo para anular el cuarteo.");
+        }
+        this.qualityStatus = QualityStatus.ANULADO;
+        this.annulReason = reason.trim();
+        this.annulledBy = userId;
+        this.annulledAt = at;
     }
 
-    public int getIdQuartering() {
-        return idQuartering;
+    @Override
+    public String getRecordType() {
+        return "Cuarteo";
     }
 
-    public void setIdQuartering(int idQuartering) {
-        this.idQuartering = idQuartering;
+    public Long getShiftId() {
+        return shiftId;
     }
 
-    public int getIdRecord() {
-        return idRecord;
-    }
-
-    public void setIdRecord(int idRecord) {
-        this.idRecord = idRecord;
-    }
-
-    public BigDecimal getInitialWeight() {
-        return initialWeight;
-    }
-
-    public void setInitialWeight(BigDecimal initialWeight) {
-        this.initialWeight = initialWeight;
+    public BigDecimal getShiftNetWeight() {
+        return shiftNetWeight;
     }
 
     public BigDecimal getSampleWeight() {
@@ -142,19 +222,28 @@ public class Quartering {
         this.sampleWeight = sampleWeight;
     }
 
-    public String getObservations() {
-        return observations;
-    }
-
-    public void setObservations(String observations) {
-        this.observations = observations;
-    }
-
+    /**
+     * Returns the subcategory results.
+     *
+     * @return unmodifiable list of results
+     */
     public List<QuarteringResult> getResults() {
-        return results;
+        return Collections.unmodifiableList(results);
     }
 
-    public void setResults(List<QuarteringResult> results) {
-        this.results = (results != null) ? results : new ArrayList<>();
+    public QualityStatus getQualityStatus() {
+        return qualityStatus;
+    }
+
+    public String getAnnulReason() {
+        return annulReason;
+    }
+
+    public Long getAnnulledBy() {
+        return annulledBy;
+    }
+
+    public LocalDateTime getAnnulledAt() {
+        return annulledAt;
     }
 }

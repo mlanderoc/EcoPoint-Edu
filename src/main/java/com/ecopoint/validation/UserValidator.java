@@ -2,19 +2,17 @@ package com.ecopoint.validation;
 
 import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
-import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.User;
 
-import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * Stateless validator for User data and domain constraints applying
- * GRASP Pure Fabrication and SOLID Single Responsibility Principle.
- * Centralizes all user input format checks and email uniqueness verification.
+ * Stateless validator for user data and the unique email rule (RN-080, RN-084),
+ * applying GRASP Pure Fabrication and SOLID Single Responsibility Principle.
  *
  * @author craulgomez
- * @version 1.0
+ * @version 2.0
  */
 public final class UserValidator {
 
@@ -24,134 +22,82 @@ public final class UserValidator {
     private static final Pattern EMAIL_PATTERN =
             Pattern.compile("^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$");
 
+    private static final int MIN_NAME_LENGTH = 2;
+    private static final int MAX_NAME_LENGTH = 80;
+
     private UserValidator() {
     }
 
     /**
-     * Validates all attributes of a User before registration or update.
+     * Validates all the data of a user before creating or updating it.
      *
-     * @param user user instance to validate
-     * @throws InvalidDataException if any attribute is null, blank, or fails format rules
+     * @param user user to validate
+     * @throws InvalidDataException if a field is missing or has an invalid format
      */
-    public static void validateUserData(User user) {
+    public static void validate(User user) {
         if (user == null) {
-            throw new InvalidDataException("usuario", "El objeto de usuario no puede ser nulo.");
+            throw new InvalidDataException("usuario", "El usuario no puede ser nulo.");
         }
         validatePersonName(user.getFirstName(), "nombre");
         validatePersonName(user.getLastName(), "apellido");
         validateEmailFormat(user.getEmail());
-        validateInstitutionalRole(user.getRole());
-    }
-
-    /**
-     * Validates that a first name or last name is non-empty, has at least 2 characters,
-     * and contains exclusively letters and spaces without numbers or special characters.
-     *
-     * @param nameValue value to validate
-     * @param fieldName Spanish field name for user-facing error messages
-     * @throws InvalidDataException if the name is blank, too short, or contains numbers
-     */
-    public static void validatePersonName(String nameValue, String fieldName) {
-        if (nameValue == null || nameValue.trim().isEmpty()) {
-            throw new InvalidDataException(fieldName, "El " + fieldName + " del usuario es obligatorio.");
+        if (user.getRole() == null) {
+            throw new InvalidDataException("rol", "El rol es obligatorio: Docente o Estudiante universitario.");
         }
-        String trimmed = nameValue.trim();
-        if (trimmed.length() < 2) {
-            throw new InvalidDataException(fieldName,
-                    "El " + fieldName + " debe contener al menos 2 caracteres.");
-        }
-        if (!LETTERS_AND_SPACES_PATTERN.matcher(trimmed).matches()) {
-            throw new InvalidDataException(fieldName,
-                    "El " + fieldName + " no puede contener números ni caracteres especiales.");
+        if (user.getInstitutionId() == null) {
+            throw new InvalidDataException("institucion", "El usuario debe pertenecer a una institución.");
         }
     }
 
     /**
-     * Validates that an email address is non-empty, contains the at symbol,
-     * and has a valid user and domain structure without spaces.
+     * Validates that no other user has the same email, ignoring spaces and
+     * upper or lower case (RN-084). When editing, the caller must exclude the
+     * user's own current email from the set.
      *
-     * @param email email address to validate
-     * @throws InvalidDataException if the email format is invalid
+     * @param user           user being created or edited
+     * @param existingEmails emails of the other users
+     * @throws InvalidDataException if the user is null
+     * @throws BusinessRuleException if the email is already registered
      */
-    public static void validateEmailFormat(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new InvalidDataException("correo", "El correo electrónico es obligatorio.");
+    public static void validateUniqueEmail(User user, Set<String> existingEmails) {
+        if (user == null) {
+            throw new InvalidDataException("usuario", "El usuario no puede ser nulo.");
         }
-        String trimmed = email.trim();
-        if (!trimmed.contains("@")) {
-            throw new InvalidDataException("correo",
-                    "El correo electrónico debe contener el símbolo '@'.");
-        }
-        if (!EMAIL_PATTERN.matcher(trimmed).matches()) {
-            throw new InvalidDataException("correo",
-                    "El correo electrónico '" + trimmed + "' no tiene un formato válido (ejemplo: usuario@institucion.edu.co).");
-        }
-    }
-
-    /**
-     * Validates the descriptive institutional role of the user.
-     *
-     * @param role descriptive institutional role
-     * @throws InvalidDataException if the role is blank or contains numbers
-     */
-    public static void validateInstitutionalRole(String role) {
-        if (role == null || role.trim().isEmpty()) {
-            throw new InvalidDataException("rol",
-                    "El rol institucional del usuario es obligatorio.");
-        }
-        String trimmed = role.trim();
-        if (!LETTERS_AND_SPACES_PATTERN.matcher(trimmed).matches()) {
-            throw new InvalidDataException("rol",
-                    "El rol institucional solo debe contener letras y espacios (sin números).");
-        }
-    }
-
-    /**
-     * Verifies that the given email address is not already registered by another user.
-     *
-     * @param email         email address to verify
-     * @param existingUsers list of currently registered users
-     * @throws BusinessRuleException if another user already has the same email address
-     */
-    public static void validateUniqueEmail(String email, List<User> existingUsers) {
-        validateUniqueEmailForUpdate(0, email, existingUsers);
-    }
-
-    /**
-     * Verifies that the given email address is not registered by any other user
-     * different from currentUserId during an update operation.
-     *
-     * @param currentUserId identifier of the user being updated (0 for new user)
-     * @param email         email address to verify
-     * @param existingUsers list of currently registered users
-     * @throws BusinessRuleException if another user already has the same email address
-     */
-    public static void validateUniqueEmailForUpdate(int currentUserId, String email, List<User> existingUsers) {
-        validateEmailFormat(email);
-        if (existingUsers == null) {
+        if (existingEmails == null) {
             return;
         }
-        String normalized = email.trim();
-        for (User existing : existingUsers) {
-            if (existing != null && existing.getIdUser() != currentUserId
-                    && existing.getEmail() != null
-                    && existing.getEmail().trim().equalsIgnoreCase(normalized)) {
-                throw new BusinessRuleException(
-                        "El correo electrónico '" + normalized + "' ya se encuentra registrado en el sistema.");
-            }
+        String normalized = User.normalizeEmail(user.getEmail());
+        boolean taken = existingEmails.stream()
+                .map(User::normalizeEmail)
+                .anyMatch(normalized::equals);
+        if (taken) {
+            throw new BusinessRuleException("El correo " + user.getEmail().trim()
+                    + " ya está registrado por otro usuario.");
         }
     }
 
-    /**
-     * Verifies that a looked-up user instance is not null.
-     *
-     * @param user       user reference to check
-     * @param identifier looked-up ID or email
-     * @throws ResourceNotFoundException if user is null
-     */
-    public static void validateUserExists(User user, Object identifier) {
-        if (user == null) {
-            throw new ResourceNotFoundException("Usuario", identifier);
+    private static void validatePersonName(String value, String field) {
+        if (value == null || value.isBlank()) {
+            throw new InvalidDataException(field, "El " + field + " es obligatorio.");
+        }
+        String trimmed = value.trim();
+        if (trimmed.length() < MIN_NAME_LENGTH || trimmed.length() > MAX_NAME_LENGTH) {
+            throw new InvalidDataException(field,
+                    "El " + field + " debe tener entre " + MIN_NAME_LENGTH + " y " + MAX_NAME_LENGTH + " caracteres.");
+        }
+        if (!LETTERS_AND_SPACES_PATTERN.matcher(trimmed).matches()) {
+            throw new InvalidDataException(field,
+                    "El " + field + " solo puede contener letras y espacios.");
+        }
+    }
+
+    private static void validateEmailFormat(String email) {
+        if (email == null || email.isBlank()) {
+            throw new InvalidDataException("correo", "El correo electrónico es obligatorio.");
+        }
+        if (!EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            throw new InvalidDataException("correo",
+                    "El correo electrónico no tiene un formato válido (ej. nombre@unicesar.edu.co).");
         }
     }
 }

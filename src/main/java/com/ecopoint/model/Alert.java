@@ -1,105 +1,121 @@
 package com.ecopoint.model;
 
+import com.ecopoint.exceptions.AccessDeniedException;
+import com.ecopoint.exceptions.BusinessRuleException;
+import com.ecopoint.exceptions.InvalidDataException;
+
 import java.time.LocalDateTime;
 
 /**
- * Represents an operational alert automatically generated when a container
- * reaches an overflow state ({@code DESBORDADO}) or exhibits improper waste separation.
+ * Automatic data-quality alert (RN-070 to RN-073): a non-conforming
+ * quartering, an atypical bag or records still pending verification. An
+ * attended alert is never deleted; it keeps who attended it, when and how.
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
 public class Alert {
 
-    public static final String TYPE_OVERFLOW = "DESBORDAMIENTO";
-    public static final String TYPE_IMPROPER_SEPARATION = "MALA_SEPARACION";
-
-    private int idAlert;
-    private int idContainerDetail;
-    private String type;
+    private Long id;
+    private final AlertType type;
+    private final String targetType;
+    private final Long targetId;
+    private final String description;
+    private final LocalDateTime createdAt;
     private boolean attended;
-    private String description;
-    private LocalDateTime generatedAt;
+    private Long attendedBy;
+    private LocalDateTime attendedAt;
+    private String attendNote;
 
     /**
-     * Default constructor.
-     */
-    public Alert() {
-    }
-
-    /**
-     * Constructs an Alert with all attributes.
+     * Creates a pending alert. Alerts are normally built by {@link AlertFactory}.
      *
-     * @param idAlert           unique identifier of the alert
-     * @param idContainerDetail identifier of the container detail that triggered the alert
-     * @param type              alert category (DESBORDAMIENTO or MALA_SEPARACION)
-     * @param attended          whether the alert has already been resolved
-     * @param description       descriptive message in Spanish explaining the alert
-     * @param generatedAt       timestamp when the alert was generated
+     * @param id          identifier, or null if not saved yet
+     * @param type        alert type
+     * @param targetType  kind of record that caused the alert, in Spanish (e.g. "Cuarteo")
+     * @param targetId    identifier of that record
+     * @param description explanation in Spanish
+     * @param createdAt   date and time the alert was raised
      */
-    public Alert(int idAlert, int idContainerDetail, String type, boolean attended,
-                 String description, LocalDateTime generatedAt) {
-        this.idAlert = idAlert;
-        this.idContainerDetail = idContainerDetail;
+    public Alert(Long id, AlertType type, String targetType, Long targetId, String description,
+                 LocalDateTime createdAt) {
+        this.id = id;
         this.type = type;
-        this.attended = attended;
+        this.targetType = targetType;
+        this.targetId = targetId;
         this.description = description;
-        this.generatedAt = generatedAt;
+        this.createdAt = createdAt;
     }
 
     /**
-     * Marks this alert as attended/resolved (GRASP Information Expert).
+     * Marks the alert as attended, with a mandatory note (RN-073).
+     *
+     * @param user user attending the alert
+     * @param note what was done about it
+     * @param at   date and time of the attention
+     * @throws AccessDeniedException if the user may not attend alerts
+     * @throws BusinessRuleException if the alert was already attended
+     * @throws InvalidDataException  if the note is missing
      */
-    public void markAsAttended() {
+    public void attend(User user, String note, LocalDateTime at) {
+        if (user == null || !user.hasPermission(Permission.ATTEND_ALERTS)) {
+            throw new AccessDeniedException("Su usuario no tiene permiso para "
+                    + Permission.ATTEND_ALERTS.getActionDescription() + ".");
+        }
+        if (attended) {
+            throw new BusinessRuleException("La alerta ya fue atendida.");
+        }
+        if (note == null || note.isBlank()) {
+            throw new InvalidDataException("observacion",
+                    "Escriba una observación sobre cómo se atendió la alerta.");
+        }
         this.attended = true;
+        this.attendedBy = user.getId();
+        this.attendedAt = at;
+        this.attendNote = note.trim();
     }
 
-    public int getIdAlert() {
-        return idAlert;
+    public Long getId() {
+        return id;
     }
 
-    public void setIdAlert(int idAlert) {
-        this.idAlert = idAlert;
+    public void setId(Long id) {
+        this.id = id;
     }
 
-    public int getIdContainerDetail() {
-        return idContainerDetail;
-    }
-
-    public void setIdContainerDetail(int idContainerDetail) {
-        this.idContainerDetail = idContainerDetail;
-    }
-
-    public String getType() {
+    public AlertType getType() {
         return type;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public String getTargetType() {
+        return targetType;
     }
 
-    public boolean isAttended() {
-        return attended;
-    }
-
-    public void setAttended(boolean attended) {
-        this.attended = attended;
+    public Long getTargetId() {
+        return targetId;
     }
 
     public String getDescription() {
         return description;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
     }
 
-    public LocalDateTime getGeneratedAt() {
-        return generatedAt;
+    public boolean isAttended() {
+        return attended;
     }
 
-    public void setGeneratedAt(LocalDateTime generatedAt) {
-        this.generatedAt = generatedAt;
+    public Long getAttendedBy() {
+        return attendedBy;
+    }
+
+    public LocalDateTime getAttendedAt() {
+        return attendedAt;
+    }
+
+    public String getAttendNote() {
+        return attendNote;
     }
 }
-

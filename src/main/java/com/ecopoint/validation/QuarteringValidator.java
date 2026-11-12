@@ -2,134 +2,159 @@ package com.ecopoint.validation;
 
 import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
-import com.ecopoint.exceptions.ResourceNotFoundException;
+import com.ecopoint.model.CharacterizationSettings;
+import com.ecopoint.model.Permission;
 import com.ecopoint.model.Quartering;
 import com.ecopoint.model.QuarteringResult;
+import com.ecopoint.model.QualityStatus;
+import com.ecopoint.model.SamplingShift;
+import com.ecopoint.model.User;
+import com.ecopoint.model.WasteCategory;
 
 import java.math.BigDecimal;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
 
 /**
- * Stateless validator for the solid waste Quartering Method enforcing
- * physical weight coherence and domain rules applying GRASP Pure Fabrication and SOLID SRP.
+ * Stateless validator for the quartering of a shift (RN-050 to RN-056),
+ * applying GRASP Pure Fabrication and SOLID SRP. The 2 % quality control is
+ * not a rejection: a non-conforming quartering is saved and raises an alert,
+ * so it is evaluated by {@code Quartering.evaluateQuality}.
  *
  * @author craulgomez
- * @version 1.0
+ * @version 2.0
  */
 public final class QuarteringValidator {
+
+    private static final int WEIGHT_DECIMALS = 2;
 
     private QuarteringValidator() {
     }
 
     /**
-     * Validates all inputs and physical weight rules of a Quartering procedure.
+     * Validates that the shift does not have a quartering yet (RN-050).
      *
-     * @param quartering quartering procedure to validate
-     * @throws InvalidDataException  if weights or quantities are null or negative
-     * @throws BusinessRuleException if sample weight exceeds initial weight or classified weights exceed sample weight
+     * @param shift shift that will receive the quartering
+     * @throws BusinessRuleException if the shift already has one
      */
-    public static void validateQuarteringData(Quartering quartering) {
+    public static void validateNoExistingQuartering(SamplingShift shift) {
+        ValidationSupport.requireNonNull(shift, "turno", "El turno no puede ser nulo.");
+        if (shift.hasQuartering()) {
+            throw new BusinessRuleException("El turno " + shift.getCode() + " ya tiene un cuarteo registrado.");
+        }
+    }
+
+    /**
+     * Validates the sample weight and the subcategory weights (RN-051, RN-055).
+     * When the shift generated less than the minimum sample, all its waste is
+     * classified ("muestra completa"), so the sample must equal the shift net weight.
+     *
+     * @param quartering quartering to validate
+     * @param settings   sample range of the institution
+     * @throws InvalidDataException  if a weight is missing, negative or has too many decimals
+     * @throws BusinessRuleException if the sample is outside the range or exceeds the shift weight
+     */
+    public static void validate(Quartering quartering, CharacterizationSettings settings) {
         if (quartering == null) {
-            throw new InvalidDataException("cuarteo", "El registro de cuarteo no puede ser nulo.");
+            throw new InvalidDataException("cuarteo", "El cuarteo no puede ser nulo.");
         }
-        if (quartering.getIdRecord() <= 0) {
-            throw new InvalidDataException("idRegistroJornada",
-                    "El identificador del registro de inspección asociado debe ser mayor que cero.");
+        BigDecimal sample = quartering.getSampleWeight();
+        BigDecimal shiftNet = quartering.getShiftNetWeight();
+        if (sample == null || sample.signum() <= 0) {
+            throw new InvalidDataException("pesoSubmuestra", "El peso de la submuestra debe ser mayor que cero.");
         }
-        if (quartering.getInitialWeight() == null
-                || quartering.getInitialWeight().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidDataException("pesoInicial",
-                    "El peso inicial recolectado debe ser mayor que 0.00 kg.");
+        requireDecimals(sample, "pesoSubmuestra");
+        if (shiftNet == null || shiftNet.signum() <= 0) {
+            throw new BusinessRuleException("El turno no tiene bolsas pesadas: no hay residuos para cuartear.");
         }
-        if (quartering.getSampleWeight() == null
-                || quartering.getSampleWeight().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new InvalidDataException("pesoMuestra",
-                    "El peso de la muestra de cuarteo debe ser mayor que 0.00 kg.");
+        if (sample.compareTo(shiftNet) > 0) {
+            throw new BusinessRuleException("La submuestra (" + sample.toPlainString()
+                    + " kg) no puede superar el peso neto del turno (" + shiftNet.toPlainString() + " kg).");
         }
-
-        List<QuarteringResult> results = quartering.getResults();
-        if (results == null || results.isEmpty()) {
-            throw new InvalidDataException("resultados",
-                    "El procedimiento de cuarteo debe incluir al menos un resultado de clasificación.");
-        }
-
-        for (QuarteringResult result : results) {
-            if (result == null) {
-                throw new InvalidDataException("resultadoCuarteo",
-                        "Ningún renglón de resultado de cuarteo puede ser nulo.");
+        if (shiftNet.compareTo(settings.minSampleWeight()) < 0) {
+            if (!quartering.isFullSample()) {
+                throw new BusinessRuleException("El turno generó " + shiftNet.toPlainString()
+                        + " kg, menos que la submuestra mínima: se debe clasificar todo (muestra completa de "
+                        + shiftNet.toPlainString() + " kg).");
             }
-            if (result.getIdWaste() <= 0) {
-                throw new InvalidDataException("idResiduo",
-                        "El identificador de la categoría de residuo debe ser mayor que cero.");
-            }
-            if (result.getWeight() == null || result.getWeight().compareTo(BigDecimal.ZERO) < 0) {
+        } else if (!settings.isSampleWeightInRange(sample)) {
+            throw new BusinessRuleException("La submuestra debe estar entre "
+                    + settings.minSampleWeight().toPlainString() + " y "
+                    + settings.maxSampleWeight().toPlainString() + " kg.");
+        }
+        if (quartering.getResults().isEmpty()) {
+            throw new InvalidDataException("resultados", "Registre el peso de al menos una subcategoría.");
+        }
+        for (QuarteringResult result : quartering.getResults()) {
+            if (result.getWeight() == null || result.getWeight().signum() < 0) {
                 throw new InvalidDataException("peso",
-                        "El peso clasificado por categoría no puede ser negativo.");
+                        "El peso de " + result.getCategoryName() + " no puede ser vacío ni negativo.");
             }
-            if (result.getQuantity() < 0) {
-                throw new InvalidDataException("cantidad",
-                        "La cantidad de unidades por categoría no puede ser negativa.");
-            }
-        }
-
-        validateWeightCoherence(quartering);
-    }
-
-    /**
-     * Enforces physical weight coherence rules for the Quartering Method:
-     * sampleWeight must not exceed initialWeight, and the sum of classified
-     * weights must not exceed sampleWeight.
-     *
-     * @param quartering quartering instance to verify
-     * @throws BusinessRuleException if physical weight constraints are violated
-     */
-    public static void validateWeightCoherence(Quartering quartering) {
-        BigDecimal initialWeight = quartering.getInitialWeight();
-        BigDecimal sampleWeight = quartering.getSampleWeight();
-
-        if (sampleWeight.compareTo(initialWeight) > 0) {
-            throw new BusinessRuleException("El peso de la muestra (" + sampleWeight
-                    + " kg) no puede ser mayor que el peso inicial recolectado (" + initialWeight + " kg).");
-        }
-
-        BigDecimal totalClassified = quartering.calculateTotalClassifiedWeight();
-        if (totalClassified.compareTo(sampleWeight) > 0) {
-            throw new BusinessRuleException("La suma de los pesos clasificados (" + totalClassified
-                    + " kg) excede el peso total de la muestra de cuarteo (" + sampleWeight + " kg).");
+            requireDecimals(result.getWeight(), "peso");
         }
     }
 
     /**
-     * Verifies that an inspection record does not already have a registered quartering
-     * procedure enforcing the 1 to 0..1 relationship.
+     * Validates that every result refers to an active subcategory of the
+     * catalog and that no subcategory appears twice (RN-055).
      *
-     * @param idRecord            inspection record identifier
-     * @param existingQuarterings list of registered quartering procedures
-     * @throws BusinessRuleException if a quartering already exists for the inspection record
+     * @param quartering quartering to validate
+     * @param catalog    subcategories of the catalog, by identifier
+     * @throws BusinessRuleException if a subcategory is unknown, inactive or repeated
      */
-    public static void validateUniqueQuarteringPerRecord(int idRecord, List<Quartering> existingQuarterings) {
-        if (existingQuarterings == null) {
-            return;
-        }
-        for (Quartering existing : existingQuarterings) {
-            if (existing != null && existing.getIdRecord() == idRecord) {
-                throw new BusinessRuleException(
-                        "El registro de inspección con identificador '" + idRecord
-                                + "' ya tiene un procedimiento de cuarteo registrado.");
+    public static void validateCategories(Quartering quartering, Map<Long, WasteCategory> catalog) {
+        ValidationSupport.requireNonNull(quartering, "cuarteo", "El cuarteo no puede ser nulo.");
+        Set<Long> seen = new HashSet<>();
+        for (QuarteringResult result : quartering.getResults()) {
+            WasteCategory category = catalog == null ? null : catalog.get(result.getCategoryId());
+            if (category == null || !category.isActive()) {
+                throw new BusinessRuleException("La subcategoría " + result.getCategoryName()
+                        + " no existe o está inactiva.");
+            }
+            if (!seen.add(result.getCategoryId())) {
+                throw new BusinessRuleException("La subcategoría " + result.getCategoryName()
+                        + " aparece dos veces en el cuarteo.");
             }
         }
     }
 
     /**
-     * Verifies that a Quartering instance exists.
+     * Validates that the user may register the sample: registering hazardous
+     * waste (Sin color group) requires its own permission (RN-056, RN-081).
      *
-     * @param quartering   quartering reference
-     * @param idQuartering searched identifier
-     * @throws ResourceNotFoundException if quartering is null
+     * @param quartering quartering being registered
+     * @param user       user registering it
+     * @throws com.ecopoint.exceptions.AccessDeniedException if the user lacks a required permission
      */
-    public static void validateQuarteringExists(Quartering quartering, int idQuartering) {
-        if (quartering == null) {
-            throw new ResourceNotFoundException("Cuarteo", idQuartering);
+    public static void validatePermissions(Quartering quartering, User user) {
+        ValidationSupport.requireNonNull(quartering, "cuarteo", "El cuarteo no puede ser nulo.");
+        AccessPolicy.require(user, Permission.REGISTER_QUARTERING);
+        if (quartering.hasHazardousResults()) {
+            AccessPolicy.require(user, Permission.REGISTER_HAZARDOUS_WASTE);
+        }
+    }
+
+    /**
+     * Validates that the user may annul the quartering: it must be
+     * non-conforming and the user needs the permission (RN-052, RN-081).
+     *
+     * @param quartering quartering to annul
+     * @param user       user annulling it
+     * @throws BusinessRuleException if the quartering is not non-conforming
+     * @throws com.ecopoint.exceptions.AccessDeniedException if the user lacks the permission
+     */
+    public static void validateAnnul(Quartering quartering, User user) {
+        ValidationSupport.requireNonNull(quartering, "cuarteo", "El cuarteo no puede ser nulo.");
+        AccessPolicy.require(user, Permission.ANNUL_QUARTERING);
+        if (quartering.getQualityStatus() != QualityStatus.NO_CONFORME) {
+            throw new BusinessRuleException("Solo se puede anular un cuarteo no conforme.");
+        }
+    }
+
+    private static void requireDecimals(BigDecimal value, String field) {
+        if (value.stripTrailingZeros().scale() > WEIGHT_DECIMALS) {
+            throw new InvalidDataException(field, "El peso admite como máximo " + WEIGHT_DECIMALS + " decimales.");
         }
     }
 }
