@@ -78,3 +78,8 @@ export function suggestSlot(study: CharacterizationStudy, slots: ShiftSlot[], no
     ?? slots[slots.length - 1]
   return candidate ? { dayNumber: candidate.dayNumber, type: candidate.type } : { dayNumber: 1, type: 'MANANA' }
 }
+
+/** "1 bolsa", "3 bolsas". */
+export function plural(count: number, singular: string, pluralForm = `${singular}s`): string {
+  return `${count} ${count === 1 ? singular : pluralForm}`
+}

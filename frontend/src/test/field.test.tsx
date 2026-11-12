@@ -214,6 +214,6 @@ describe('Shift checklist and closing (T322, T323, R-345, R-346, CA-306)', () =>
     expect(summary).toHaveTextContent('AU, BA, TE, PAE, ZV')
 
     await user.click(screen.getByRole('button', { name: 'Confirmar cierre' }))
-    expect(await screen.findByText(/Cerrado · 1 bolsas/)).toBeInTheDocument()
+    expect(await screen.findByText(/Cerrado · 1 bolsa ·/)).toBeInTheDocument()
   })
 })

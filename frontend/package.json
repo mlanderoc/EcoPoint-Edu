@@ -10,7 +10,8 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "check:mobile": "node scripts/check-mobile.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^7.0.6",

@@ -15,7 +15,7 @@ import { ApiError } from '@/services/apiClient'
 import { SamplingShift, SourceProgress } from '@/types'
 import { cn } from '@/utils/cn'
 import { fieldService } from '../services/fieldService'
-import { formatNumber } from '../utils/fieldMath'
+import { formatNumber, plural } from '../utils/fieldMath'
 
 const STATUS_TEXT: Record<SourceProgress['status'], string> = {
   CON_GENERACION: 'Con bolsas',
@@ -107,7 +107,7 @@ export function ShiftPage() {
         <div>
           <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Turno {shift.code}</h1>
           <p className="text-sm text-[var(--color-text-muted)]">
-            {isOpen ? 'Abierto' : 'Cerrado'} · {shift.bagCount} bolsas · {formatNumber(shift.totalNetWeight)} kg netos
+            {isOpen ? 'Abierto' : 'Cerrado'} · {plural(shift.bagCount, 'bolsa')} · {formatNumber(shift.totalNetWeight)} kg netos
           </p>
         </div>
         {isOpen && shift.population && (
@@ -152,7 +152,7 @@ export function ShiftPage() {
                 <p className="font-mono font-bold text-lg">{source.code}</p>
                 <p className="text-sm text-[var(--color-text-muted)]">{source.name}</p>
                 {source.bagCount > 0 && (
-                  <p className="text-xs">{source.bagCount} bolsas · {formatNumber(source.totalNetWeight)} kg</p>
+                  <p className="text-xs">{plural(source.bagCount, 'bolsa')} · {formatNumber(source.totalNetWeight)} kg</p>
                 )}
               </div>
               <div className="flex items-center gap-2">
@@ -179,7 +179,7 @@ export function ShiftPage() {
         <div className="flex flex-col gap-2">
           {pending.length > 0 && (
             <p className="text-sm text-amber-900 flex items-center gap-2">
-              <Lock className="w-4 h-4" /> Faltan {pending.length} fuentes: {pending.map((source) => source.code).join(', ')}.
+              <Lock className="w-4 h-4" /> Faltan {plural(pending.length, 'fuente')}: {pending.map((source) => source.code).join(', ')}.
               Registre sus bolsas o márquelas sin generación.
             </p>
           )}
