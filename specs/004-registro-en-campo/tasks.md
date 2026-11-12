@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **APROBADO** (11 nov 2026) |
+| Estado | **BORRADOR — pendiente de revisión** |
 | Plan | [plan.md](plan.md) |
 | Rama | `feature/004-registro-en-campo` (desde `develop`) |
 | Responsable | Carlos Raúl Gómez Galvis (`craulgomez@unicesar.edu.co`) |
@@ -25,9 +25,9 @@
   Inicializar la carpeta `frontend/` con Vite 6, React 18/19 y TypeScript 5 en modo estricto. Configurar `tsconfig.json` con alias de importación `@/*` y `vite.config.ts`.
   *Verificación:* `cd frontend && npm run build` genera el bundle sin advertencias ni errores.
 
-- [ ] **T301. Configuración de Tailwind CSS y tokens de diseño.**
-  Instalar y configurar Tailwind CSS v3/v4 con la paleta de colores del logo de EcoPoint Edu (Verde Eco `#1E8449`, Verde Pino `#0F3D23`, Hoja `#8BC34A`, Azul UPC `#2F5DA8`), badges de la Res. 2184/2019 (Blanco, Verde, Negro, Sin color) y variables CSS para alto contraste solar.
-  *Verificación:* Componente de prueba visualiza correctamente los colores institucionales y clases de utilidad.
+- [ ] **T301. Configuración de Tailwind CSS v4 y tokens de diseño.**
+  Instalar y configurar Tailwind CSS v4 con `@tailwindcss/vite`. Definir la paleta de colores del logo de EcoPoint Edu (Verde Eco `#1E8449`, Verde Pino `#0F3D23`, Hoja `#8BC34A`, Azul del texto 'Edu' `#2F5DA8`), badges de la Res. 2184/2019 (Blanco, Verde Orgánico `#27AE60`, Negro, Sin color) y variables CSS para alto contraste solar.
+  *Verificación:* Componente de prueba visualiza correctamente los colores institucionales y clases de utilidad de Tailwind v4.
 
 - [ ] **T302. Infraestructura de pruebas con Vitest y Testing Library.**
   Configurar Vitest, `@testing-library/react`, `@testing-library/jest-dom` y `jsdom`. Crear un test básico de humo.
@@ -37,9 +37,9 @@
   Definir en `src/types/` las interfaces de entidades (`User`, `UserRole`, `Institution`, `GenerationSource`, `Study`, `SamplingDay`, `Shift`, `WasteBag`, `WasteGroup`) y el contrato de error de la Spec 003 (`ErrorResponse`, `FieldError`).
   *Verificación:* `npm run typecheck` valida los tipos sin inconsistencias.
 
-- [ ] **T304. Mock Service Worker (MSW v2) y datos semilla.**
-  Instalar MSW v2 y configurar `src/mocks/browser.ts` y `src/mocks/handlers.ts`. Cargar datos semilla realistas de la I.E. Prudencia Daza (fuentes `AU`, `BA`, `CAF`, `OF`, etc., usuarios docente y estudiante, estudio de ejemplo). Configurar interceptor para simular latencia de red y errores controlados (400, 401, 403, 404, 422).
-  *Verificación:* En el navegador, las peticiones `fetch('/api/v1/auth/me')` y `fetch('/api/v1/institutions')` son interceptadas y devuelven los datos simulados con status 200.
+- [ ] **T304. Mock Service Worker (MSW v2) con simulación de sesión por cookie.**
+  Instalar MSW v2 y configurar `src/mocks/browser.ts` y `src/mocks/handlers.ts`. Simular la autenticación mediante cookie de sesión `HttpOnly` en memoria evaluando `withCredentials` (sin tokens en LocalStorage). Cargar datos semilla realistas de la I.E. Prudencia Daza (fuentes `AU`, `BA`, `CAF`, `OF`, etc., usuarios docente y estudiante, estudio de ejemplo). Configurar interceptor para simular latencia de red y errores controlados (400, 401, 403, 404, 422).
+  *Verificación:* En el navegador, las peticiones `fetch('/api/v1/auth/me', { credentials: 'include' })` y `fetch('/api/v1/institutions')` son interceptadas y devuelven los datos simulados con status 200 tras login.
 
 ---
 
@@ -50,7 +50,7 @@
   *Verificación:* Pruebas unitarias en Vitest confirmando dimensiones mínimas $\ge 48\text{ px}$ y aceptación de separador decimal punto y coma.
 
 - [ ] **T306. Badges y chips de grupos de residuos (R-304).**
-  Crear `WasteGroupBadge` y `WasteGroupChip` que representen los 4 grupos de la Res. 2184/2019 (Blanco, Verde, Negro, Sin color), asegurando que siempre incluyan el nombre textual visible junto al color.
+  Crear `WasteGroupBadge` y `WasteGroupChip` que representen los 4 grupos de la Res. 2184/2019 (Blanco, Verde Orgánico `#27AE60`, Negro, Sin color), asegurando que siempre incluyan el nombre textual visible junto al color y que se usen exclusivamente como chips informativos, nunca como botones.
   *Verificación:* Pruebas unitarias validando que el texto de cada grupo de residuo esté presente en el DOM y con contraste WCAG adecuado.
 
 - [ ] **T307. Layout principal adaptativo y menú según rol (R-311, CA-300, CA-307).**
@@ -61,16 +61,16 @@
 
 ## Fase 2 — Autenticación, Sesión y Control de Acceso
 
-- [ ] **T308. Cliente HTTP base y normalizador de errores (R-303).**
-  Crear `src/services/apiClient.ts` con Axios o Fetch interceptando respuestas de error. Normalizar las respuestas con el formato de la Spec 003 (`{ timestamp, status, errorCode, message, path, fieldErrors }`) y notificar vencimiento de sesión.
+- [ ] **T308. Cliente HTTP base con withCredentials y normalizador de errores (R-303).**
+  Crear `src/services/apiClient.ts` con Axios o Fetch configurado con `withCredentials: true` para envío de cookies de sesión `HttpOnly` (sin manejo de tokens en LocalStorage). Normalizar las respuestas con el formato de la Spec 003 (`{ timestamp, status, errorCode, message, path, fieldErrors }`) y notificar vencimiento de sesión ante error 401.
   *Verificación:* Pruebas unitarias de cliente HTTP verificando la propagación de mensajes en español y la lista de `fieldErrors`.
 
 - [ ] **T309. Contexto de autenticación y pantalla de inicio de sesión (R-310, R-312).**
-  Crear `AuthContext`, hook `useAuth` y la vista `/login` con formulario de correo y contraseña. Soporte para el aviso "Su sesión expiró" tras recibir error 401.
-  *Verificación:* `test('loginFormSuccessAndSessionHandling')` valida el inicio de sesión exitoso y la redirección.
+  Crear `AuthContext`, hook `useAuth` y la vista `/login` con formulario de correo y contraseña. Al autenticar con éxito, sincronizar con `GET /api/v1/auth/me`. Soporte para el aviso "Su sesión expiró" tras recibir error 401.
+  *Verificación:* `test('loginFormSuccessAndSessionHandling')` valida el inicio de sesión exitoso y la sincronización con `/auth/me`.
 
 - [ ] **T310. Guardas de ruta por rol y visibilidad condicional (CA-300, R-311).**
-  Implementar `RequireAuth` y `RequireRole`. Restringir vistas administrativas y de configuración únicamente al rol `DOCENTE`. En el rol `ESTUDIANTE_UNIVERSITARIO`, ocultar los enlaces del menú y deshabilitar/ocultar botones de abrir y cerrar turnos.
+  Implementar `RequireAuth`, `RequireRole` y `RequirePermission`. Restringir vistas administrativas y de configuración únicamente al rol `DOCENTE`. En el rol `ESTUDIANTE_UNIVERSITARIO`, ocultar los enlaces de administración y deshabilitar/ocultar botones de abrir y cerrar turnos, dejando la arquitectura preparada para las acciones de campo avanzadas (Specs 005/006).
   *Verificación:* `test('ca300_studentMenuAndButtonsRestricted')` confirma que el estudiante no ve opciones administrativas ni botones de turno.
 
 ---
