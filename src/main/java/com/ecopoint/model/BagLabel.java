@@ -17,9 +17,6 @@ import com.ecopoint.exceptions.InvalidDataException;
  */
 public record BagLabel(String sourceCode, int dayNumber, ShiftType shiftType, int sequence) {
 
-    /** Number of sampling days of a characterization study (RN-010). */
-    public static final int STUDY_DAYS = 8;
-
     /**
      * Validates every part of the label.
      *
@@ -30,8 +27,8 @@ public record BagLabel(String sourceCode, int dayNumber, ShiftType shiftType, in
             throw new InvalidDataException("codigoFuente",
                     "El código de la fuente debe tener de 2 a 6 letras mayúsculas o dígitos.");
         }
-        if (dayNumber < 1 || dayNumber > STUDY_DAYS) {
-            throw new InvalidDataException("dia", "El día de muestreo debe estar entre 1 y " + STUDY_DAYS + ".");
+        if (dayNumber < 1 || dayNumber > CharacterizationStudy.SAMPLING_DAYS) {
+            throw new InvalidDataException("dia", "El día de muestreo debe estar entre 1 y " + CharacterizationStudy.SAMPLING_DAYS + ".");
         }
         if (shiftType == null) {
             throw new InvalidDataException("turno", "El turno es obligatorio.");

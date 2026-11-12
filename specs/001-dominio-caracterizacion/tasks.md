@@ -50,7 +50,7 @@ Reglas:
 
 ## Fase 3 — Estudio y turnos
 
-- [ ] **T10. Estudio de caracterización.** `CharacterizationStudy`, `SamplingDay` y `StudyValidator`.
+- [x] **T10. Estudio de caracterización.** `CharacterizationStudy`, `SamplingDay` y `StudyValidator`.
   *Verificación:* `CharacterizationStudyTest` (CA-010, `overlaps`), `StudyValidatorTest` (CA-011, CA-012, CA-014, RN-015).
 
 - [ ] **T11. Verificación (base común).** `VerificationInfo`, `VerifiableRecord` (abstracta), `Correction`.

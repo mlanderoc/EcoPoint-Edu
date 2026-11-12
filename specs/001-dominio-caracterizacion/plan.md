@@ -80,6 +80,7 @@ classDiagram
         getEndDate() LocalDate
         overlaps(CharacterizationStudy) boolean
         changeStatus(StudyStatus)
+        reopen(Long, String, LocalDateTime)
     }
     class SamplingDay {
         int dayNumber
@@ -224,6 +225,7 @@ Objetos inmutables (`record` de Java 17) con su propia validación en el constru
 | `GeoPolygon` | `List<GeoPoint> vertices` | Cerrado, ≥ 3 vértices distintos (RN-004) |
 | `BagLabel` | `sourceCode`, `dayNumber`, `shiftType`, `sequence` (0 = sin consecutivo) | `toString()` → `AU-D3-M` o `AU-D3-M-2` (RN-031) |
 | `CharacterizationSettings` | Rango de submuestra (45–55 kg), tolerancia (2 %), peso neto máximo por bolsa (50 kg), densidad mínima y máxima (20–1 000 kg/m³) | `defaults()` con esos valores (D8, RN-037, RN-052) |
+| `StudyReopening` | `userId`, `reason`, `at` | Registro de cada reapertura de un estudio cerrado (RN-017) |
 
 ### 4.4 Verificación y correcciones (RN-060 a RN-063)
 
