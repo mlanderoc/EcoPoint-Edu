@@ -56,10 +56,10 @@ Reglas:
 - [x] **T11. Cuarteo y densidad.** `QuarteringRepository` (transaccional) y `DensityRepository`.
   *Verificación:* `QuarteringRepositoryIT` (CA-105, CA-103 desde la aplicación), `DensityRepositoryIT`.
 
-- [ ] **T12. Verificación y correcciones.** `VerificationRepository` y `CorrectionRepository`.
+- [x] **T12. Verificación y correcciones.** `VerificationRepository` y `CorrectionRepository`.
   *Verificación:* `CorrectionRepositoryIT` (CA-107).
 
-- [ ] **T13. Alertas y evidencias.** `AlertRepository` y `EvidenceRepository`.
+- [x] **T13. Alertas y evidencias.** `AlertRepository` y `EvidenceRepository`.
   *Verificación:* sus `*RepositoryIT` (CA-110).
 
 ## Fase 4 — Cierre
