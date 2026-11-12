@@ -22,7 +22,7 @@ Reglas:
 - [x] **T01. Esquema.** `sql/001_schema.sql`: tipos `ENUM`, las 20 tablas del plan (sección 3.2) con sus PK, FK, `UNIQUE`, `CHECK`, columnas generadas, *trigger* de solo inserción en `CORRECCION`, comentarios de política de borrado y las 2 vistas. Empieza borrando todo lo que exista.
   *Verificación:* se ejecuta dos veces seguidas con `psql` sin errores.
 
-- [ ] **T02. Semilla.** `sql/002_seed.sql`: las 15+ subcategorías (R-040), la I.E. Prudencia Daza con sus 8 fuentes ficticias y polígonos provisionales (R-041), un docente y un estudiante de demostración (R-042), un estudio CERRADO completo (R-043) y un estudio EN_EJECUCION a medio llenar (R-044).
+- [x] **T02. Semilla.** `sql/002_seed.sql`: las 15+ subcategorías (R-040), la I.E. Prudencia Daza con sus 8 fuentes ficticias y polígonos provisionales (R-041), un docente y un estudiante de demostración (R-042), un estudio CERRADO completo (R-043) y un estudio EN_EJECUCION a medio llenar (R-044).
   *Verificación:* 001 + 002 dos veces seguidas sin errores, con el mismo contenido (CA-100, CA-101).
 
 - [ ] **T03. Scripts de recreación.** `sql/recrear-base.ps1` y `sql/recrear-base.sh` (crean la base si no existe y ejecutan 001 + 002).
