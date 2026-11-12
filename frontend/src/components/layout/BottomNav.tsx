@@ -2,7 +2,7 @@ import React from 'react'
 import { ClipboardList, Calendar, Bell, UserCheck, Settings, ShoppingBag } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useOptionalAuth } from '@/features/auth/hooks/useAuth'
 
 export interface BottomNavProps {
   role?: UserRole
@@ -15,13 +15,7 @@ export function BottomNav({
   currentPath = '/campo',
   onNavigate,
 }: BottomNavProps) {
-  let authRole: UserRole | undefined
-  try {
-    const auth = useAuth()
-    authRole = auth.role ?? undefined
-  } catch {
-    // Outside AuthProvider
-  }
+  const authRole: UserRole | undefined = useOptionalAuth()?.role ?? undefined
 
   const role = roleProp ?? authRole
 

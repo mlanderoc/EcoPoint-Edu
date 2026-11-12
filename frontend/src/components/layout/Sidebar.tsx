@@ -12,7 +12,7 @@ import {
 } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useOptionalAuth } from '@/features/auth/hooks/useAuth'
 
 export interface NavItem {
   label: string
@@ -34,13 +34,7 @@ export function Sidebar({
   onNavigate,
   className,
 }: SidebarProps) {
-  let authRole: UserRole | undefined
-  try {
-    const auth = useAuth()
-    authRole = auth.role ?? undefined
-  } catch {
-    // Outside AuthProvider
-  }
+  const authRole: UserRole | undefined = useOptionalAuth()?.role ?? undefined
 
   const role = roleProp ?? authRole
 

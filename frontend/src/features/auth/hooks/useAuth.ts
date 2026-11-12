@@ -15,3 +15,11 @@ export function useAuth(): AuthContextType {
   }
   return context
 }
+
+/**
+ * Returns the authentication context, or null outside an AuthProvider.
+ * Layout components use it so they can also render in isolation (stories, tests).
+ */
+export function useOptionalAuth(): AuthContextType | null {
+  return useContext(AuthContext) ?? null
+}

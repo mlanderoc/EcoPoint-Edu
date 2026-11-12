@@ -11,7 +11,7 @@ import { Header } from './Header'
 import { Sidebar } from './Sidebar'
 import { BottomNav } from './BottomNav'
 import { User } from '@/types'
-import { useAuth } from '@/features/auth/hooks/useAuth'
+import { useOptionalAuth } from '@/features/auth/hooks/useAuth'
 
 export interface AppLayoutProps {
   user?: User | null
@@ -28,20 +28,11 @@ export function AppLayout({
   onLogout,
   children,
 }: AppLayoutProps) {
-  let authUser: User | null = null
-  let authLogout: (() => Promise<void>) | undefined
-  let isAuthLoading = false
-  let isAuthenticated = false
-
-  try {
-    const auth = useAuth()
-    authUser = auth.user
-    authLogout = auth.logout
-    isAuthLoading = auth.isLoading
-    isAuthenticated = auth.isAuthenticated
-  } catch {
-    // Outside AuthProvider (e.g. standalone tests)
-  }
+  const auth = useOptionalAuth()
+  const authUser: User | null = auth?.user ?? null
+  const authLogout: (() => Promise<void>) | undefined = auth?.logout
+  const isAuthLoading = auth?.isLoading ?? false
+  const isAuthenticated = auth?.isAuthenticated ?? false
 
   const user = userProp !== undefined ? userProp : authUser
   const handleLogout = onLogout ?? authLogout
