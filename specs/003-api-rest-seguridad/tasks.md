@@ -94,5 +94,5 @@ Reglas:
 - [x] **T22. Ejemplos y documentación.** `docs/api/*.http` por recurso, README (cómo arrancar el backend y el frontend juntos) y `docs/layer-diagram.md` con las capas nuevas. *(Merlín)*
   *Verificación:* los `.http` corren contra la base de desarrollo con la semilla.
 
-- [ ] **T23. Revisión final y PR.** Trazabilidad CA-200 a CA-212, `git grep` de contraseñas, `./mvnw verify` en verde, revisión de Antigravity y PR a `develop`. *(Merlín)*
+- [x] **T23. Revisión final y PR.** Trazabilidad CA-200 a CA-212, `git grep` de contraseñas, `./mvnw verify` en verde, revisión de Antigravity y PR a `develop`. *(Merlín)*
   *Verificación:* veredicto "APROBADO PARA PR".
