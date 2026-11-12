@@ -57,7 +57,7 @@ Reglas:
 
 ## Fase 3 — Estudios, turnos y bolsas
 
-- [ ] **T12. Servicio de estudios.** `StudyService`: crear con 8 días, cambiar fechas y fuentes, cambiar de estado (RN-014, RN-016) y reabrir con motivo, en transacciones. *(Estefanía)*
+- [x] **T12. Servicio de estudios.** `StudyService`: crear con 8 días, cambiar fechas y fuentes, cambiar de estado (RN-014, RN-016) y reabrir con motivo, en transacciones. *(Estefanía)*
   *Verificación:* pruebas unitarias de cada transición permitida y rechazada.
 
 - [ ] **T13. Servicio de turnos.** `ShiftService`: abrir, cerrar (RN-024) y reabrir; población; "sin generación"; los 16 turnos posibles del estudio con su avance. *(Estefanía)*
