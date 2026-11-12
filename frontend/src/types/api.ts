@@ -22,3 +22,11 @@ export interface ApiResponse<T> {
   data: T
   status: number
 }
+
+/** One page of a long list (spec 003, R-103). */
+export interface PageResponse<T> {
+  items: T[]
+  page: number
+  size: number
+  totalItems: number
+}

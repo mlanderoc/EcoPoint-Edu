@@ -1,13 +1,22 @@
+/**
+ * Mock of the REST API of Spec 003 for development without backend and for the
+ * tests. Routes, JSON and error format follow the real API (plan of Spec 003,
+ * sections 4 and 5); turn it off with VITE_USE_MOCK_API=false.
+ *
+ * @author craulgomez
+ */
+
 import { http, HttpResponse } from 'msw'
 import {
-  mockInstitution,
-  mockUsers,
-  mockSources,
-  mockCrews,
-  mockCategories,
-  mockStudy,
-  mockShifts,
+  MockShift,
   mockBags,
+  mockCategories,
+  mockCrews,
+  mockInstitution,
+  mockShifts,
+  mockSources,
+  mockStudy,
+  mockUsers,
 } from './data/seedData'
 import {
   CharacterizationStudy,
@@ -15,440 +24,485 @@ import {
   GenerationSource,
   Institution,
   SamplingShift,
+  ShiftSlot,
+  ShiftType,
+  SourceProgress,
+  StudyStatus,
   User,
+  UserRole,
   WasteBag,
   WasteCategory,
 } from '@/types'
+import { ALL_PERMISSIONS, hasPermission } from '@/features/auth/utils/permissions'
 
-// In-memory mutable state for the mock session
-let activeUser: User | null = mockUsers[0] // Default logged in as Docente for development convenience
+/** Demo password of every seed user (sql/002_seed.sql). */
+const DEMO_PASSWORD = 'EcoPoint2026'
+const NEXT_STATUS: Record<StudyStatus, StudyStatus | null> = {
+  PLANIFICADO: 'EN_EJECUCION',
+  EN_EJECUCION: 'EN_DEPURACION',
+  EN_DEPURACION: 'CERRADO',
+  CERRADO: null,
+}
+
+let activeUser: User | null = mockUsers[0]
 let institutionsState: Institution[] = [{ ...mockInstitution }]
 let usersState: User[] = [...mockUsers]
 let sourcesState: GenerationSource[] = [...mockSources]
 let crewsState: Crew[] = [...mockCrews]
 let categoriesState: WasteCategory[] = [...mockCategories]
-let studyState: CharacterizationStudy = { ...mockStudy }
-let shiftsState: SamplingShift[] = [...mockShifts]
+let studiesState: CharacterizationStudy[] = [{ ...mockStudy }]
+let shiftsState: MockShift[] = cloneShifts()
 let bagsState: WasteBag[] = [...mockBags]
+let nextId = 1000
+
+function newId(): number {
+  nextId += 1
+  return nextId
+}
+
+function apiError(status: number, errorCode: string, message: string, path: string,
+                  fieldErrors: { field: string; message: string }[] = []) {
+  return HttpResponse.json(
+    { timestamp: new Date().toISOString(), status, errorCode, message, path, fieldErrors },
+    { status }
+  )
+}
+
+function notFound(path: string, what: string) {
+  return apiError(404, 'ERR_NOT_FOUND', `El recurso ${what} no fue encontrado en el sistema.`, path)
+}
+
+function requireSession(path: string) {
+  return activeUser ? null : apiError(401, 'ERR_UNAUTHORIZED', 'Debe iniciar sesión para continuar.', path)
+}
+
+function requirePermission(permission: Parameters<typeof hasPermission>[1], path: string) {
+  const noSession = requireSession(path)
+  if (noSession) {
+    return noSession
+  }
+  return hasPermission(activeUser?.role, permission)
+    ? null
+    : apiError(403, 'ERR_FORBIDDEN', 'No tiene permiso para realizar esta acción.', path)
+}
+
+function withSession(user: User): User {
+  const institution = institutionsState.find((item) => item.id === user.institutionId)
+  return {
+    ...user,
+    institutionName: institution?.name ?? null,
+    permissions: ALL_PERMISSIONS.filter((permission) => hasPermission(user.role, permission)),
+  }
+}
+
+function round2(value: number): number {
+  return Math.round(value * 100) / 100
+}
+
+function participatingSources(studyId: number): GenerationSource[] {
+  const study = studiesState.find((item) => item.id === studyId)
+  const ids = new Set(study?.participatingSourceIds ?? [])
+  return sourcesState.filter((source) => ids.has(source.id))
+}
+
+function progressOf(shift: MockShift): SourceProgress[] {
+  return participatingSources(shift.studyId).map((source) => {
+    const bags = bagsState.filter((bag) => bag.shiftId === shift.id && bag.sourceId === source.id)
+    const status = bags.length > 0 ? 'CON_GENERACION'
+      : shift.sourcesWithoutGeneration.includes(source.id) ? 'SIN_GENERACION' : 'PENDIENTE'
+    return {
+      sourceId: source.id,
+      code: source.code,
+      name: source.name,
+      type: source.type,
+      bagCount: bags.length,
+      totalNetWeight: round2(bags.reduce((sum, bag) => sum + bag.netWeight, 0)),
+      status,
+    }
+  })
+}
+
+function shiftCode(dayNumber: number, type: ShiftType): string {
+  return `D${dayNumber}-${type === 'MANANA' ? 'M' : 'T'}`
+}
+
+function toShiftResponse(shift: MockShift): SamplingShift {
+  const bags = bagsState.filter((bag) => bag.shiftId === shift.id)
+  return {
+    ...shift,
+    code: shiftCode(shift.dayNumber, shift.type),
+    bagCount: bags.length,
+    totalNetWeight: round2(bags.reduce((sum, bag) => sum + bag.netWeight, 0)),
+    sourcesWithoutGeneration: [...shift.sourcesWithoutGeneration].sort((a, b) => a - b),
+    hasQuartering: false,
+    hasDensity: false,
+    sources: progressOf(shift),
+  }
+}
+
+function page<T>(items: T[], url: URL) {
+  const size = Math.min(Number(url.searchParams.get('size') ?? 50) || 50, 200)
+  const pageNumber = Math.max(Number(url.searchParams.get('page') ?? 0) || 0, 0)
+  const from = pageNumber * size
+  return { items: items.slice(from, from + size), page: pageNumber, size, totalItems: items.length }
+}
+
+function findShift(params: Record<string, unknown>): MockShift | undefined {
+  return shiftsState.find((shift) => shift.id === Number(params.shiftId))
+}
 
 export const handlers = [
-  // --- AUTHENTICATION ---
+  // --- AUTHENTICATION (plan 003, section 4.1) ---
+  http.get('/api/v1/auth/csrf', () => new HttpResponse(null, { status: 204 })),
+
   http.post('/api/v1/auth/login', async ({ request }) => {
     const body = (await request.json()) as { email?: string; password?: string }
-    const { email, password } = body
-
-    // Match credentials
     const found = usersState.find(
-      (u) =>
-        u.email.toLowerCase() === email?.toLowerCase() &&
-        password === 'EcoPoint2026'
+      (user) => user.email.toLowerCase() === body.email?.trim().toLowerCase() && user.active
     )
-
-    if (!found) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 401,
-          errorCode: 'ERR_UNAUTHORIZED',
-          message: 'Correo electrónico o contraseña incorrectos.',
-          path: '/api/v1/auth/login',
-          fieldErrors: [],
-        },
-        { status: 401 }
-      )
+    if (!found || body.password !== DEMO_PASSWORD) {
+      return apiError(401, 'ERR_UNAUTHORIZED', 'Correo o contraseña incorrectos.', '/api/v1/auth/login')
     }
-
     activeUser = found
-    return HttpResponse.json(found, { status: 200 })
+    return HttpResponse.json(withSession(found))
   }),
 
   http.post('/api/v1/auth/logout', () => {
     activeUser = null
-    return HttpResponse.json({ success: true }, { status: 200 })
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.get('/api/v1/auth/me', () => {
-    if (!activeUser) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 401,
-          errorCode: 'ERR_UNAUTHORIZED',
-          message: 'Su sesión expiró o no ha iniciado sesión.',
-          path: '/api/v1/auth/me',
-          fieldErrors: [],
-        },
-        { status: 401 }
-      )
-    }
-    return HttpResponse.json(activeUser, { status: 200 })
+    const noSession = requireSession('/api/v1/auth/me')
+    return noSession ?? HttpResponse.json(withSession(activeUser as User))
   }),
 
-  // --- INSTITUTIONS & SOURCES ---
-  http.get('/api/v1/institutions', () => {
-    return HttpResponse.json(institutionsState, { status: 200 })
-  }),
+  // --- INSTITUTIONS AND SOURCES (section 5.1) ---
+  http.get('/api/v1/institutions', () => HttpResponse.json(institutionsState)),
 
   http.post('/api/v1/institutions', async ({ request }) => {
+    const denied = requirePermission('MANAGE_ADMINISTRATION', '/api/v1/institutions')
+    if (denied) return denied
     const body = (await request.json()) as Omit<Institution, 'id'>
-    const newInst: Institution = {
-      ...body,
-      id: Date.now(),
-    }
-    institutionsState.push(newInst)
-    return HttpResponse.json(newInst, { status: 201 })
+    const created: Institution = { mapZoom: 17, ...body, id: newId() }
+    institutionsState.push(created)
+    return HttpResponse.json(created, { status: 201 })
   }),
 
   http.put('/api/v1/institutions/:id', async ({ params, request }) => {
-    const id = Number(params.id)
+    const index = institutionsState.findIndex((item) => item.id === Number(params.id))
+    if (index < 0) return notFound(`/api/v1/institutions/${params.id}`, 'Institución')
     const body = (await request.json()) as Partial<Institution>
-    const idx = institutionsState.findIndex((i) => i.id === id)
-    if (idx >= 0) {
-      institutionsState[idx] = { ...institutionsState[idx], ...body }
-      return HttpResponse.json(institutionsState[idx], { status: 200 })
-    }
-    return HttpResponse.json({ status: 404 }, { status: 404 })
+    institutionsState[index] = { ...institutionsState[index], ...body, id: institutionsState[index].id }
+    return HttpResponse.json(institutionsState[index])
   }),
 
-  http.get('/api/v1/institutions/:id/sources', () => {
-    return HttpResponse.json(sourcesState, { status: 200 })
+  http.get('/api/v1/institutions/:id/sources', ({ request }) => {
+    const onlyActive = new URL(request.url).searchParams.get('active') === 'true'
+    return HttpResponse.json(sourcesState.filter((source) => !onlyActive || source.active))
   }),
 
   http.post('/api/v1/institutions/:id/sources', async ({ params, request }) => {
-    const body = (await request.json()) as Omit<GenerationSource, 'id'>
-    const newSource: GenerationSource = {
-      ...body,
-      id: Date.now(),
-      institutionId: Number(params.id) || 1,
-      active: body.active !== undefined ? body.active : true,
+    const path = `/api/v1/institutions/${params.id}/sources`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'>
+    if (sourcesState.some((source) => source.code === body.code)) {
+      return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${body.code} en esta institución.`, path)
     }
-    sourcesState.push(newSource)
-    return HttpResponse.json(newSource, { status: 201 })
+    const created: GenerationSource = {
+      ...body, id: newId(), institutionId: Number(params.id) || 1, active: true, hasGeometry: false,
+    }
+    sourcesState.push(created)
+    return HttpResponse.json(created, { status: 201 })
   }),
 
   http.put('/api/v1/institutions/:id/sources/:sourceId', async ({ params, request }) => {
-    const sourceId = Number(params.sourceId)
+    const index = sourcesState.findIndex((source) => source.id === Number(params.sourceId))
+    if (index < 0) return notFound(`/api/v1/institutions/${params.id}/sources/${params.sourceId}`, 'Fuente')
     const body = (await request.json()) as Partial<GenerationSource>
-    const idx = sourcesState.findIndex((s) => s.id === sourceId)
-    if (idx >= 0) {
-      sourcesState[idx] = { ...sourcesState[idx], ...body }
-      return HttpResponse.json(sourcesState[idx], { status: 200 })
-    }
-    return HttpResponse.json({ status: 404 }, { status: 404 })
+    sourcesState[index] = { ...sourcesState[index], ...body, id: sourcesState[index].id }
+    return HttpResponse.json(sourcesState[index])
   }),
 
-  // --- USERS & CREWS ---
-  http.get('/api/v1/users', () => {
-    return HttpResponse.json(usersState, { status: 200 })
+  http.post('/api/v1/institutions/:id/sources/:sourceId/:action', ({ params }) => {
+    const source = sourcesState.find((item) => item.id === Number(params.sourceId))
+    if (!source) return notFound(`/api/v1/institutions/${params.id}/sources/${params.sourceId}`, 'Fuente')
+    source.active = params.action === 'activate'
+    return HttpResponse.json(source)
+  }),
+
+  // --- USERS, CREWS AND CATEGORIES (section 5.1) ---
+  http.get('/api/v1/users', ({ request }) => {
+    const denied = requirePermission('MANAGE_ADMINISTRATION', '/api/v1/users')
+    if (denied) return denied
+    const url = new URL(request.url)
+    const role = url.searchParams.get('role') as UserRole | null
+    return HttpResponse.json(page(usersState.filter((user) => !role || user.role === role), url))
   }),
 
   http.post('/api/v1/users', async ({ request }) => {
-    const body = (await request.json()) as Omit<User, 'id'>
-    // Validation: duplicate email (CA-302)
-    const exists = usersState.some(
-      (u) => u.email.toLowerCase() === body.email.toLowerCase()
-    )
-    if (exists) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 400,
-          errorCode: 'ERR_INVALID_DATA',
-          message: 'Los datos enviados contienen errores.',
-          path: '/api/v1/users',
-          fieldErrors: [
-            {
-              field: 'email',
-              message: 'El correo electrónico ya se encuentra registrado.',
-            },
-          ],
-        },
-        { status: 400 }
-      )
+    const body = (await request.json()) as Omit<User, 'id' | 'active'> & { password?: string }
+    if (usersState.some((user) => user.email.toLowerCase() === body.email.trim().toLowerCase())) {
+      return apiError(422, 'ERR_BUSINESS_RULE', `El correo ${body.email.trim()} ya está registrado por otro usuario.`,
+        '/api/v1/users')
     }
-
-    const newUser: User = {
-      ...body,
-      id: Date.now(),
-      active: true,
-    }
-    usersState.push(newUser)
-    return HttpResponse.json(newUser, { status: 201 })
+    const { password: _password, ...data } = body
+    const created: User = { ...data, id: newId(), active: true, institutionId: data.institutionId ?? 1 }
+    usersState.push(created)
+    return HttpResponse.json(created, { status: 201 })
   }),
 
-  http.get('/api/v1/crews', () => {
-    return HttpResponse.json(crewsState, { status: 200 })
-  }),
+  http.get('/api/v1/crews', () => HttpResponse.json(crewsState)),
 
   http.post('/api/v1/crews', async ({ request }) => {
     const body = (await request.json()) as Omit<Crew, 'id'>
-    const newCrew: Crew = {
-      ...body,
-      id: Date.now(),
+    const responsible = usersState.find((user) => user.id === body.responsibleId)
+    if (!responsible || responsible.role !== 'DOCENTE') {
+      return apiError(422, 'ERR_BUSINESS_RULE', `La cuadrilla ${body.name} debe tener un docente como responsable.`,
+        '/api/v1/crews')
     }
-    crewsState.push(newCrew)
-    return HttpResponse.json(newCrew, { status: 201 })
+    const created: Crew = {
+      ...body, id: newId(), responsibleName: `${responsible.firstName} ${responsible.lastName}`,
+    }
+    crewsState.push(created)
+    return HttpResponse.json(created, { status: 201 })
   }),
 
-  http.get('/api/v1/waste-categories', () => {
-    return HttpResponse.json(categoriesState, { status: 200 })
+  http.get('/api/v1/waste-categories', ({ request }) => {
+    const group = new URL(request.url).searchParams.get('group')
+    return HttpResponse.json(categoriesState.filter((category) => !group || category.group === group))
   }),
 
   http.post('/api/v1/waste-categories', async ({ request }) => {
-    const body = (await request.json()) as Omit<WasteCategory, 'id'>
-    const newCategory: WasteCategory = {
-      ...body,
-      id: Date.now(),
-      active: true,
+    const body = (await request.json()) as Omit<WasteCategory, 'id' | 'active'>
+    const created: WasteCategory = {
+      ...body, id: newId(), active: true, hazardous: body.group === 'SIN_COLOR',
     }
-    categoriesState.push(newCategory)
-    return HttpResponse.json(newCategory, { status: 201 })
+    categoriesState.push(created)
+    return HttpResponse.json(created, { status: 201 })
   }),
 
-  // --- CHARACTERIZATION STUDY ---
-  http.get('/api/v1/studies', () => {
-    return HttpResponse.json([studyState], { status: 200 })
-  }),
+  // --- STUDIES (section 5.2) ---
+  http.get('/api/v1/studies', () => HttpResponse.json(studiesState)),
 
-  http.get('/api/v1/studies/:id', () => {
-    return HttpResponse.json(studyState, { status: 200 })
+  http.get('/api/v1/studies/:id', ({ params }) => {
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    return study ? HttpResponse.json(study) : notFound(`/api/v1/studies/${params.id}`, 'Estudio')
   }),
 
   http.post('/api/v1/studies', async ({ request }) => {
-    const body = (await request.json()) as Partial<CharacterizationStudy>
-    studyState = {
-      ...mockStudy,
-      ...body,
-      id: Date.now(),
+    const denied = requirePermission('MANAGE_STUDIES', '/api/v1/studies')
+    if (denied) return denied
+    const body = (await request.json()) as { institutionId?: number; days: { dayNumber: number; date: string | null }[] }
+    const days = Array.from({ length: 8 }, (_, index) => ({
+      dayNumber: index + 1,
+      date: body.days.find((day) => day.dayNumber === index + 1)?.date ?? null,
+      discarded: index === 0,
+    }))
+    const created: CharacterizationStudy = {
+      id: newId(),
+      institutionId: body.institutionId ?? 1,
       status: 'PLANIFICADO',
-    } as CharacterizationStudy
-    return HttpResponse.json(studyState, { status: 201 })
-  }),
-
-  http.post('/api/v1/studies/:id/close', () => {
-    // CA-309: Motivo exacto visible si quedan registros pendientes
-    return HttpResponse.json(
-      {
-        timestamp: new Date().toISOString(),
-        status: 422,
-        errorCode: 'ERR_BUSINESS_RULE',
-        message: 'No se puede cerrar el estudio: Quedan 4 registros pendientes de verificación.',
-        path: '/api/v1/studies/1/close',
-        fieldErrors: [],
-      },
-      { status: 422 }
-    )
-  }),
-
-  // --- SHIFTS & FIELD REGISTRATION ---
-  http.get('/api/v1/studies/:id/shifts', () => {
-    return HttpResponse.json(shiftsState, { status: 200 })
-  }),
-
-  http.get('/api/v1/shifts/:id', ({ params }) => {
-    const shift = shiftsState.find((s) => s.id === Number(params.id))
-    if (!shift) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 404,
-          errorCode: 'ERR_NOT_FOUND',
-          message: 'Turno de muestreo no encontrado.',
-          path: `/api/v1/shifts/${params.id}`,
-        },
-        { status: 404 }
-      )
+      startDate: days[0].date,
+      endDate: days[7].date,
+      days,
+      participatingSourceIds: sourcesState.filter((source) => source.active).map((source) => source.id),
+      pendingRecords: 0,
     }
-    return HttpResponse.json(shift, { status: 200 })
+    studiesState.push(created)
+    return HttpResponse.json(created, { status: 201 })
   }),
 
-  http.post('/api/v1/shifts/:id/open', ({ params }) => {
-    const shift = shiftsState.find((s) => s.id === Number(params.id))
-    if (shift) {
-      shift.status = 'ABIERTO'
-      return HttpResponse.json(shift, { status: 200 })
-    }
-    return HttpResponse.json({ status: 404 }, { status: 404 })
+  http.put('/api/v1/studies/:id/sources', async ({ params, request }) => {
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(`/api/v1/studies/${params.id}/sources`, 'Estudio')
+    const body = (await request.json()) as { sourceIds: number[] }
+    study.participatingSourceIds = [...body.sourceIds].sort((a, b) => a - b)
+    return HttpResponse.json(study)
   }),
 
-  // Population registration (R-342)
-  http.get('/api/v1/shifts/:id/population', ({ params }) => {
-    const shift = shiftsState.find((s) => s.id === Number(params.id))
-    return HttpResponse.json(shift?.population ?? null, { status: 200 })
+  http.post('/api/v1/studies/:id/status', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/status`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    const body = (await request.json()) as { status: StudyStatus; reason?: string }
+    if (study.status === 'EN_DEPURACION' && body.status === 'CERRADO' && study.pendingRecords > 0) {
+      return apiError(422, 'ERR_BUSINESS_RULE',
+        `No se puede cerrar el estudio: quedan ${study.pendingRecords} registros pendientes de verificación.`, path)
+    }
+    const reopening = study.status === 'CERRADO' && body.status === 'EN_DEPURACION'
+    if (!reopening && NEXT_STATUS[study.status] !== body.status) {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'El estudio solo avanza un estado a la vez.', path)
+    }
+    study.status = body.status
+    return HttpResponse.json(study)
   }),
 
-  http.post('/api/v1/shifts/:id/population', async ({ params, request }) => {
-    const shift = shiftsState.find((s) => s.id === Number(params.id))
-    if (!shift) return HttpResponse.json({ status: 404 }, { status: 404 })
-
-    const body = (await request.json()) as {
-      students: number
-      teachers: number
-      staff: number
-    }
-
-    const total = Number(body.students || 0) + Number(body.teachers || 0) + Number(body.staff || 0)
-    shift.population = {
-      students: Number(body.students || 0),
-      teachers: Number(body.teachers || 0),
-      staff: Number(body.staff || 0),
-      total,
-    }
-    return HttpResponse.json(shift.population, { status: 200 })
-  }),
-
-  // Bags (R-343, CA-303, CA-304, CA-305, CA-310)
-  http.get('/api/v1/shifts/:id/bags', ({ params }) => {
-    const filtered = bagsState.filter((b) => b.shiftId === Number(params.id))
-    return HttpResponse.json(filtered, { status: 200 })
-  }),
-
-  http.post('/api/v1/shifts/:id/bags', async ({ params, request }) => {
-    const shiftId = Number(params.id)
-    const shift = shiftsState.find((s) => s.id === shiftId)
-    if (!shift) return HttpResponse.json({ status: 404 }, { status: 404 })
-
-    // CA-303 / RN-023: No bags before population
-    if (!shift.population || shift.population.total <= 0) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 422,
-          errorCode: 'ERR_BUSINESS_RULE',
-          message: 'No se pueden registrar bolsas: registre primero la población del turno.',
-          path: `/api/v1/shifts/${shiftId}/bags`,
-          fieldErrors: [],
-        },
-        { status: 422 }
-      )
-    }
-
-    const body = (await request.json()) as {
-      sourceId: number
-      grossWeight: number
-      tare: number
-      volume: number
-    }
-
-    // CA-305: tare >= grossWeight validation
-    if (Number(body.tare) >= Number(body.grossWeight)) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 400,
-          errorCode: 'ERR_INVALID_DATA',
-          message: 'Los datos enviados contienen errores.',
-          path: `/api/v1/shifts/${shiftId}/bags`,
-          fieldErrors: [
-            {
-              field: 'tare',
-              message: 'La tara no puede superar el peso bruto.',
-            },
-          ],
-        },
-        { status: 400 }
-      )
-    }
-
-    const source = sourcesState.find((s) => s.id === Number(body.sourceId))
-    const sourceCode = source ? source.code : 'GEN'
-    const shiftLetter = shift.type === 'MANANA' ? 'M' : 'T'
-    const label = `${sourceCode}-D${shift.dayNumber}-${shiftLetter}`
-
-    const gross = Number(body.grossWeight)
-    const tare = Number(body.tare)
-    const vol = Number(body.volume)
-    const netWeight = Number((gross - tare).toFixed(2))
-    const density = vol > 0 ? Number((netWeight / vol).toFixed(2)) : 0
-
-    const newBag: WasteBag = {
-      id: Date.now(),
-      shiftId,
-      sourceId: Number(body.sourceId),
-      sourceCode,
-      label,
-      grossWeight: gross,
-      tare,
-      netWeight,
-      volume: vol,
-      density,
-      verificationStatus: 'PENDIENTE',
-    }
-
-    bagsState.push(newBag)
-    return HttpResponse.json(newBag, { status: 201 })
-  }),
-
-  // Mark source without generation (R-345)
-  http.post(
-    '/api/v1/shifts/:id/sources/:sourceId/no-generation',
-    ({ params }) => {
-      const shift = shiftsState.find((s) => s.id === Number(params.id))
-      const sourceId = Number(params.sourceId)
-      if (shift && !shift.sourcesWithoutGeneration.includes(sourceId)) {
-        shift.sourcesWithoutGeneration.push(sourceId)
+  // --- SHIFTS (section 5.2) ---
+  http.get('/api/v1/studies/:id/shifts', ({ params }) => {
+    const studyId = Number(params.id)
+    const total = participatingSources(studyId).length
+    const slots: ShiftSlot[] = []
+    for (let day = 1; day <= 8; day += 1) {
+      for (const type of ['MANANA', 'TARDE'] as ShiftType[]) {
+        const shift = shiftsState.find((item) => item.studyId === studyId && item.dayNumber === day && item.type === type)
+        const covered = shift ? progressOf(shift).filter((source) => source.status !== 'PENDIENTE').length : 0
+        slots.push({
+          dayNumber: day, type, shiftId: shift?.id ?? null, status: shift?.status ?? null,
+          coveredSources: covered, totalSources: total,
+        })
       }
-      return HttpResponse.json({ success: true }, { status: 200 })
     }
-  ),
+    return HttpResponse.json(slots)
+  }),
 
-  // Close shift (R-346, CA-306)
-  http.post('/api/v1/shifts/:id/close', ({ params }) => {
-    const shift = shiftsState.find((s) => s.id === Number(params.id))
-    if (!shift) return HttpResponse.json({ status: 404 }, { status: 404 })
+  http.post('/api/v1/studies/:id/shifts', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/shifts`
+    const denied = requirePermission('MANAGE_SHIFTS', path)
+    if (denied) return denied
+    const body = (await request.json()) as { dayNumber: number; type: ShiftType; crewId?: number | null }
+    const studyId = Number(params.id)
+    if (shiftsState.some((shift) => shift.studyId === studyId && shift.dayNumber === body.dayNumber
+      && shift.type === body.type)) {
+      const label = body.type === 'MANANA' ? 'mañana' : 'tarde'
+      return apiError(422, 'ERR_BUSINESS_RULE', `El turno de ${label} del día ${body.dayNumber} ya existe.`, path)
+    }
+    const shift: MockShift = {
+      id: newId(), studyId, dayNumber: body.dayNumber, type: body.type, status: 'ABIERTO',
+      crewId: body.crewId ?? null, population: null, sourcesWithoutGeneration: [],
+    }
+    shiftsState.push(shift)
+    return HttpResponse.json(toShiftResponse(shift), { status: 201 })
+  }),
 
-    // Check if any source is pending
-    const shiftBags = bagsState.filter((b) => b.shiftId === shift.id)
-    const sourcesWithBags = new Set(shiftBags.map((b) => b.sourceId))
-    const sourcesWithoutGen = new Set(shift.sourcesWithoutGeneration)
+  http.get('/api/v1/shifts/:shiftId', ({ params }) => {
+    const shift = findShift(params)
+    return shift ? HttpResponse.json(toShiftResponse(shift)) : notFound(`/api/v1/shifts/${params.shiftId}`, 'Turno')
+  }),
 
-    const pending = studyState.participatingSourceIds.filter(
-      (sId) => !sourcesWithBags.has(sId) && !sourcesWithoutGen.has(sId)
-    )
-
+  http.post('/api/v1/shifts/:shiftId/close', ({ params }) => {
+    const path = `/api/v1/shifts/${params.shiftId}/close`
+    const denied = requirePermission('MANAGE_SHIFTS', path)
+    if (denied) return denied
+    const shift = findShift(params)
+    if (!shift) return notFound(path, 'Turno')
+    const pending = progressOf(shift).filter((source) => source.status === 'PENDIENTE').map((source) => source.code)
     if (pending.length > 0) {
-      return HttpResponse.json(
-        {
-          timestamp: new Date().toISOString(),
-          status: 422,
-          errorCode: 'ERR_BUSINESS_RULE',
-          message: 'No se puede cerrar el turno: existen fuentes pendientes de registro.',
-          path: `/api/v1/shifts/${shift.id}/close`,
-          fieldErrors: [],
-        },
-        { status: 422 }
-      )
+      return apiError(422, 'ERR_BUSINESS_RULE', `No se puede cerrar el turno ${shiftCode(shift.dayNumber, shift.type)}: `
+        + `faltan registros de las fuentes ${pending.sort().join(', ')}. Registre sus bolsas o márquelas como "sin generación".`,
+      path)
     }
-
     shift.status = 'CERRADO'
-    return HttpResponse.json(shift, { status: 200 })
+    return HttpResponse.json(toShiftResponse(shift))
+  }),
+
+  http.get('/api/v1/shifts/:shiftId/population', ({ params }) => {
+    const shift = findShift(params)
+    if (!shift) return notFound(`/api/v1/shifts/${params.shiftId}/population`, 'Turno')
+    return shift.population ? HttpResponse.json(shift.population) : new HttpResponse(null, { status: 204 })
+  }),
+
+  http.put('/api/v1/shifts/:shiftId/population', async ({ params, request }) => {
+    const path = `/api/v1/shifts/${params.shiftId}/population`
+    const shift = findShift(params)
+    if (!shift) return notFound(path, 'Turno')
+    const body = (await request.json()) as { students: number; teachers: number; staff: number }
+    const total = Number(body.students) + Number(body.teachers) + Number(body.staff)
+    if (total <= 0) {
+      return apiError(400, 'ERR_INVALID_DATA', 'La población del turno debe ser mayor que cero: registre cuántas personas hay presentes.', path)
+    }
+    shift.population = {
+      id: newId(), students: Number(body.students), teachers: Number(body.teachers), staff: Number(body.staff), total,
+      verification: { status: 'PENDIENTE', enteredBy: activeUser?.id ?? null, enteredAt: new Date().toISOString(),
+        verifiedBy: null, verifiedAt: null },
+    }
+    return HttpResponse.json(shift.population)
+  }),
+
+  // --- BAGS (section 5.2) ---
+  http.get('/api/v1/shifts/:shiftId/bags', ({ params, request }) => {
+    const bags = bagsState.filter((bag) => bag.shiftId === Number(params.shiftId))
+    return HttpResponse.json(page(bags, new URL(request.url)))
+  }),
+
+  http.post('/api/v1/shifts/:shiftId/bags', async ({ params, request }) => {
+    const path = `/api/v1/shifts/${params.shiftId}/bags`
+    const shift = findShift(params)
+    if (!shift) return notFound(path, 'Turno')
+    if (!shift.population) {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Registre primero la población del turno.', path)
+    }
+    const body = (await request.json()) as { sourceId: number; grossWeight: number; tare: number; volume: number }
+    if (Number(body.tare) >= Number(body.grossWeight)) {
+      const reason = 'La tara no puede ser mayor o igual que el peso bruto.'
+      return apiError(400, 'ERR_INVALID_DATA', `Dato inválido en el campo 'tara': ${reason}`, path,
+        [{ field: 'tare', message: reason }])
+    }
+    const source = sourcesState.find((item) => item.id === Number(body.sourceId))
+    const code = source?.code ?? 'GEN'
+    const sameSource = bagsState.filter((bag) => bag.shiftId === shift.id && bag.sourceId === Number(body.sourceId))
+    const base = `${code}-${shiftCode(shift.dayNumber, shift.type)}`
+    const netWeight = round2(Number(body.grossWeight) - Number(body.tare))
+    const density = Number(body.volume) > 0 ? round2(netWeight / Number(body.volume)) : null
+    const created: WasteBag = {
+      id: newId(), shiftId: shift.id, sourceId: Number(body.sourceId), sourceCode: code,
+      label: sameSource.length === 0 ? base : `${base}-${sameSource.length + 1}`,
+      grossWeight: Number(body.grossWeight), tare: Number(body.tare), netWeight, volume: Number(body.volume), density,
+      atypical: netWeight > 50 || (density !== null && (density < 20 || density > 1000)),
+      verification: { status: 'PENDIENTE', enteredBy: activeUser?.id ?? null, enteredAt: new Date().toISOString(),
+        verifiedBy: null, verifiedAt: null },
+    }
+    bagsState.push(created)
+    return HttpResponse.json(created, { status: 201 })
+  }),
+
+  http.post('/api/v1/shifts/:shiftId/sources/:sourceId/no-generation', ({ params }) => {
+    const shift = findShift(params)
+    if (!shift) return notFound(`/api/v1/shifts/${params.shiftId}`, 'Turno')
+    const sourceId = Number(params.sourceId)
+    if (!shift.sourcesWithoutGeneration.includes(sourceId)) {
+      shift.sourcesWithoutGeneration.push(sourceId)
+    }
+    return HttpResponse.json(toShiftResponse(shift))
+  }),
+
+  http.delete('/api/v1/shifts/:shiftId/sources/:sourceId/no-generation', ({ params }) => {
+    const shift = findShift(params)
+    if (!shift) return notFound(`/api/v1/shifts/${params.shiftId}`, 'Turno')
+    shift.sourcesWithoutGeneration = shift.sourcesWithoutGeneration.filter((id) => id !== Number(params.sourceId))
+    return HttpResponse.json(toShiftResponse(shift))
   }),
 ]
 
-// Reset helper for tests
-export function resetMockState(userRole?: 'DOCENTE' | 'ESTUDIANTE_UNIVERSITARIO' | null) {
-  if (userRole === null) {
-    activeUser = null
-  } else {
-    activeUser = mockUsers.find((u) => u.role === (userRole || 'DOCENTE')) || mockUsers[0]
-  }
-  institutionsState = [{ ...mockInstitution }]
-  usersState = [...mockUsers]
-  sourcesState = [...mockSources]
-  crewsState = [...mockCrews]
-  categoriesState = [...mockCategories]
-  studyState = { ...mockStudy }
-  shiftsState = [
-    {
-      ...mockShifts[0],
-      population: { students: 450, teachers: 18, staff: 8, total: 476 },
-      sourcesWithoutGeneration: [],
-      status: 'ABIERTO',
-    },
-  ]
-  bagsState = [...mockBags]
+function cloneShifts(): MockShift[] {
+  return mockShifts.map((shift) => ({
+    ...shift,
+    population: shift.population ? { ...shift.population } : null,
+    sourcesWithoutGeneration: [...shift.sourcesWithoutGeneration],
+  }))
 }
 
+/** Resets the mock state between tests; null leaves the user logged out. */
+export function resetMockState(userRole?: UserRole | null) {
+  activeUser = userRole === null
+    ? null
+    : mockUsers.find((user) => user.role === (userRole || 'DOCENTE')) || mockUsers[0]
+  institutionsState = [{ ...mockInstitution }]
+  usersState = [...mockUsers]
+  sourcesState = mockSources.map((source) => ({ ...source }))
+  crewsState = [...mockCrews]
+  categoriesState = [...mockCategories]
+  studiesState = [{ ...mockStudy, days: mockStudy.days.map((day) => ({ ...day })),
+    participatingSourceIds: [...mockStudy.participatingSourceIds] }]
+  shiftsState = cloneShifts()
+  bagsState = [...mockBags]
+  nextId = 1000
+}
+
+/** Changes the user of the mock session. */
 export function setActiveUser(user: User | null) {
   activeUser = user
 }

@@ -1,6 +1,6 @@
 /**
- * Domain model types matching Spec 001, Spec 002, and Spec 003.
- * Mirroring Java backend models in com.ecopoint.model.
+ * Domain types as the REST API of Spec 003 returns them (DTOs of com.ecopoint.dto).
+ * Enum values mirror the Java model of Spec 001.
  *
  * @author craulgomez
  */
@@ -31,6 +31,10 @@ export type QualityStatus = 'CONFORME' | 'NO_CONFORME' | 'ANULADO'
 
 export type AlertType = 'CUARTEO_NO_CONFORME' | 'VALOR_ATIPICO' | 'VERIFICACION_PENDIENTE'
 
+/** State of a participating source in a shift (RN-024, R-345). */
+export type SourceShiftStatus = 'CON_GENERACION' | 'SIN_GENERACION' | 'PENDIENTE'
+
+/** UserResponse. `permissions` and `institutionName` come with login and /auth/me. */
 export interface User {
   id: number
   firstName: string
@@ -39,6 +43,8 @@ export interface User {
   role: UserRole
   active: boolean
   institutionId?: number
+  institutionName?: string | null
+  permissions?: string[]
 }
 
 export interface GeoPoint {
@@ -46,12 +52,22 @@ export interface GeoPoint {
   longitude: number
 }
 
+export interface CharacterizationSettings {
+  minSampleWeight: number
+  maxSampleWeight: number
+  qualityTolerancePercent: number
+  maxBagNetWeight: number
+  minBagDensity: number
+  maxBagDensity: number
+}
+
 export interface Institution {
   id: number
   name: string
   address: string
-  mapCenter?: GeoPoint
+  mapCenter?: GeoPoint | null
   mapZoom?: number
+  settings?: CharacterizationSettings
 }
 
 export interface GenerationSource {
@@ -61,12 +77,14 @@ export interface GenerationSource {
   name: string
   type: SourceType
   active: boolean
+  hasGeometry?: boolean
 }
 
 export interface Crew {
   id: number
   name: string
-  responsibleId: number
+  responsibleId: number | null
+  responsibleName?: string | null
   memberIds: number[]
 }
 
@@ -74,31 +92,54 @@ export interface WasteCategory {
   id: number
   name: string
   group: WasteGroup
+  description?: string
   active: boolean
+  hazardous?: boolean
 }
 
 export interface SamplingDay {
   dayNumber: number
-  date: string
-  excluded: boolean
+  date: string | null
+  /** Day 1 is discarded: it does not enter the calculations (R-333). */
+  discarded: boolean
 }
 
 export interface CharacterizationStudy {
   id: number
   institutionId: number
-  name?: string
   status: StudyStatus
-  startDate?: string
-  endDate?: string
+  startDate: string | null
+  endDate: string | null
   days: SamplingDay[]
   participatingSourceIds: number[]
+  pendingRecords: number
+}
+
+export interface Verification {
+  status: VerificationStatus
+  enteredBy: number | null
+  enteredAt: string | null
+  verifiedBy: number | null
+  verifiedAt: string | null
 }
 
 export interface ShiftPopulation {
+  id?: number | null
   students: number
   teachers: number
   staff: number
   total: number
+  verification?: Verification | null
+}
+
+export interface SourceProgress {
+  sourceId: number
+  code: string
+  name: string
+  type: SourceType
+  bagCount: number
+  totalNetWeight: number
+  status: SourceShiftStatus
 }
 
 export interface SamplingShift {
@@ -106,10 +147,26 @@ export interface SamplingShift {
   studyId: number
   dayNumber: number
   type: ShiftType
+  code: string
   status: ShiftStatus
-  crewId?: number
-  population?: ShiftPopulation
+  crewId: number | null
+  population: ShiftPopulation | null
+  bagCount: number
+  totalNetWeight: number
   sourcesWithoutGeneration: number[]
+  hasQuartering: boolean
+  hasDensity: boolean
+  sources: SourceProgress[]
+}
+
+/** One of the 16 possible shifts of a study, opened or not (status null). */
+export interface ShiftSlot {
+  dayNumber: number
+  type: ShiftType
+  shiftId: number | null
+  status: ShiftStatus | null
+  coveredSources: number
+  totalSources: number
 }
 
 export interface WasteBag {
@@ -122,14 +179,7 @@ export interface WasteBag {
   tare: number
   netWeight: number
   volume: number
-  density: number
-  photoUrl?: string
-  verificationStatus: VerificationStatus
-}
-
-export interface SourceShiftSummary {
-  source: GenerationSource
-  bagCount: number
-  totalNetWeight: number
-  status: 'CON_GENERACION' | 'SIN_GENERACION' | 'PENDIENTE'
+  density: number | null
+  atypical: boolean
+  verification: Verification
 }

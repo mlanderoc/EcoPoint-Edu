@@ -48,12 +48,13 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
     await user.type(nameInput, 'Docente')
     await user.type(lastNameInput, 'Duplicado')
     await user.type(emailInput, 'docente.demo@unicesar.edu.co')
+    await user.type(screen.getByLabelText(/Contraseña inicial/i), 'ClaveSegura2026')
     await user.click(saveBtn)
 
     // CA-302: Verify error message appears in red directly under the email field
     const errorMessage = await screen.findByRole('alert')
     expect(errorMessage).toBeInTheDocument()
-    expect(errorMessage).toHaveTextContent(/El correo electrónico ya se encuentra registrado/i)
+    expect(errorMessage).toHaveTextContent(/ya está registrado/i)
     expect(errorMessage).toHaveClass('text-red-600')
     expect(emailInput).toHaveClass('border-red-500')
   }, 15000)
@@ -87,11 +88,35 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
     await user.type(lastNameInput, 'Pérez')
     await user.type(emailInput, 'laura.perez@unicesar.edu.co')
     await user.selectOptions(roleSelect, 'ESTUDIANTE_UNIVERSITARIO')
+    await user.type(screen.getByLabelText(/Contraseña inicial/i), 'ClaveSegura2026')
     await user.click(saveBtn)
 
     // Verify user is created and visible in list
     expect(await screen.findByText('Laura Pérez')).toBeInTheDocument()
     expect(screen.getByText('laura.perez@unicesar.edu.co')).toBeInTheDocument()
     expect(screen.getAllByText('Estudiante').length).toBeGreaterThan(0)
+  }, 15000)
+
+  it('asks for an initial password of at least 8 characters before calling the API', async () => {
+    resetMockState('DOCENTE')
+    const user = userEvent.setup()
+
+    render(
+      <MemoryRouter>
+        <AuthProvider initialUser={teacherUser}>
+          <UsersPage />
+        </AuthProvider>
+      </MemoryRouter>
+    )
+
+    await user.click(await screen.findByRole('button', { name: /Nuevo Usuario/i }))
+    await user.type(screen.getByLabelText(/Nombres/i), 'Mario')
+    await user.type(screen.getByLabelText(/Apellidos/i), 'Gómez')
+    await user.type(screen.getByLabelText(/Correo Institucional/i), 'mario.gomez@unicesar.edu.co')
+    await user.type(screen.getByLabelText(/Contraseña inicial/i), 'corta')
+    await user.click(screen.getByRole('button', { name: /Guardar Usuario/i }))
+
+    expect(await screen.findByText(/al menos 8 caracteres/i)).toBeInTheDocument()
+    expect(screen.queryByText('Mario Gómez')).not.toBeInTheDocument()
   }, 15000)
 })

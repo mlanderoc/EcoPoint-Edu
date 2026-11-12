@@ -11,6 +11,9 @@ import { User, UserRole } from '@/types'
 import { ApiError } from '@/services/apiClient'
 import { adminService } from '../services/adminService'
 
+/** Shortest initial password the API accepts (spec 003, UserValidator). */
+const MIN_PASSWORD_LENGTH = 8
+
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'DOCENTE', label: 'Docente Responsable' },
   { value: 'ESTUDIANTE_UNIVERSITARIO', label: 'Estudiante Universitario' },
@@ -24,8 +27,9 @@ export function UsersPage() {
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<UserRole>('DOCENTE')
-  const [active, setActive] = useState(true)
+  const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
+  const [passwordError, setPasswordError] = useState<string | null>(null)
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
 
@@ -50,8 +54,9 @@ export function UsersPage() {
     setLastName('')
     setEmail('')
     setRole('DOCENTE')
-    setActive(true)
+    setPassword('')
     setEmailError(null)
+    setPasswordError(null)
     setGeneralError(null)
   }
 
@@ -63,6 +68,7 @@ export function UsersPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setEmailError(null)
+    setPasswordError(null)
     setGeneralError(null)
 
     if (!firstName.trim()) {
@@ -77,6 +83,10 @@ export function UsersPage() {
       setEmailError('El correo electrónico es obligatorio.')
       return
     }
+    if (password.length < MIN_PASSWORD_LENGTH) {
+      setPasswordError(`La contraseña inicial debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`)
+      return
+    }
 
     try {
       setIsSaving(true)
@@ -85,16 +95,21 @@ export function UsersPage() {
         lastName: lastName.trim(),
         email: email.trim().toLowerCase(),
         role,
-        active,
+        password,
       })
       setUsers((prev) => [...prev, created])
       setIsModalOpen(false)
       resetForm()
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        const fieldError = err.getFieldError('email')
-        if (fieldError) {
-          setEmailError(fieldError)
+        // RN-084 (unique email) is the only business rule of a user's data, so a 422
+        // is shown next to the email field (CA-302).
+        const emailMessage = err.getFieldError('email') ?? (err.status === 422 ? err.message : undefined)
+        const passwordMessage = err.getFieldError('password')
+        if (emailMessage) {
+          setEmailError(emailMessage)
+        } else if (passwordMessage) {
+          setPasswordError(passwordMessage)
         } else {
           setGeneralError(err.message)
         }
@@ -269,19 +284,21 @@ export function UsersPage() {
             disabled={isSaving}
           />
 
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              id="user-active"
-              type="checkbox"
-              checked={active}
-              onChange={(e) => setActive(e.target.checked)}
-              disabled={isSaving}
-              className="w-4 h-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]"
-            />
-            <label htmlFor="user-active" className="text-sm font-medium text-[var(--color-text-main)] cursor-pointer">
-              Usuario activo para muestreos
-            </label>
-          </div>
+          <Input
+            id="user-password"
+            label="Contraseña inicial"
+            type="password"
+            autoComplete="new-password"
+            placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              if (passwordError) setPasswordError(null)
+            }}
+            error={passwordError || undefined}
+            disabled={isSaving}
+            required
+          />
 
           <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
             <Button

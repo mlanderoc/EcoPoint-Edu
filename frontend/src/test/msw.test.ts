@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { resetMockState } from '@/mocks/handlers'
 
 describe('Mock Service Worker API Contracts (T304)', () => {
   it('intercepts GET /api/v1/auth/me and returns active user', async () => {
@@ -17,21 +18,22 @@ describe('Mock Service Worker API Contracts (T304)', () => {
     expect(data[0].name).toBe('I.E. Prudencia Daza')
   })
 
-  it('rejects duplicate email with 400 and fieldError (CA-302 contract)', async () => {
+  it('rejects a duplicate email with 422 like the real API (RN-084, CA-302 contract)', async () => {
     const res = await fetch('/api/v1/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        name: 'Carlos',
+        firstName: 'Carlos',
         lastName: 'Gómez',
         email: 'docente.demo@unicesar.edu.co', // Already exists
         role: 'DOCENTE',
+        password: 'ClaveSegura2026',
       }),
     })
-    expect(res.status).toBe(400)
+    expect(res.status).toBe(422)
     const data = await res.json()
-    expect(data.errorCode).toBe('ERR_INVALID_DATA')
-    expect(data.fieldErrors?.[0].field).toBe('email')
+    expect(data.errorCode).toBe('ERR_BUSINESS_RULE')
+    expect(data.message).toContain('ya está registrado')
   })
 
   it('rejects tare >= gross weight with 400 and tare fieldError (CA-305 contract)', async () => {
@@ -69,11 +71,23 @@ describe('Mock Service Worker API Contracts (T304)', () => {
     expect(data.density).toBe(150.0)
   })
 
-  it('rejects closing study when pending verifications exist (CA-309 contract)', async () => {
-    const res = await fetch('/api/v1/studies/1/close', { method: 'POST' })
+  it('rejects closing a study with pending verifications (CA-309 contract)', async () => {
+    resetMockState('DOCENTE')
+    const toCleaning = await fetch('/api/v1/studies/2/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'EN_DEPURACION' }),
+    })
+    expect(toCleaning.status).toBe(200)
+
+    const res = await fetch('/api/v1/studies/2/status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status: 'CERRADO' }),
+    })
     expect(res.status).toBe(422)
     const data = await res.json()
     expect(data.errorCode).toBe('ERR_BUSINESS_RULE')
-    expect(data.message).toContain('Quedan 4 registros pendientes de verificación')
+    expect(data.message).toContain('quedan 2 registros pendientes de verificación')
   })
 })

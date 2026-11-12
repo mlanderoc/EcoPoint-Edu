@@ -5,6 +5,7 @@
  */
 
 import { apiClient } from '@/services/apiClient'
+import { PageResponse } from '@/types/api'
 import {
   Crew,
   GenerationSource,
@@ -12,6 +13,9 @@ import {
   User,
   WasteCategory,
 } from '@/types'
+
+/** Data to create a user: the API stores the password only as a BCrypt hash. */
+export type NewUser = Pick<User, 'firstName' | 'lastName' | 'email' | 'role'> & { password: string }
 
 export const adminService = {
   // Institutions
@@ -52,10 +56,11 @@ export const adminService = {
 
   // Users
   getUsers: async (): Promise<User[]> => {
-    return apiClient.get<User[]>('/api/v1/users')
+    const page = await apiClient.get<PageResponse<User>>('/api/v1/users', { params: { size: 200 } })
+    return page.items
   },
 
-  createUser: async (data: Omit<User, 'id'>): Promise<User> => {
+  createUser: async (data: NewUser): Promise<User> => {
     return apiClient.post<User>('/api/v1/users', data)
   },
 

@@ -111,7 +111,7 @@ describe('Authentication & Session Handling (T309, R-310, R-312)', () => {
     await user.click(submitButton)
 
     expect(
-      await screen.findByText('Correo electrónico o contraseña incorrectos.')
+      await screen.findByText('Correo o contraseña incorrectos.')
     ).toBeInTheDocument()
   })
 

@@ -3,8 +3,11 @@ import {
   Crew,
   GenerationSource,
   Institution,
-  SamplingShift,
+  ShiftPopulation,
+  ShiftStatus,
+  ShiftType,
   User,
+  Verification,
   WasteBag,
   WasteCategory,
 } from '@/types'
@@ -93,39 +96,54 @@ export const mockCategories: WasteCategory[] = [
   { id: 8, name: 'Pilas y baterías', group: 'SIN_COLOR', active: true },
 ]
 
+/** Study in execution, like study 2 of sql/002_seed.sql (day 1 is discarded). */
 export const mockStudy: CharacterizationStudy = {
-  id: 1,
+  id: 2,
   institutionId: 1,
-  name: 'Línea Base Prudencia Daza 2026',
   status: 'EN_EJECUCION',
   startDate: '2026-03-02',
   endDate: '2026-03-11',
   participatingSourceIds: [1, 2, 3, 4, 5, 6],
+  pendingRecords: 2,
   days: [
-    { dayNumber: 1, date: '2026-03-02', excluded: true },
-    { dayNumber: 2, date: '2026-03-03', excluded: false },
-    { dayNumber: 3, date: '2026-03-04', excluded: false },
-    { dayNumber: 4, date: '2026-03-05', excluded: false },
-    { dayNumber: 5, date: '2026-03-06', excluded: false },
-    { dayNumber: 6, date: '2026-03-09', excluded: false },
-    { dayNumber: 7, date: '2026-03-10', excluded: false },
-    { dayNumber: 8, date: '2026-03-11', excluded: false },
+    { dayNumber: 1, date: '2026-03-02', discarded: true },
+    { dayNumber: 2, date: '2026-03-03', discarded: false },
+    { dayNumber: 3, date: '2026-03-04', discarded: false },
+    { dayNumber: 4, date: '2026-03-05', discarded: false },
+    { dayNumber: 5, date: '2026-03-06', discarded: false },
+    { dayNumber: 6, date: '2026-03-09', discarded: false },
+    { dayNumber: 7, date: '2026-03-10', discarded: false },
+    { dayNumber: 8, date: '2026-03-11', discarded: false },
   ],
 }
 
-export const mockShifts: SamplingShift[] = [
+/** Shift as the mock keeps it; the API answer is built from it in the handlers. */
+export interface MockShift {
+  id: number
+  studyId: number
+  dayNumber: number
+  type: ShiftType
+  status: ShiftStatus
+  crewId: number | null
+  population: ShiftPopulation | null
+  sourcesWithoutGeneration: number[]
+}
+
+export const mockShifts: MockShift[] = [
   {
     id: 14,
-    studyId: 1,
+    studyId: 2,
     dayNumber: 3,
     type: 'MANANA',
     status: 'ABIERTO',
     crewId: 1,
     population: {
+      id: 1,
       students: 450,
       teachers: 18,
       staff: 8,
       total: 476,
+      verification: pendingBy(2),
     },
     sourcesWithoutGeneration: [],
   },
@@ -143,6 +161,17 @@ export const mockBags: WasteBag[] = [
     netWeight: 4.2,
     volume: 0.035,
     density: 120.0,
-    verificationStatus: 'PENDIENTE',
+    atypical: false,
+    verification: pendingBy(2),
   },
 ]
+
+function pendingBy(userId: number): Verification {
+  return {
+    status: 'PENDIENTE',
+    enteredBy: userId,
+    enteredAt: '2026-03-04T07:30:00',
+    verifiedBy: null,
+    verifiedAt: null,
+  }
+}
