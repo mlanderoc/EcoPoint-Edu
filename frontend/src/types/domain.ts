@@ -1,5 +1,6 @@
 /**
- * Domain model types matching Spec 001, Spec 003, and Spec 004.
+ * Domain model types matching Spec 001, Spec 002, and Spec 003.
+ * Mirroring Java backend models in com.ecopoint.model.
  *
  * @author craulgomez
  */
@@ -11,24 +12,28 @@ export type WasteGroup = 'BLANCO' | 'VERDE' | 'NEGRO' | 'SIN_COLOR'
 export type SourceType =
   | 'AULAS'
   | 'OFICINAS'
-  | 'BANOS'
-  | 'CAFETERIA'
-  | 'PATIO'
+  | 'TIENDA_ESCOLAR'
+  | 'PAE'
   | 'ZONAS_VERDES'
+  | 'BANOS'
   | 'LABORATORIO'
-  | 'OTRO'
+  | 'OTRA'
 
 export type ShiftType = 'MANANA' | 'TARDE'
 
-export type ShiftStatus = 'NO_INICIADO' | 'ABIERTO' | 'CERRADO'
+export type ShiftStatus = 'ABIERTO' | 'CERRADO'
 
-export type StudyStatus = 'PLANIFICADO' | 'EN_EJECUCION' | 'FINALIZADO' | 'CERRADO'
+export type StudyStatus = 'PLANIFICADO' | 'EN_EJECUCION' | 'EN_DEPURACION' | 'CERRADO'
 
-export type VerificationStatus = 'PENDIENTE' | 'VERIFICADO' | 'CORREGIDO' | 'RECHAZADO'
+export type VerificationStatus = 'PENDIENTE' | 'VERIFICADO' | 'CORREGIDO'
+
+export type QualityStatus = 'CONFORME' | 'NO_CONFORME' | 'ANULADO'
+
+export type AlertType = 'CUARTEO_NO_CONFORME' | 'VALOR_ATIPICO' | 'VERIFICACION_PENDIENTE'
 
 export interface User {
   id: number
-  name: string
+  firstName: string
   lastName: string
   email: string
   role: UserRole
@@ -36,14 +41,16 @@ export interface User {
   institutionId?: number
 }
 
+export interface GeoPoint {
+  latitude: number
+  longitude: number
+}
+
 export interface Institution {
   id: number
   name: string
   address: string
-  mapCenter?: {
-    lat: number
-    lng: number
-  }
+  mapCenter?: GeoPoint
   mapZoom?: number
 }
 
@@ -59,7 +66,7 @@ export interface GenerationSource {
 export interface Crew {
   id: number
   name: string
-  teacherId: number
+  responsibleId: number
   memberIds: number[]
 }
 
@@ -79,10 +86,10 @@ export interface SamplingDay {
 export interface CharacterizationStudy {
   id: number
   institutionId: number
-  name: string
+  name?: string
   status: StudyStatus
-  startDate: string
-  endDate: string
+  startDate?: string
+  endDate?: string
   days: SamplingDay[]
   participatingSourceIds: number[]
 }

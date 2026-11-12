@@ -14,8 +14,8 @@ export const mockInstitution: Institution = {
   name: 'I.E. Prudencia Daza',
   address: 'Calle 16 # 19-32, Valledupar, Cesar',
   mapCenter: {
-    lat: 10.4742,
-    lng: -73.2436,
+    latitude: 10.4742,
+    longitude: -73.2436,
   },
   mapZoom: 18,
 }
@@ -23,7 +23,7 @@ export const mockInstitution: Institution = {
 export const mockUsers: User[] = [
   {
     id: 1,
-    name: 'Docente',
+    firstName: 'Docente',
     lastName: 'Demo',
     email: 'docente.demo@unicesar.edu.co',
     role: 'DOCENTE',
@@ -32,7 +32,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 2,
-    name: 'Estudiante',
+    firstName: 'Estudiante',
     lastName: 'Demo',
     email: 'estudiante.demo@unicesar.edu.co',
     role: 'ESTUDIANTE_UNIVERSITARIO',
@@ -41,7 +41,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 3,
-    name: 'Laura',
+    firstName: 'Laura',
     lastName: 'Ríos',
     email: 'laura.rios@unicesar.edu.co',
     role: 'ESTUDIANTE_UNIVERSITARIO',
@@ -50,7 +50,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 4,
-    name: 'Andrés',
+    firstName: 'Andrés',
     lastName: 'Mendoza',
     email: 'andres.mendoza@unicesar.edu.co',
     role: 'ESTUDIANTE_UNIVERSITARIO',
@@ -59,7 +59,7 @@ export const mockUsers: User[] = [
   },
   {
     id: 5,
-    name: 'Valentina',
+    firstName: 'Valentina',
     lastName: 'Arias',
     email: 'valentina.arias@unicesar.edu.co',
     role: 'ESTUDIANTE_UNIVERSITARIO',
@@ -71,15 +71,15 @@ export const mockUsers: User[] = [
 export const mockSources: GenerationSource[] = [
   { id: 1, institutionId: 1, code: 'AU', name: 'Aulas de Clase', type: 'AULAS', active: true },
   { id: 2, institutionId: 1, code: 'BA', name: 'Baterías Sanitarias', type: 'BANOS', active: true },
-  { id: 3, institutionId: 1, code: 'CAF', name: 'Cafetería / Tienda', type: 'CAFETERIA', active: true },
+  { id: 3, institutionId: 1, code: 'TE', name: 'Tienda Escolar', type: 'TIENDA_ESCOLAR', active: true },
   { id: 4, institutionId: 1, code: 'OF', name: 'Oficinas Administrativas', type: 'OFICINAS', active: true },
-  { id: 5, institutionId: 1, code: 'PAE', name: 'Comedor Escolar PAE', type: 'CAFETERIA', active: true },
+  { id: 5, institutionId: 1, code: 'PAE', name: 'Programa de Alimentación Escolar (PAE)', type: 'PAE', active: true },
   { id: 6, institutionId: 1, code: 'ZV', name: 'Patios y Zonas Verdes', type: 'ZONAS_VERDES', active: true },
 ]
 
 export const mockCrews: Crew[] = [
-  { id: 1, name: 'Cuadrilla Mañana A', teacherId: 1, memberIds: [2] },
-  { id: 2, name: 'Cuadrilla Tarde B', teacherId: 1, memberIds: [2] },
+  { id: 1, name: 'Cuadrilla Mañana A', responsibleId: 1, memberIds: [2] },
+  { id: 2, name: 'Cuadrilla Tarde B', responsibleId: 1, memberIds: [2] },
 ]
 
 export const mockCategories: WasteCategory[] = [

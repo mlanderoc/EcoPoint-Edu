@@ -6,7 +6,7 @@ import { User } from '@/types'
 describe('Layout and Menu per Role (T307, CA-300, CA-307)', () => {
   const studentUser: User = {
     id: 2,
-    name: 'Estudiante',
+    firstName: 'Estudiante',
     lastName: 'Demo',
     email: 'estudiante.demo@unicesar.edu.co',
     role: 'ESTUDIANTE_UNIVERSITARIO',
@@ -15,7 +15,7 @@ describe('Layout and Menu per Role (T307, CA-300, CA-307)', () => {
 
   const teacherUser: User = {
     id: 1,
-    name: 'Docente',
+    firstName: 'Docente',
     lastName: 'Demo',
     email: 'docente.demo@unicesar.edu.co',
     role: 'DOCENTE',

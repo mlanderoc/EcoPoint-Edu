@@ -27,7 +27,7 @@ export function Header({ user, onLogout }: HeaderProps) {
         <div className="flex items-center gap-3">
           <div className="text-right flex flex-col items-end">
             <span className="text-xs font-bold leading-tight">
-              {user.name} {user.lastName}
+              {user.firstName} {user.lastName}
             </span>
             <span
               className={`text-[10px] font-extrabold px-1.5 py-0.2 rounded-sm tracking-wide uppercase ${

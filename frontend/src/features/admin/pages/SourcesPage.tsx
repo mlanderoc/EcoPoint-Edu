@@ -11,14 +11,14 @@ import { GenerationSource, SourceType } from '@/types'
 import { adminService } from '../services/adminService'
 
 const SOURCE_TYPES: { value: SourceType; label: string }[] = [
-  { value: 'AULAS', label: 'Aulas de Clase' },
-  { value: 'OFICINAS', label: 'Oficinas Administrativas' },
-  { value: 'BANOS', label: 'Baterías Sanitarias' },
-  { value: 'CAFETERIA', label: 'Cafetería / Tienda / PAE' },
-  { value: 'PATIO', label: 'Patios' },
-  { value: 'ZONAS_VERDES', label: 'Zonas Verdes' },
-  { value: 'LABORATORIO', label: 'Laboratorios' },
-  { value: 'OTRO', label: 'Otro' },
+  { value: 'AULAS', label: 'Aulas' },
+  { value: 'OFICINAS', label: 'Oficinas' },
+  { value: 'TIENDA_ESCOLAR', label: 'Tienda escolar' },
+  { value: 'PAE', label: 'Programa de Alimentación Escolar (PAE)' },
+  { value: 'ZONAS_VERDES', label: 'Zonas verdes' },
+  { value: 'BANOS', label: 'Baños' },
+  { value: 'LABORATORIO', label: 'Laboratorio' },
+  { value: 'OTRA', label: 'Otra' },
 ]
 
 export function SourcesPage() {

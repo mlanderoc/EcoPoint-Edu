@@ -20,7 +20,7 @@ export function UsersPage() {
   const [users, setUsers] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [name, setName] = useState('')
+  const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
   const [role, setRole] = useState<UserRole>('DOCENTE')
@@ -46,7 +46,7 @@ export function UsersPage() {
   }, [])
 
   const resetForm = () => {
-    setName('')
+    setFirstName('')
     setLastName('')
     setEmail('')
     setRole('DOCENTE')
@@ -65,7 +65,7 @@ export function UsersPage() {
     setEmailError(null)
     setGeneralError(null)
 
-    if (!name.trim()) {
+    if (!firstName.trim()) {
       setGeneralError('El nombre del usuario es obligatorio.')
       return
     }
@@ -81,7 +81,7 @@ export function UsersPage() {
     try {
       setIsSaving(true)
       const created = await adminService.createUser({
-        name: name.trim(),
+        firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim().toLowerCase(),
         role,
@@ -178,7 +178,7 @@ export function UsersPage() {
                     </div>
                     <div>
                       <CardTitle className="text-base">
-                        {u.name} {u.lastName}
+                        {u.firstName} {u.lastName}
                       </CardTitle>
                       <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{u.email}</p>
                     </div>
@@ -226,11 +226,11 @@ export function UsersPage() {
       >
         <form onSubmit={handleCreate} className="flex flex-col gap-4 mt-2">
           <Input
-            id="user-name"
+            id="user-firstname"
             label="Nombres"
             placeholder="Ej. Carlos Raúl"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
             disabled={isSaving}
             required
           />

@@ -69,7 +69,7 @@ export function FieldDashboard() {
                 Día 1 — Turno Mañana ({shiftOpen ? 'Abierto' : 'Cerrado'})
               </span>
               <span className="text-xs text-[var(--color-text-muted)]">
-                Usuario: <strong className="text-slate-800">{user?.name} {user?.lastName}</strong> ({user?.role === 'DOCENTE' ? 'Docente' : 'Estudiante'})
+                Usuario: <strong className="text-slate-800">{user?.firstName} {user?.lastName}</strong> ({user?.role === 'DOCENTE' ? 'Docente' : 'Estudiante'})
               </span>
             </div>
           </div>
