@@ -6,6 +6,7 @@ import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.PersistenceException;
 import com.ecopoint.exceptions.QualityControlException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
+import com.ecopoint.exceptions.UnauthorizedException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -76,6 +77,12 @@ class ApiExceptionHandlerTest {
     @Test
     void r110_parameterOfTheWrongTypeIsInvalidData() throws Exception {
         expectError(get("/test/number/abc"), 400, "ERR_INVALID_DATA");
+    }
+
+    @Test
+    void ca202_failedLoginIsUnauthorized() throws Exception {
+        expectError(get("/test/unauthorized"), 401, "ERR_UNAUTHORIZED")
+                .andExpect(jsonPath("$.message").value("Correo o contraseña incorrectos."));
     }
 
     @Test
@@ -164,6 +171,11 @@ class ApiExceptionHandlerTest {
         @GetMapping("/test/number/{value}")
         int number(@PathVariable int value) {
             return value;
+        }
+
+        @GetMapping("/test/unauthorized")
+        void unauthorized() {
+            throw new UnauthorizedException("Correo o contraseña incorrectos.");
         }
 
         @GetMapping("/test/forbidden")

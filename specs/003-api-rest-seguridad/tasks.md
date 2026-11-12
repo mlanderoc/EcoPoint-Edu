@@ -41,7 +41,7 @@ Reglas:
 - [x] **T07. Servicio de autenticación.** `UnauthorizedException` (401) en la jerarquía de excepciones, documentada en `AGENTS.md` *(Merlín)*. `AuthService`: login con mensaje único (T7 del plan), usuario actual con su institución y sus permisos. *(Estefanía)*
   *Verificación:* pruebas unitarias con repositorios simulados: correo inexistente, contraseña errada, cuenta inactiva y cuenta bloqueada dan el mismo mensaje.
 
-- [ ] **T08. Rutas de autenticación.** `AuthController` (`login`, `logout`, `me`, `csrf`) y `UserResponse`. `AuthIT` contra la semilla. *(Carlos)*
+- [x] **T08. Rutas de autenticación.** `AuthController` (`login`, `logout`, `me`, `csrf`) y `UserResponse`. `AuthIT` contra la semilla. *(Carlos)*
   *Verificación:* CA-200, CA-201, CA-202 y el bloqueo de R-126 en `AuthIT`.
 
 ## Fase 2 — Administración

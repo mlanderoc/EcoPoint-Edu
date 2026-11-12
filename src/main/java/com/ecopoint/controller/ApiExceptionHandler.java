@@ -8,6 +8,7 @@ import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.PersistenceException;
 import com.ecopoint.exceptions.QualityControlException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
+import com.ecopoint.exceptions.UnauthorizedException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -104,6 +105,18 @@ public class ApiExceptionHandler {
     public ResponseEntity<ApiError> fileTooLarge(MaxUploadSizeExceededException exception, HttpServletRequest request) {
         return error(HttpStatus.BAD_REQUEST, InvalidDataException.ERROR_CODE,
                 "El archivo supera el tamaño máximo de 5 MB.", request);
+    }
+
+    /**
+     * Wrong login or invalid session (401, CA-202).
+     *
+     * @param exception authentication error
+     * @param request   current request
+     * @return error response
+     */
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<ApiError> unauthorized(UnauthorizedException exception, HttpServletRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, exception.getErrorCode(), exception.getMessage(), request);
     }
 
     /**
