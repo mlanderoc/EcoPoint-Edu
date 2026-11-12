@@ -11,7 +11,7 @@ Esta carpeta contiene las especificaciones del sistema **EcoPoint Edu: caracteri
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | [001](001-dominio-caracterizacion/spec.md) | Dominio de caracterización | RF-01 a RF-12 (reglas) | — | Claude | Claude | Antigravity | **Aprobada** |
 | [002](002-persistencia-postgresql/spec.md) | Persistencia PostgreSQL | Todos (almacenamiento) | 001 | Claude | Claude | Antigravity | **Aprobada** |
-| [003](003-api-rest-seguridad/spec.md) | API REST y seguridad | RF-11 (permisos) | 002 | Claude | Antigravity | Claude | **Aprobada** |
+| [003](003-api-rest-seguridad/spec.md) | API REST y seguridad | RF-11 (permisos) | 002 | Claude | Claude | Antigravity | **Aprobada** |
 | [004](004-registro-en-campo/spec.md) | Registro en campo | RF-01 a RF-05 | 003 | Claude | Antigravity | Claude | **Aprobada** |
 | [005](005-cuarteo-control-calidad/spec.md) | Cuarteo y control de calidad | RF-06 a RF-10 | 004 | Claude | Antigravity | Claude | **Aprobada** |
 | [006](006-indicadores-reportes/spec.md) | Indicadores y reportes | RF-12, RF-13 | 005 | Claude | Antigravity | Claude | **Aprobada** |
