@@ -78,6 +78,7 @@ Dónde va cada regla:
   | Excepción | Cuándo | HTTP |
   | --- | --- | --- |
   | `InvalidDataException` | Formato, nulo o rango inválido | 400 |
+  | `UnauthorizedException` | Correo o contraseña incorrectos, cuenta bloqueada o sesión inválida | 401 |
   | `AccessDeniedException` | El rol no permite la acción | 403 |
   | `ResourceNotFoundException` | El registro no existe | 404 |
   | `BusinessRuleException` | Viola una regla de negocio | 422 |

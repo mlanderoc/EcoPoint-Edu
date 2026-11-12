@@ -32,13 +32,13 @@ Reglas:
 - [x] **T04. Formato de error.** `ClockConfig` y la configuración de JSON (fechas ISO y decimales sin notación científica) *(Merlín)*. DTO `ApiError`, `FieldErrorDto` y `PageResponse`; `ApiExceptionHandler` con la tabla de la sección 4.2 del plan, el diccionario de campos y el identificador en el log para los 500. *(Carlos)*
   *Verificación:* `@WebMvcTest` con un controlador de prueba: un caso por fila de la tabla; CA-208 (500 sin SQL ni traza).
 
-- [x] **T05. Configuración de seguridad.** `SecurityConfig` (sesión, CSRF con `CookieCsrfTokenRepository`, CORS, rutas públicas: login y csrf), `EcoPointUserDetails`, `EcoPointUserDetailsService`, `BCryptPasswordEncoder`, respuestas JSON para 401 y 403. *(Merlín)*
+- [x] **T05. Configuración de seguridad.** `SecurityConfig` (sesión, CSRF con `CookieCsrfTokenRepository`, CORS, rutas públicas: login y csrf), `EcoPointUserDetails`, `BCryptPasswordEncoder`, respuestas JSON para 401 y 403. *(Merlín)*
   *Verificación:* una ruta protegida sin sesión responde 401 con `ERR_UNAUTHORIZED` (CA-200); un `POST` sin cabecera CSRF responde 403.
 
 - [x] **T06. Bloqueo por intentos.** `LoginAttemptService`: 5 fallos seguidos bloquean el correo 15 minutos; un acierto reinicia el contador. Con `Clock` para probar el paso del tiempo. *(Merlín)*
   *Verificación:* pruebas unitarias del bloqueo y del desbloqueo a los 15 minutos.
 
-- [ ] **T07. Servicio de autenticación.** `AuthService`: login con mensaje único (T7 del plan), usuario actual con su institución y sus permisos. *(Estefanía)*
+- [ ] **T07. Servicio de autenticación.** `UnauthorizedException` (401) en la jerarquía de excepciones, documentada en `AGENTS.md` *(Merlín)*. `AuthService`: login con mensaje único (T7 del plan), usuario actual con su institución y sus permisos. *(Estefanía)*
   *Verificación:* pruebas unitarias con repositorios simulados: correo inexistente, contraseña errada, cuenta inactiva y cuenta bloqueada dan el mismo mensaje.
 
 - [ ] **T08. Rutas de autenticación.** `AuthController` (`login`, `logout`, `me`, `csrf`) y `UserResponse`. `AuthIT` contra la semilla. *(Carlos)*

@@ -7,12 +7,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.ProviderManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -27,8 +23,9 @@ import java.util.List;
 
 /**
  * Security of the API (spec 003): session cookie, CSRF, CORS and the public
- * routes. Spring Security only authenticates; the permissions of RN-081 are
- * checked by the services with {@code AccessPolicy} (decisions T1 to T5).
+ * routes. The login itself is checked by {@code AuthService}, which then keeps the
+ * user in the session; the permissions of RN-081 are checked by the services with
+ * {@code AccessPolicy} (decisions T1 to T5).
  *
  * @author mlanderoc
  * @version 1.0
@@ -91,21 +88,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(BCRYPT_STRENGTH);
-    }
-
-    /**
-     * Checks email and password against the database.
-     *
-     * @param userDetailsService loads the user and its hash
-     * @param passwordEncoder    compares the password with the hash
-     * @return the authentication manager used by the login
-     */
-    @Bean
-    public AuthenticationManager authenticationManager(UserDetailsService userDetailsService,
-                                                       PasswordEncoder passwordEncoder) {
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(userDetailsService);
-        provider.setPasswordEncoder(passwordEncoder);
-        return new ProviderManager(provider);
     }
 
     /**

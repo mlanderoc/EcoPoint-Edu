@@ -1,7 +1,5 @@
 package com.ecopoint.config;
 
-import com.ecopoint.persistence.UserRepository;
-import com.ecopoint.security.EcoPointUserDetailsService;
 import com.ecopoint.security.ErrorResponseWriter;
 import com.ecopoint.security.JsonAccessDeniedHandler;
 import com.ecopoint.security.JsonAuthenticationEntryPoint;
@@ -12,7 +10,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -36,7 +33,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 @WebMvcTest(controllers = SecurityConfigTest.ProtectedController.class)
 @Import({SecurityConfig.class, ClockConfig.class, ErrorResponseWriter.class, JsonAuthenticationEntryPoint.class,
-        JsonAccessDeniedHandler.class, EcoPointUserDetailsService.class, SecurityConfigTest.ProtectedController.class})
+        JsonAccessDeniedHandler.class, SecurityConfigTest.ProtectedController.class})
 @TestPropertySource(properties = "ecopoint.frontend-origin=http://localhost:5173")
 class SecurityConfigTest {
 
@@ -45,9 +42,6 @@ class SecurityConfigTest {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-
-    @MockitoBean
-    private UserRepository users;
 
     @Test
     void ca200_requestWithoutSessionGetsUnauthorizedJson() throws Exception {

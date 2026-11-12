@@ -9,9 +9,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Authenticated user kept in the session: the domain {@link User} plus its
- * password hash, which only Spring Security reads to check the password
- * (spec 003, decisions T2 and T5).
+ * Authenticated user kept in the session. It wraps the domain {@link User}; the
+ * password is never kept in the session, because the login is checked before
+ * (spec 003, decisions T1 and T2).
  *
  * @author mlanderoc
  * @version 1.0
@@ -21,17 +21,14 @@ public class EcoPointUserDetails implements UserDetails {
     private static final long serialVersionUID = 1L;
 
     private final User user;
-    private final transient String passwordHash;
 
     /**
      * Creates the session user.
      *
-     * @param user         domain user
-     * @param passwordHash BCrypt hash of its password
+     * @param user domain user already authenticated
      */
-    public EcoPointUserDetails(User user, String passwordHash) {
+    public EcoPointUserDetails(User user) {
         this.user = user;
-        this.passwordHash = passwordHash;
     }
 
     /**
@@ -50,7 +47,7 @@ public class EcoPointUserDetails implements UserDetails {
 
     @Override
     public String getPassword() {
-        return passwordHash;
+        return null;
     }
 
     @Override

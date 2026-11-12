@@ -66,4 +66,13 @@ class ExceptionsTest {
         assertEquals("general", exception.getFieldName());
         assertEquals("El archivo no es un GeoJSON válido.", exception.getProblemDescription());
     }
+
+    @Test
+    void ca202_unauthorizedExceptionHasItsOwnErrorCodeAndSpanishMessage() {
+        UnauthorizedException exception = new UnauthorizedException("Correo o contraseña incorrectos.");
+
+        assertInstanceOf(EcoPointException.class, exception);
+        assertEquals("ERR_UNAUTHORIZED", exception.getErrorCode());
+        assertEquals("Correo o contraseña incorrectos.", exception.getMessage());
+    }
 }
