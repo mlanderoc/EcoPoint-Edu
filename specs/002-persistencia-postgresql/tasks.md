@@ -47,7 +47,7 @@ Reglas:
 
 ## Fase 3 — Repositorios de campo (Estefanía)
 
-- [ ] **T09. Reconstrucción del dominio.** Métodos `restore(...)` en `CharacterizationStudy`, `SamplingShift` y los registros verificables, para rearmarlos desde la base sin repetir validaciones (riesgo R1 del plan).
+- [x] **T09. Reconstrucción del dominio.** Métodos `restore(...)` en `CharacterizationStudy`, `SamplingShift` y los registros verificables, para rearmarlos desde la base sin repetir validaciones (riesgo R1 del plan).
   *Verificación:* pruebas unitarias de cada `restore`.
 
 - [ ] **T10. Turnos y bolsas.** `ShiftRepository` (agregado completo) y `WasteBagRepository`.
