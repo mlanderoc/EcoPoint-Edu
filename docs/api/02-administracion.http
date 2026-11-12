@@ -1,0 +1,78 @@
+### Administración (spec 003, sección 5.1). Inicie sesión como docente con 01-sesion.http.
+@base = http://localhost:8080/api/v1
+@xsrf = pegue-aqui-el-token
+
+### Instituciones
+GET {{base}}/institutions
+
+### Ver la institución piloto
+GET {{base}}/institutions/1
+
+### Fijar el centro y el zoom del plano (spec 007, R-623)
+PUT {{base}}/institutions/1
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{
+  "name": "I.E. Prudencia Daza",
+  "address": "Valledupar, Cesar",
+  "mapCenter": { "latitude": 10.4700000, "longitude": -73.2500000 },
+  "mapZoom": 18
+}
+
+### Fuentes activas de la institución
+GET {{base}}/institutions/1/sources?active=true
+
+### Crear una fuente
+POST {{base}}/institutions/1/sources
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "code": "CAF", "name": "Cafetería", "type": "OTRA" }
+
+### Código repetido: 422 ERR_BUSINESS_RULE (RN-002)
+POST {{base}}/institutions/1/sources
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "code": "PAE", "name": "Otro PAE", "type": "PAE" }
+
+### Desactivar una fuente (RN-005)
+POST {{base}}/institutions/1/sources/9/deactivate
+X-XSRF-TOKEN: {{xsrf}}
+
+### Usuarios, una página a la vez
+GET {{base}}/users?role=ESTUDIANTE_UNIVERSITARIO&page=0&size=20
+
+### Crear un usuario con su contraseña inicial
+POST {{base}}/users
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{
+  "firstName": "Mario",
+  "lastName": "Gómez",
+  "email": "mario.gomez@unicesar.edu.co",
+  "role": "ESTUDIANTE_UNIVERSITARIO",
+  "password": "ClaveSegura2026"
+}
+
+### Cuadrillas
+GET {{base}}/crews
+
+### Crear una cuadrilla con su docente responsable (RN-085)
+POST {{base}}/crews
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "name": "Cuadrilla C", "responsibleId": 1, "memberIds": [2, 3] }
+
+### Subcategorías de un grupo
+GET {{base}}/waste-categories?group=SIN_COLOR
+
+### Crear una subcategoría
+POST {{base}}/waste-categories
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "name": "Icopor", "group": "NEGRO", "description": "Bandejas y vasos de poliestireno" }

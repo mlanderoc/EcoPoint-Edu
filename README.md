@@ -12,12 +12,12 @@ Proyecto de aula de **Programación de Computadores III**, Universidad Popular d
 
 | Spec | Contenido | Estado |
 | --- | --- | --- |
-| [001](specs/001-dominio-caracterizacion/spec.md) | Dominio de caracterización: modelo, validadores y excepciones (Java puro) | Terminada, en revisión |
-| [002](specs/002-persistencia-postgresql/spec.md) | Persistencia en PostgreSQL: esquema, datos de demostración y repositorios | Terminada, en revisión |
-| [003](specs/003-api-rest-seguridad/spec.md) | API REST y seguridad (Spring Boot) | Pendiente |
+| [001](specs/001-dominio-caracterizacion/spec.md) | Dominio de caracterización: modelo, validadores y excepciones (Java puro) | Terminada |
+| [002](specs/002-persistencia-postgresql/spec.md) | Persistencia en PostgreSQL: esquema, datos de demostración y repositorios | Terminada |
+| [003](specs/003-api-rest-seguridad/spec.md) | API REST y seguridad (Spring Boot) | Terminada, en revisión |
 | [004](specs/004-registro-en-campo/spec.md) a [007](specs/007-plano-interactivo-fuentes/spec.md) | Pantallas web (React), indicadores, reportes y plano interactivo | Pendiente |
 
-Mientras no se complete la spec 003 no hay aplicación para usar desde el navegador: por ahora el proyecto es el dominio, la base de datos y sus pruebas.
+El backend ya expone la API REST completa del registro en campo, el cuarteo y la verificación. Las pantallas web (React) llegan con las specs 004 a 007.
 
 ## 2. Cómo empezar
 
@@ -60,7 +60,26 @@ mvnw.cmd test        # PowerShell o CMD
 
 Debe terminar en `BUILD SUCCESS` con todas las pruebas en verde.
 
-## 5. Arquitectura
+## 5. Arrancar la API
+
+Con la base de desarrollo lista (sección 3):
+
+```powershell
+$env:SPRING_PROFILES_ACTIVE = "dev"   # activa Swagger UI; omítelo en producción
+.\mvnw.cmd spring-boot:run           # PowerShell o CMD
+./mvnw spring-boot:run                # Git Bash, Linux o macOS
+```
+
+La API queda en `http://localhost:8080/api/v1`:
+
+- **Documentación interactiva** (solo con el perfil `dev`): http://localhost:8080/swagger-ui.html
+- **Ejemplos listos para ejecutar**: [`docs/api/`](docs/api/README.md) (cliente HTTP de IntelliJ o REST Client de VS Code).
+- **Sesión**: cookie `HttpOnly` de 8 horas. Cada `POST`, `PUT`, `PATCH` y `DELETE` lleva la cabecera `X-XSRF-TOKEN` con el valor de la cookie `XSRF-TOKEN` que entrega `GET /api/v1/auth/csrf`.
+- **Frontend en desarrollo**: Vite reenvía `/api` a `http://localhost:8080`, así navegador y API comparten origen. Si el frontend corre en otro origen, defínelo en `ECOPOINT_FRONTEND_ORIGIN` (por defecto `http://localhost:5173`).
+
+Variables opcionales de la API: `ECOPOINT_FRONTEND_ORIGIN`, `ECOPOINT_UPLOAD_DIR` (carpeta de las fotos, por defecto `./uploads`), `ECOPOINT_COOKIE_SECURE` (`true` con HTTPS) y `PORT` (por defecto 8080). Ver [`.env.example`](.env.example).
+
+## 6. Arquitectura
 
 ```
 Frontend (React)  →  controller (API REST /api/v1)  →  service  →  validation  →  model
@@ -74,11 +93,14 @@ exceptions: transversal
 | `com.ecopoint.model` | Estudio, días, turnos, fuentes, bolsas, cuarteo, densidad, verificación, usuarios, alertas | 001 |
 | `com.ecopoint.validation` | Validadores sin estado y `AccessPolicy` (permisos por rol) | 001 |
 | `com.ecopoint.persistence` | Interfaces de repositorio e implementaciones JDBC sobre PostgreSQL | 002 |
-| `com.ecopoint.service`, `com.ecopoint.controller` | Servicios y API REST | 003 |
+| `com.ecopoint.service` | Casos de uso: permisos, transacciones y orquestación | 003 |
+| `com.ecopoint.controller`, `com.ecopoint.dto` | API REST `/api/v1`: rutas, JSON de entrada y salida, formato de error | 003 |
+| `com.ecopoint.security`, `com.ecopoint.config` | Sesión, CSRF, CORS, bloqueo por intentos, reloj, OpenAPI | 003 |
 
-## 6. Documentación técnica
+## 7. Documentación técnica
 
 * [Diagrama de clases y trazabilidad GRASP/SOLID](docs/class-diagrama.md)
 * [Diagrama de capas y dependencias](docs/layer-diagram.md)
 * [Jerarquía de excepciones](docs/exception-hierarchy-diagram.md)
 * [Base de datos: tablas, relaciones y decisiones](docs/base-de-datos.md)
+* [Ejemplos de la API](docs/api/README.md)
