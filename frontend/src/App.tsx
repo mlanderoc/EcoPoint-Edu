@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from
 import { AuthProvider, RequireAuth, RequireRole, LoginPage, useAuth } from '@/features/auth'
 import { AppLayout } from '@/components/layout'
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
+import { InstitutionsPage, SourcesPage } from '@/features/admin'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -116,6 +117,23 @@ export function AppRoutes() {
               </RoutedAppLayout>
             }
           />
+          <Route
+            path="/admin/instituciones"
+            element={
+              <RoutedAppLayout>
+                <InstitutionsPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route
+            path="/admin/fuentes"
+            element={
+              <RoutedAppLayout>
+                <SourcesPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route path="/admin" element={<Navigate to="/admin/instituciones" replace />} />
           <Route
             path="/admin/*"
             element={

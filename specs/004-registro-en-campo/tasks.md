@@ -77,7 +77,7 @@
 
 ## Fase 3 — Módulo de Administración (Solo Docente)
 
-- [ ] **T311. Administración de instituciones y fuentes de generación (R-320, R-321).**
+- [x] **T311. Administración de instituciones y fuentes de generación (R-320, R-321).**
   Vistas `/admin/instituciones` y `/admin/fuentes`. Listado, creación y edición de fuentes con código (ej. `AU`), nombre, tipo (Aulas, Oficinas, etc.) y estado activo/inactivo.
   *Verificación:* Pruebas de integración validando el listado y alta de fuentes vinculadas a una institución.
 

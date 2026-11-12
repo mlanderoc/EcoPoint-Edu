@@ -1,11 +1,19 @@
+/**
+ * Modal dialog atomic component wrapping Radix UI Dialog.
+ *
+ * @author craulgomez
+ */
+
 import React from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { X } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export interface ModalProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  open?: boolean
+  isOpen?: boolean
+  onOpenChange?: (open: boolean) => void
+  onClose?: () => void
   title: string
   description?: string
   children: React.ReactNode
@@ -14,14 +22,25 @@ export interface ModalProps {
 
 export function Modal({
   open,
+  isOpen,
   onOpenChange,
+  onClose,
   title,
   description,
   children,
   className,
 }: ModalProps) {
+  const isModalOpen = open !== undefined ? open : Boolean(isOpen)
+
+  const handleOpenChange = (nextOpen: boolean) => {
+    onOpenChange?.(nextOpen)
+    if (!nextOpen && onClose) {
+      onClose()
+    }
+  }
+
   return (
-    <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
+    <DialogPrimitive.Root open={isModalOpen} onOpenChange={handleOpenChange}>
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs transition-opacity animate-in fade-in" />
         <DialogPrimitive.Content
