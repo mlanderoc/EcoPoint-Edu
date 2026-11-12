@@ -45,7 +45,7 @@ Reglas:
 - [x] **T08. Residuos.** Reescribir `WasteCategory` (subcategoría con `WasteGroup`); crear `WasteCategoryValidator`.
   *Verificación:* `WasteCategoryValidatorTest`: RN-041 (nombre único) y RN-042 (no cambia de grupo si tiene resultados).
 
-- [ ] **T09. Usuarios y cuadrillas.** Reescribir `User` (rol enum) y `UserValidator`; crear `Crew`, `CrewValidator` y `AccessPolicy`.
+- [x] **T09. Usuarios y cuadrillas.** Reescribir `User` (rol enum) y `UserValidator`; crear `Crew`, `CrewValidator` y `AccessPolicy`.
   *Verificación:* `UserValidatorTest` (CA-080, RN-084), `CrewValidatorTest` (CA-081), `AccessPolicyTest` (lanza `AccessDeniedException`).
 
 ## Fase 3 — Estudio y turnos

@@ -162,7 +162,7 @@ classDiagram
     class Crew {
         Long id
         String name
-        Long responsibleUserId
+        User responsible
         List~User~ members
         hasResponsibleTeacher() boolean
     }
