@@ -50,10 +50,10 @@ Reglas:
 - [x] **T09. Reconstrucción del dominio.** Métodos `restore(...)` en `CharacterizationStudy`, `SamplingShift` y los registros verificables, para rearmarlos desde la base sin repetir validaciones (riesgo R1 del plan).
   *Verificación:* pruebas unitarias de cada `restore`.
 
-- [ ] **T10. Turnos y bolsas.** `ShiftRepository` (agregado completo) y `WasteBagRepository`.
+- [x] **T10. Turnos y bolsas.** `ShiftRepository` (agregado completo) y `WasteBagRepository`.
   *Verificación:* `ShiftRepositoryIT`, `WasteBagRepositoryIT` (CA-110; peso neto y densidad leídos de las columnas generadas: CA-106).
 
-- [ ] **T11. Cuarteo y densidad.** `QuarteringRepository` (transaccional) y `DensityRepository`.
+- [x] **T11. Cuarteo y densidad.** `QuarteringRepository` (transaccional) y `DensityRepository`.
   *Verificación:* `QuarteringRepositoryIT` (CA-105, CA-103 desde la aplicación), `DensityRepositoryIT`.
 
 - [ ] **T12. Verificación y correcciones.** `VerificationRepository` y `CorrectionRepository`.
