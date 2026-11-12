@@ -21,7 +21,7 @@ public final class EvidenceValidator {
 
     private static final int MAX_DESCRIPTION_LENGTH = 500;
 
-    private static final Map<String, String> EXTENSION_BY_MIME_TYPE = Map.of(
+    private static final Map<String, String> MIME_TYPE_BY_EXTENSION = Map.of(
             ".jpg", "image/jpeg",
             ".jpeg", "image/jpeg",
             ".png", "image/png");
@@ -47,7 +47,7 @@ public final class EvidenceValidator {
             throw new InvalidDataException("archivo", "El archivo de la evidencia es obligatorio.");
         }
         String extension = extensionOf(evidence.getFilePath());
-        String expectedMimeType = EXTENSION_BY_MIME_TYPE.get(extension);
+        String expectedMimeType = MIME_TYPE_BY_EXTENSION.get(extension);
         if (expectedMimeType == null || !expectedMimeType.equalsIgnoreCase(evidence.getMimeType())) {
             throw new InvalidDataException("formato", "Solo se aceptan fotos en formato JPG o PNG.");
         }
