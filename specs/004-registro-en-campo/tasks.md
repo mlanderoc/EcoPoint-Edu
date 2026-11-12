@@ -146,6 +146,6 @@
   Auditoría visual y funcional en emulador móvil (ancho 360 px): verificar ausencia de desplazamiento horizontal, objetivos táctiles $\ge 48\text{ px}$ y flujo continuo para registrar una bolsa en menos de 30 segundos.
   *Verificación:* `field-ergonomics.test.tsx` recorre el flujo de CA-307 (abrir turno, población, 3 bolsas, cerrar) comprobando objetivos táctiles ≥ 48 px y que cada bolsa toma 5 acciones; `npm run check:mobile` mide en Chrome real a 360 px que no haya desplazamiento horizontal ni controles pequeños. El tiempo de un usuario entrenado (CA-308) se mide a mano en la prueba con la cuadrilla.
 
-- [ ] **T325. Documentación y revisión final del PR.**
+- [x] **T325. Documentación y revisión final del PR.**
   Actualizar `README.md` del frontend con instrucciones de arranque local (`npm install`, `npm run dev`), variables de entorno (`VITE_USE_MOCK_API`) y ejecución de pruebas (`npm test`). Verificar el cumplimiento de todos los criterios CA-300 a CA-310.
   *Verificación:* Suite completa de pruebas en verde y PR abierto hacia `develop`.

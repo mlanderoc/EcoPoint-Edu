@@ -118,6 +118,8 @@ describe('Study lifecycle (T316, R-332, CA-309)', () => {
     expect(
       await screen.findByText('No se puede cerrar el estudio: quedan 2 registros pendientes de verificación.')
     ).toBeInTheDocument()
+    expect(screen.getByText('En depuración')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Cerrar estudio' })).toBeInTheDocument()
   })
 
   it('rn017_reopeningAClosedStudyAsksForAReason', async () => {
