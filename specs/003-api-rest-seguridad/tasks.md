@@ -63,7 +63,7 @@ Reglas:
 - [x] **T13. Servicio de turnos.** `ShiftService`: abrir, cerrar (RN-024) y reabrir; población; "sin generación"; los 16 turnos posibles del estudio con su avance. *(Estefanía)*
   *Verificación:* pruebas unitarias, incluido cerrar con fuentes pendientes.
 
-- [ ] **T14. Servicio de bolsas.** `WasteBagService`: registrar (RN-023, rótulo, atípica con su alerta en la misma transacción) y corregir mientras esté PENDIENTE. *(Estefanía)*
+- [x] **T14. Servicio de bolsas.** `WasteBagService`: registrar (RN-023, rótulo, atípica con su alerta en la misma transacción) y corregir mientras esté PENDIENTE. *(Estefanía)*
   *Verificación:* pruebas unitarias; la alerta de valor atípico se crea junto con la bolsa.
 
 - [ ] **T15. Rutas de estudios, turnos y bolsas.** Controladores y DTO de la sección 5.2 del plan, con paginación de bolsas. *(Carlos)*

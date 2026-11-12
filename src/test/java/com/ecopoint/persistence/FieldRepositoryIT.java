@@ -228,4 +228,15 @@ class FieldRepositoryIT extends PostgresIntegrationTest {
         shifts.save(shift);
         assertNull(shifts.findById(shift.getId()).orElseThrow().getCrewId());
     }
+
+    @Test
+    void r348_bagKnowsItsShift() {
+        SamplingShift shift = openShiftWithPopulation();
+        WasteBag bag = bag(classrooms, "12.40", "0.40", "0.080");
+        shift.addBag(bag);
+        bags.save(shift.getId(), bag);
+
+        assertEquals(shift.getId(), bags.findShiftId(bag.getId()).orElseThrow());
+        assertTrue(bags.findShiftId(999_999L).isEmpty());
+    }
 }

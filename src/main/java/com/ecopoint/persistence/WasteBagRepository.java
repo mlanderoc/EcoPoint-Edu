@@ -39,4 +39,12 @@ public interface WasteBagRepository {
      * @return bags of the shift
      */
     List<WasteBag> findByShift(Long shiftId);
+
+    /**
+     * Returns the shift a bag belongs to (spec 003, R-348).
+     *
+     * @param bagId bag id
+     * @return the shift id, or empty if the bag does not exist
+     */
+    Optional<Long> findShiftId(Long bagId);
 }
