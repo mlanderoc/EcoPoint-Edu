@@ -113,6 +113,19 @@ public class VerificationService {
     }
 
     /**
+     * Returns the shift a verifiable record belongs to.
+     *
+     * @param kind     kind of record
+     * @param recordId record id
+     * @return the shift id
+     * @throws ResourceNotFoundException if the record does not exist
+     */
+    public Long shiftOf(RecordKind kind, Long recordId) {
+        return verifications.findShiftOfRecord(kind.getRecordType(), recordId)
+                .orElseThrow(() -> new ResourceNotFoundException(kind.getRecordType(), recordId));
+    }
+
+    /**
      * Returns the correction history of a record (RN-063).
      *
      * @param kind     kind of record
@@ -297,8 +310,7 @@ public class VerificationService {
     }
 
     private Located locate(RecordKind kind, Long recordId) {
-        Long shiftId = verifications.findShiftOfRecord(kind.getRecordType(), recordId)
-                .orElseThrow(() -> new ResourceNotFoundException(kind.getRecordType(), recordId));
+        Long shiftId = shiftOf(kind, recordId);
         SamplingShift shift = shifts.findById(shiftId)
                 .orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
         CharacterizationStudy study = studies.findById(shift.getStudyId())
