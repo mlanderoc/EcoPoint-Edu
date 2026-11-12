@@ -1,0 +1,62 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1E8449;
+  --color-primary-hover: #145A32;
+  --color-primary-light: #E8F5E9;
+  --color-brand-dark: #0F3D23;
+  --color-accent-leaf: #8BC34A;
+  --color-edu-blue: #2F5DA8;
+
+  --color-waste-white: #FFFFFF;
+  --color-waste-green: #27AE60;
+  --color-waste-black: #1E293B;
+  --color-waste-none: #64748B;
+
+  --color-warning: #D97706;
+  --color-warning-bg: #FEF3C7;
+  --color-danger: #DC2626;
+  --color-danger-bg: #FEE2E2;
+  --color-success: #16A34A;
+
+  --color-bg-app: #F8FAFC;
+  --color-text-main: #0F172A;
+  --color-text-muted: #334155;
+}
+
+:root {
+  --primary: #1E8449;
+  --primary-hover: #145A32;
+  --primary-light: #E8F5E9;
+  --brand-dark: #0F3D23;
+  --accent-leaf: #8BC34A;
+  --edu-blue: #2F5DA8;
+
+  --waste-white: #FFFFFF;
+  --waste-green: #27AE60;
+  --waste-black: #1E293B;
+  --waste-none: #64748B;
+
+  --warning: #D97706;
+  --warning-bg: #FEF3C7;
+  --danger: #DC2626;
+  --danger-bg: #FEE2E2;
+  --success: #16A34A;
+
+  --bg-app: #F8FAFC;
+  --text-main: #0F172A;
+  --text-muted: #334155;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background-color: var(--bg-app);
+  color: var(--text-main);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+}
