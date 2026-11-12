@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | BORRADOR — pendiente de revisión |
+| Estado | **APROBADO** (11 nov 2026) |
 | Plan | [plan.md](plan.md) |
 | Rama | `feature/002-persistencia-postgresql` (desde `develop`) |
 
