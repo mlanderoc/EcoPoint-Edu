@@ -98,7 +98,7 @@ Dónde va cada regla:
 - Ramas: `main` ← `develop` ← `feature/NNN-nombre` (una rama por spec) o `fix/nombre`.
 - **Prohibido** hacer commit directo a `main` o `develop`, usar `git push --force` y aprobar el PR propio.
 - Mensajes de commit en **español**, con prefijo: `feat:`, `fix:`, `docs:`, `test:`, `refactor:`, `chore:`. Ejemplo: `feat: agregar cálculo de densidad en WasteBag`.
-- **Autoría:** el **autor** de cada commit es el integrante responsable de lo que cambia, según el reparto de [`src/TEAM.md`](src/TEAM.md). Se indica con `git commit --author="Nombre <correo>"`:
+- **Autoría:** el **autor** de cada commit es el integrante responsable de lo que cambia, según el reparto de [`src/TEAM.md`](src/TEAM.md). El mismo integrante va como **autor y como committer**, para que ningún otro aparezca en el commit. Se indica con `GIT_COMMITTER_NAME="Nombre" GIT_COMMITTER_EMAIL="correo" git commit --author="Nombre <correo>"`:
 
   | Lo que cambia el commit | Autor |
   | --- | --- |
