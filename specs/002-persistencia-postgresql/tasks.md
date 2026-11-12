@@ -14,7 +14,7 @@ Reglas:
 
 ## Fase 0 — Base del proyecto
 
-- [ ] **T00. Spring Boot y PostgreSQL.** `pom.xml` con padre Spring Boot 3.5, `spring-boot-starter-jdbc`, driver PostgreSQL, `spring-boot-starter-test` y `maven-failsafe-plugin`. Clase `EcoPointApplication`. `application.properties` con `ECOPOINT_DB_URL`, `ECOPOINT_DB_USER` y `ECOPOINT_DB_PASSWORD` (sin valor por defecto para la contraseña). `.env.example` documentado.
+- [x] **T00. Spring Boot y PostgreSQL.** `pom.xml` con padre Spring Boot 3.5, `spring-boot-starter-jdbc`, driver PostgreSQL, `spring-boot-starter-test` y `maven-failsafe-plugin`. Clase `EcoPointApplication`. `application.properties` con `ECOPOINT_DB_URL`, `ECOPOINT_DB_USER` y `ECOPOINT_DB_PASSWORD` (sin valor por defecto para la contraseña). `.env.example` documentado.
   *Verificación:* `./mvnw test` sigue con las 264 pruebas en verde; `git grep -i password` no muestra contraseñas reales.
 
 ## Fase 1 — Esquema y semilla
