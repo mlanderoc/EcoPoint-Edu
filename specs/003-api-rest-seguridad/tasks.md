@@ -15,7 +15,7 @@ Reglas:
 
 ## Fase 0 — Base web
 
-- [ ] **T00. Reparto en `TEAM.md`.** Actualizar `src/TEAM.md` a la versión actual (React, PostgreSQL, sin Swing ni archivos planos) con los paquetes nuevos `config`, `security`, `service`, `controller` y `dto`, según la sección 9 del plan. *(Merlín)*
+- [x] **T00. Reparto en `TEAM.md`.** Actualizar `src/TEAM.md` a la versión actual (React, PostgreSQL, sin Swing ni archivos planos) con los paquetes nuevos `config`, `security`, `service`, `controller` y `dto`, según la sección 9 del plan. *(Merlín)*
   *Verificación:* cada paquete del plan tiene un responsable en `TEAM.md`.
 
 - [ ] **T01. Servidor web.** `pom.xml` con `spring-boot-starter-web`, `spring-boot-starter-security`, `springdoc-openapi-starter-webmvc-ui` y `spring-security-test`. `application.properties`: sin `web-application-type=none`, puerto 8080, sesión de 8 h, cookie `HttpOnly` y `SameSite=Lax`, `ECOPOINT_FRONTEND_ORIGIN` y `ECOPOINT_UPLOAD_DIR`; Swagger apagado salvo en el perfil `dev` (`application-dev.properties`). `.env.example` y `.gitignore` (carpeta de fotos). *(Merlín)*
