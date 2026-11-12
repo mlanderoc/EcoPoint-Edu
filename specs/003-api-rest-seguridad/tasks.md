@@ -35,7 +35,7 @@ Reglas:
 - [x] **T05. Configuración de seguridad.** `SecurityConfig` (sesión, CSRF con `CookieCsrfTokenRepository`, CORS, rutas públicas: login y csrf), `EcoPointUserDetails`, `EcoPointUserDetailsService`, `BCryptPasswordEncoder`, respuestas JSON para 401 y 403. *(Merlín)*
   *Verificación:* una ruta protegida sin sesión responde 401 con `ERR_UNAUTHORIZED` (CA-200); un `POST` sin cabecera CSRF responde 403.
 
-- [ ] **T06. Bloqueo por intentos.** `LoginAttemptService`: 5 fallos seguidos bloquean el correo 15 minutos; un acierto reinicia el contador. Con `Clock` para probar el paso del tiempo. *(Merlín)*
+- [x] **T06. Bloqueo por intentos.** `LoginAttemptService`: 5 fallos seguidos bloquean el correo 15 minutos; un acierto reinicia el contador. Con `Clock` para probar el paso del tiempo. *(Merlín)*
   *Verificación:* pruebas unitarias del bloqueo y del desbloqueo a los 15 minutos.
 
 - [ ] **T07. Servicio de autenticación.** `AuthService`: login con mensaje único (T7 del plan), usuario actual con su institución y sus permisos. *(Estefanía)*
