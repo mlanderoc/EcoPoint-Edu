@@ -29,10 +29,10 @@ Reglas:
 - [x] **T03. Contraseñas en el repositorio.** `UserRepository.findPasswordHashByEmail` y `updatePasswordHash` con su implementación JDBC y prueba de integración. *(Merlín)*
   *Verificación:* `CatalogAndPeopleRepositoryIT` cubre los dos métodos.
 
-- [ ] **T04. Formato de error.** DTO `ApiError`, `FieldErrorDto` y `PageResponse`; `ApiExceptionHandler` con la tabla de la sección 4.2 del plan, el diccionario de campos y el identificador en el log para los 500. *(Carlos)*
+- [ ] **T04. Formato de error.** `ClockConfig` y la configuración de JSON (fechas ISO y decimales sin notación científica) *(Merlín)*. DTO `ApiError`, `FieldErrorDto` y `PageResponse`; `ApiExceptionHandler` con la tabla de la sección 4.2 del plan, el diccionario de campos y el identificador en el log para los 500. *(Carlos)*
   *Verificación:* `@WebMvcTest` con un controlador de prueba: un caso por fila de la tabla; CA-208 (500 sin SQL ni traza).
 
-- [ ] **T05. Configuración de seguridad.** `SecurityConfig` (sesión, CSRF con `CookieCsrfTokenRepository`, CORS, rutas públicas: login y csrf), `EcoPointUserDetails`, `EcoPointUserDetailsService`, `BCryptPasswordEncoder`, respuestas JSON para 401 y 403, `JacksonConfig` y `ClockConfig`. *(Merlín)*
+- [ ] **T05. Configuración de seguridad.** `SecurityConfig` (sesión, CSRF con `CookieCsrfTokenRepository`, CORS, rutas públicas: login y csrf), `EcoPointUserDetails`, `EcoPointUserDetailsService`, `BCryptPasswordEncoder`, respuestas JSON para 401 y 403. *(Merlín)*
   *Verificación:* una ruta protegida sin sesión responde 401 con `ERR_UNAUTHORIZED` (CA-200); un `POST` sin cabecera CSRF responde 403.
 
 - [ ] **T06. Bloqueo por intentos.** `LoginAttemptService`: 5 fallos seguidos bloquean el correo 15 minutos; un acierto reinicia el contador. Con `Clock` para probar el paso del tiempo. *(Merlín)*
