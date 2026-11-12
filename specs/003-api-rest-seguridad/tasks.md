@@ -38,7 +38,7 @@ Reglas:
 - [x] **T06. Bloqueo por intentos.** `LoginAttemptService`: 5 fallos seguidos bloquean el correo 15 minutos; un acierto reinicia el contador. Con `Clock` para probar el paso del tiempo. *(Merlín)*
   *Verificación:* pruebas unitarias del bloqueo y del desbloqueo a los 15 minutos.
 
-- [ ] **T07. Servicio de autenticación.** `UnauthorizedException` (401) en la jerarquía de excepciones, documentada en `AGENTS.md` *(Merlín)*. `AuthService`: login con mensaje único (T7 del plan), usuario actual con su institución y sus permisos. *(Estefanía)*
+- [x] **T07. Servicio de autenticación.** `UnauthorizedException` (401) en la jerarquía de excepciones, documentada en `AGENTS.md` *(Merlín)*. `AuthService`: login con mensaje único (T7 del plan), usuario actual con su institución y sus permisos. *(Estefanía)*
   *Verificación:* pruebas unitarias con repositorios simulados: correo inexistente, contraseña errada, cuenta inactiva y cuenta bloqueada dan el mismo mensaje.
 
 - [ ] **T08. Rutas de autenticación.** `AuthController` (`login`, `logout`, `me`, `csrf`) y `UserResponse`. `AuthIT` contra la semilla. *(Carlos)*
