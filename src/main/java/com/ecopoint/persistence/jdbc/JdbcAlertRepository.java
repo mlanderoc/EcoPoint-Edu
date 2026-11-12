@@ -89,4 +89,21 @@ public class JdbcAlertRepository implements AlertRepository {
         return DataAccessTranslator.execute("listar las alertas",
                 () -> jdbc.query(SELECT + "ORDER BY creada_en DESC, id DESC", MAPPER));
     }
+
+    @Override
+    public List<Alert> findByStudy(Long studyId) {
+        return DataAccessTranslator.execute("listar las alertas del estudio " + studyId,
+                () -> jdbc.query(SELECT + "WHERE (tipo_registro = 'Turno' AND id_registro IN ("
+                                + "SELECT id FROM TURNO WHERE id_estudio = :estudio)) "
+                                + "OR (tipo_registro = 'Bolsa' AND id_registro IN (SELECT r.id FROM BOLSA r "
+                                + "JOIN TURNO t ON t.id = r.id_turno WHERE t.id_estudio = :estudio)) "
+                                + "OR (tipo_registro = 'Cuarteo' AND id_registro IN (SELECT r.id FROM CUARTEO r "
+                                + "JOIN TURNO t ON t.id = r.id_turno WHERE t.id_estudio = :estudio)) "
+                                + "OR (tipo_registro = 'Población del turno' AND id_registro IN (SELECT r.id "
+                                + "FROM POBLACION_TURNO r JOIN TURNO t ON t.id = r.id_turno WHERE t.id_estudio = :estudio)) "
+                                + "OR (tipo_registro = 'Medición de densidad' AND id_registro IN (SELECT r.id "
+                                + "FROM MEDICION_DENSIDAD r JOIN TURNO t ON t.id = r.id_turno WHERE t.id_estudio = :estudio)) "
+                                + "ORDER BY creada_en DESC, id DESC",
+                        new MapSqlParameterSource("estudio", studyId), MAPPER));
+    }
 }

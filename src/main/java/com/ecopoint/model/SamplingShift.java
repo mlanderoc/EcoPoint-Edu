@@ -28,6 +28,7 @@ public class SamplingShift {
     private final int dayNumber;
     private final ShiftType type;
     private ShiftStatus status;
+    private Long crewId;
     private ShiftPopulation population;
     private final List<WasteBag> bags;
     private Quartering quartering;
@@ -330,6 +331,24 @@ public class SamplingShift {
 
     public ShiftType getType() {
         return type;
+    }
+
+    /**
+     * Returns the crew that works the shift.
+     *
+     * @return crew id, or null when no crew was assigned
+     */
+    public Long getCrewId() {
+        return crewId;
+    }
+
+    /**
+     * Assigns the crew that works the shift (spec 004, R-331 and R-341).
+     *
+     * @param crewId crew id, or null to leave the shift without crew
+     */
+    public void assignCrew(Long crewId) {
+        this.crewId = crewId;
     }
 
     public ShiftStatus getStatus() {

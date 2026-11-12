@@ -1,0 +1,83 @@
+### Cuarteo, densidad, verificación, alertas y fotos (spec 003, sección 5.3)
+@base = http://localhost:8080/api/v1
+@xsrf = pegue-aqui-el-token
+
+### Registrar el cuarteo del turno: devuelve CONFORME o NO_CONFORME (control del 2 %)
+POST {{base}}/shifts/21/quartering
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{
+  "sampleWeight": 50.00,
+  "results": [
+    { "categoryId": 1, "weight": 30.00 },
+    { "categoryId": 8, "weight": 19.50 }
+  ]
+}
+
+### Ver el cuarteo con su composición por grupo
+GET {{base}}/shifts/21/quartering
+
+### Anular un cuarteo no conforme (RN-052)
+POST {{base}}/shifts/21/quartering/annul
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "reason": "La báscula estaba descalibrada." }
+
+### Registrar la densidad del turno (RN-057)
+POST {{base}}/shifts/21/density
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "containerVolume": 0.200, "netWeight": 30.00 }
+
+### Registros pendientes de verificación del estudio 2
+GET {{base}}/verifications?studyId=2
+
+### Verificar una bolsa: la verifica otra persona, no quien la digitó (RN-062)
+POST {{base}}/verifications/bag/136
+X-XSRF-TOKEN: {{xsrf}}
+
+### Corregir una bolsa contra el papel: guarda el valor anterior (RN-063)
+POST {{base}}/verifications/bag/137/correct
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "values": { "grossWeight": 12.04 }, "reason": "En el papel dice 12,04" }
+
+### Historial de correcciones de la bolsa
+GET {{base}}/records/bag/137/history
+
+### Alertas pendientes del estudio 2
+GET {{base}}/alerts?studyId=2&attended=false
+
+### Atender una alerta con su observación (RN-073)
+POST {{base}}/alerts/3/attend
+Content-Type: application/json
+X-XSRF-TOKEN: {{xsrf}}
+
+{ "reason": "Se volvió a pesar la bolsa: el valor era correcto." }
+
+### Subir una foto de una bolsa (JPG o PNG hasta 5 MB)
+POST {{base}}/evidences
+X-XSRF-TOKEN: {{xsrf}}
+Content-Type: multipart/form-data; boundary=EcoPoint
+
+--EcoPoint
+Content-Disposition: form-data; name="targetType"
+
+BAG
+--EcoPoint
+Content-Disposition: form-data; name="targetId"
+
+136
+--EcoPoint
+Content-Disposition: form-data; name="file"; filename="balanza.jpg"
+Content-Type: image/jpeg
+
+< ./balanza.jpg
+--EcoPoint--
+
+### Fotos de la bolsa
+GET {{base}}/evidences?targetType=BAG&targetId=136

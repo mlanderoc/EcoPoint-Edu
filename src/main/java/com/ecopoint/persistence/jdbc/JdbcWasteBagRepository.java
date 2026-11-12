@@ -73,4 +73,11 @@ public class JdbcWasteBagRepository implements WasteBagRepository {
                 () -> jdbc.query(SELECT + "WHERE b.id_turno = :turno ORDER BY b.id",
                         new MapSqlParameterSource("turno", shiftId), FieldRecordMappers.BAG));
     }
+
+    @Override
+    public Optional<Long> findShiftId(Long bagId) {
+        return DataAccessTranslator.execute("buscar el turno de la bolsa " + bagId,
+                () -> jdbc.queryForList("SELECT id_turno FROM BOLSA WHERE id = :id",
+                        new MapSqlParameterSource("id", bagId), Long.class).stream().findFirst());
+    }
 }

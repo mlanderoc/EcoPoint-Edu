@@ -43,4 +43,13 @@ public interface AlertRepository {
      * @return alerts
      */
     List<Alert> findAll();
+
+    /**
+     * Lists the alerts of one study, newest first. An alert belongs to the study
+     * of the shift of the record that caused it (spec 003, section 5.3).
+     *
+     * @param studyId study id
+     * @return alerts of the study
+     */
+    List<Alert> findByStudy(Long studyId);
 }

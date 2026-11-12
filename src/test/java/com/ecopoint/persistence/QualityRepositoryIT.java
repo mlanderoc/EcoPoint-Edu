@@ -127,4 +127,27 @@ class QualityRepositoryIT extends PostgresIntegrationTest {
         assertThrows(PersistenceException.class, () -> evidence.save(new Evidence(null, EvidenceTarget.BAG, 1L,
                 "evidencias/grande.jpg", "image/jpeg", 6_000_000, null, teacher.getId(), AT)));
     }
+
+    @Test
+    void t17_alertsAreListedByTheStudyOfTheirRecord() {
+        Long closed = jdbc.queryForObject("SELECT id FROM ESTUDIO WHERE estado = 'CERRADO'", Long.class);
+
+        assertEquals(2, alerts.findByStudy(closed).size());
+        assertTrue(alerts.findByStudy(executingStudy).isEmpty());
+    }
+
+    @Test
+    void t18_evidenceIsFoundByIdAndRecordsKnowTheirShift() {
+        WasteBag bag = pendingBag();
+        Evidence saved = evidence.save(new Evidence(null, EvidenceTarget.BAG, bag.getId(), "evidencias/bolsa-2.png",
+                "image/png", 120_000, null, teacher.getId(), AT));
+
+        assertEquals("evidencias/bolsa-2.png", evidence.findById(saved.getId()).orElseThrow().getFilePath());
+        assertTrue(evidence.findById(999_999L).isEmpty());
+
+        Long shiftOfBag = jdbc.queryForObject("SELECT id_turno FROM BOLSA WHERE id = ?", Long.class, bag.getId());
+        assertEquals(shiftOfBag, verifications.findShiftOfRecord("Bolsa", bag.getId()).orElseThrow());
+        assertTrue(verifications.findShiftOfRecord("Bolsa", 999_999L).isEmpty());
+        assertTrue(verifications.findShiftOfRecord("Desconocido", bag.getId()).isEmpty());
+    }
 }
