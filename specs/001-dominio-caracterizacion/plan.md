@@ -255,7 +255,7 @@ Clases `final`, sin estado, con métodos `static`, como las actuales. Cada regla
 | `ShiftValidator` | `validateNewShift(study, day, type, existingShifts)`, `validatePopulation(population)`, `validateOpenForRegistration(shift, study)`, `validateCanRegisterBag(shift, study)`, `validateCanClose(shift, Map<Long, String> participatingSources)`, `validateReopen(shift, study)` | RN-020 a RN-025 |
 | `WasteBagValidator` | `validate(bag, Set<Long> participatingSourceIds)`, `isAtypical(bag, settings)` | RN-030 a RN-037 (las condiciones del turno las revisa `ShiftValidator`) |
 | `QuarteringValidator` | `validate(quartering, settings)`, `validateCategories(quartering, Map<Long, WasteCategory>)`, `validateNoExistingQuartering(shift)`, `validatePermissions(quartering, user)`, `validateAnnul(quartering, user)` | RN-050 a RN-056 |
-| `DensityValidator` | `validate(measurement, shift)` | RN-057 |
+| `DensityValidator` | `validate(measurement)`, `validateNoExistingDensity(shift)` | RN-057 |
 | `VerificationValidator` | `validateVerifier(record, user)`, `validateCorrection(record, user, reason)` | RN-062, RN-063 |
 | `UserValidator` | `validate(user)`, `validateUniqueEmail(user, Set<String> existingEmails)` | RN-084 |
 | `CrewValidator` | `validate(crew)` | RN-085 |

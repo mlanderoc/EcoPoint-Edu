@@ -67,7 +67,7 @@ Reglas:
 - [x] **T14. Cuarteo.** Reescribir `Quartering` y `QuarteringResult`; reescribir `QuarteringValidator`.
   *Verificación:* `QuarteringTest` (CA-052, CA-053, CA-054, `annul`), `QuarteringValidatorTest` (CA-050, CA-051, CA-055, CA-056, RN-055).
 
-- [ ] **T15. Densidad.** `DensityMeasurement` y `DensityValidator`.
+- [x] **T15. Densidad.** `DensityMeasurement` y `DensityValidator`.
   *Verificación:* `DensityMeasurementTest`: 31,20 kg en 0,208 m³ = 150,00 kg/m³; RN-057 (una por turno, valores > 0).
 
 ## Fase 5 — Calidad, alertas y evidencias
