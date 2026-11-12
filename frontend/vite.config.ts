@@ -17,6 +17,16 @@ export default defineConfig({
       '@': path.resolve(rootDir, './src'),
     },
   },
+  // Development: /api goes to the Spring Boot backend, so the browser sees a single
+  // origin and the session and CSRF cookies work without CORS (spec 003, decision T4).
+  server: {
+    proxy: {
+      '/api': {
+        target: process.env.VITE_API_TARGET ?? 'http://localhost:8080',
+        changeOrigin: false,
+      },
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom',

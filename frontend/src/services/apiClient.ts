@@ -1,5 +1,6 @@
 /**
- * Base HTTP client configured with credentials and Spec 003 error normalization.
+ * Base HTTP client configured with credentials, the CSRF token of Spec 003 (decision T3)
+ * and Spec 003 error normalization.
  *
  * @author craulgomez
  */
@@ -60,6 +61,47 @@ export function notifyUnauthorized(error: ApiError): void {
   })
 }
 
+/** Cookie where the backend leaves the CSRF token (spec 003, decision T3). */
+export const CSRF_COOKIE = 'XSRF-TOKEN'
+/** Header where every state-changing request sends the CSRF token back. */
+export const CSRF_HEADER = 'X-XSRF-TOKEN'
+const CSRF_URL = '/api/v1/auth/csrf'
+const STATE_CHANGING_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'])
+
+let pendingCsrfRequest: Promise<void> | null = null
+
+/**
+ * Reads a cookie visible to JavaScript. The session cookie is HttpOnly and is
+ * never visible here; only the CSRF token is.
+ */
+export function readCookie(name: string): string | undefined {
+  const prefix = `${name}=`
+  const found = document.cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(prefix))
+  return found ? decodeURIComponent(found.substring(prefix.length)) : undefined
+}
+
+/**
+ * Returns the CSRF token, asking the backend for it the first time
+ * (GET /api/v1/auth/csrf leaves it in the XSRF-TOKEN cookie).
+ */
+export async function ensureCsrfToken(): Promise<string | undefined> {
+  const current = readCookie(CSRF_COOKIE)
+  if (current) {
+    return current
+  }
+  pendingCsrfRequest ??= fetch(CSRF_URL, { credentials: 'include' })
+    .then(() => undefined)
+    .catch(() => undefined)
+    .finally(() => {
+      pendingCsrfRequest = null
+    })
+  await pendingCsrfRequest
+  return readCookie(CSRF_COOKIE)
+}
+
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   params?: Record<string, string | number | boolean | undefined | null>
   body?: unknown
@@ -86,9 +128,12 @@ async function request<T>(url: string, options: RequestOptions = {}): Promise<T>
   }
 
   const isJsonBody = body !== undefined && !(body instanceof FormData)
+  const method = (restOptions.method ?? 'GET').toUpperCase()
+  const csrfToken = STATE_CHANGING_METHODS.has(method) ? await ensureCsrfToken() : undefined
   const defaultHeaders: HeadersInit = {
     Accept: 'application/json',
     ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
+    ...(csrfToken ? { [CSRF_HEADER]: csrfToken } : {}),
   }
 
   const response = await fetch(fullUrl, {

@@ -160,4 +160,41 @@ describe('HTTP apiClient (T308, R-303)', () => {
     expect(result.filter).toBe('active')
     expect(result.page).toBe('2')
   })
+
+  it('sends the CSRF token of the cookie in X-XSRF-TOKEN on state-changing requests (spec 003, T3)', async () => {
+    document.cookie = 'XSRF-TOKEN=token-de-prueba; path=/'
+    const seen: Record<string, string | null> = {}
+    server.use(
+      http.post('/api/v1/test-csrf', ({ request }) => {
+        seen.post = request.headers.get('X-XSRF-TOKEN')
+        return HttpResponse.json({ ok: true })
+      }),
+      http.get('/api/v1/test-csrf', ({ request }) => {
+        seen.get = request.headers.get('X-XSRF-TOKEN')
+        return HttpResponse.json({ ok: true })
+      })
+    )
+
+    await apiClient.post('/api/v1/test-csrf', {})
+    await apiClient.get('/api/v1/test-csrf')
+
+    expect(seen.post).toBe('token-de-prueba')
+    expect(seen.get).toBeNull()
+    document.cookie = 'XSRF-TOKEN=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/'
+  })
+
+  it('asks the backend for the CSRF cookie when it is missing (spec 003, T3)', async () => {
+    let csrfCalls = 0
+    server.use(
+      http.get('/api/v1/auth/csrf', () => {
+        csrfCalls += 1
+        return new HttpResponse(null, { status: 204 })
+      }),
+      http.post('/api/v1/test-csrf-missing', () => HttpResponse.json({ ok: true }))
+    )
+
+    await apiClient.post('/api/v1/test-csrf-missing', {})
+
+    expect(csrfCalls).toBe(1)
+  })
 })
