@@ -167,8 +167,8 @@ class VerificationServiceTest {
         when(verifications.findPendingByStudy(7L)).thenReturn(List.of(
                 new PendingRecord("Bolsa", 50L, 30L), new PendingRecord("Bolsa", 51L, 31L)));
 
-        assertEquals(1, service.pending(7L, 30L).size());
-        assertEquals(2, service.pending(7L, null).size());
+        assertEquals(1, service.pending(checker, 7L, 30L).size());
+        assertEquals(2, service.pending(checker, 7L, null).size());
     }
 
     @Test

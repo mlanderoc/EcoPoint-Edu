@@ -8,6 +8,7 @@ import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Correction;
 import com.ecopoint.model.DensityMeasurement;
 import com.ecopoint.model.Institution;
+import com.ecopoint.model.Permission;
 import com.ecopoint.model.QualityStatus;
 import com.ecopoint.model.Quartering;
 import com.ecopoint.model.QuarteringResult;
@@ -26,6 +27,7 @@ import com.ecopoint.persistence.ShiftRepository;
 import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.VerificationRepository;
 import com.ecopoint.persistence.WasteBagRepository;
+import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.DensityValidator;
 import com.ecopoint.validation.QuarteringValidator;
 import com.ecopoint.validation.ShiftValidator;
@@ -102,11 +104,13 @@ public class VerificationService {
     /**
      * Lists the records of a study still pending verification.
      *
+     * @param actor   user that asks; needs the verification permission
      * @param studyId study id
      * @param shiftId shift to keep, or null for the whole study
      * @return pending records ordered by shift
      */
-    public List<PendingRecord> pending(Long studyId, Long shiftId) {
+    public List<PendingRecord> pending(User actor, Long studyId, Long shiftId) {
+        AccessPolicy.require(actor, Permission.VERIFY_RECORDS);
         return verifications.findPendingByStudy(studyId).stream()
                 .filter(pending -> shiftId == null || Objects.equals(pending.shiftId(), shiftId))
                 .toList();
