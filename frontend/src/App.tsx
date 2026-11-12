@@ -10,6 +10,7 @@ import { AuthProvider, RequireAuth, RequireRole, LoginPage, useAuth } from '@/fe
 import { AppLayout } from '@/components/layout'
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
 import { InstitutionsPage, SourcesPage, UsersPage, CrewsPage, CategoriesPage } from '@/features/admin'
+import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -110,10 +111,23 @@ export function AppRoutes() {
             path="/estudios"
             element={
               <RoutedAppLayout>
-                <PlaceholderPage
-                  title="Configuración del Estudio"
-                  description="Planificación de los 8 días de muestreo y asignación de cuadrillas."
-                />
+                <StudiesPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route
+            path="/estudios/nuevo"
+            element={
+              <RoutedAppLayout>
+                <NewStudyPage />
+              </RoutedAppLayout>
+            }
+          />
+          <Route
+            path="/estudios/:id"
+            element={
+              <RoutedAppLayout>
+                <StudyDetailPage />
               </RoutedAppLayout>
             }
           />

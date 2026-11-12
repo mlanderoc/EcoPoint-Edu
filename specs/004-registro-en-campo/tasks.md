@@ -93,15 +93,16 @@
 
 ## Fase 4 — Configuración del Estudio de Caracterización
 
-- [ ] **T314. Planificador de fechas y propuesta de 7 días hábiles (R-330, CA-301).**
+- [x] **T314. Planificador de fechas y propuesta de 7 días hábiles (R-330, CA-301).**
   Implementar la utilidad `calculateSamplingDays(startDate: string): string[]` que, dado el Día 1, calcula automáticamente los siguientes 7 días hábiles consecutivos (omitiendo sábados y domingos). Integrar en el formulario de creación de estudio (`/estudios/nuevo`).
   *Verificación:* `test('ca301_samplingDaysProposalSkipsWeekends')` verifica que al ingresar lunes 2 de marzo de 2026, proponga 3, 4, 5, 6, 9, 10 y 11 de marzo.
 
-- [ ] **T315. Formulario de configuración del estudio y asignación de cuadrillas (R-331, R-333).**
-  Completar el formulario de estudio permitiendo seleccionar fuentes participantes, asignar cuadrillas a los turnos mañana/tarde y mostrar el banner destacado: *"Día 1: Día de descarte: no entra en los cálculos"*.
-  *Verificación:* Pruebas de integración validando la asignación de cuadrillas y el rótulo de descarte del día 1.
+- [x] **T315. Formulario de configuración del estudio y asignación de cuadrillas (R-331, R-333).**
+  Completar el formulario de estudio permitiendo seleccionar fuentes participantes y mostrar el banner destacado: *"Día 1: Día de descarte: no entra en los cálculos"*.
+  La cuadrilla de cada turno se asigna al abrirlo (T317, R-341), porque la API de la spec 003 la guarda en el turno.
+  *Verificación:* Pruebas de integración validando las fuentes participantes y el rótulo de descarte del día 1.
 
-- [ ] **T316. Monitor de ciclo de vida del estudio y control de cierres (R-332, CA-309).**
+- [x] **T316. Monitor de ciclo de vida del estudio y control de cierres (R-332, CA-309).**
   Vista `/estudios/:id` con la barra de progreso de los 8 días. Botón para avanzar o cerrar el estudio con diálogo de confirmación. Si el cierre es rechazado por la API debido a registros pendientes, mostrar el motivo exacto en un panel explicativo.
   *Verificación:* `test('ca309_studyClosingRejectionDisplaysExactReason')` simula rechazo 422 y verifica la visualización del motivo al usuario.
 

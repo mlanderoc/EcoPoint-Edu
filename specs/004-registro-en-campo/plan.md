@@ -199,10 +199,10 @@ Basada en la identidad visual del logo de **EcoPoint Edu** y los lineamientos de
   - **Planificador Inteligente de Fechas (R-330, CA-301):** Función `calculateSamplingDays(startDate)` que calcula automáticamente los siguientes 7 días hábiles consecutivos (lunes a viernes), excluyendo sábados y domingos. El docente puede ajustar cualquier fecha si hay festivos o jornadas especiales.
   - El Día 1 se resalta visualmente con un banner informativo: *"Día de descarte: no entra en los cálculos de generación per cápita ni línea base"* (R-333).
   - Selección de fuentes participantes (por defecto todas las activas, R-331).
-  - Asignación de cuadrillas por turno con opción de replicar la configuración a todos los días del estudio.
+  - La cuadrilla de cada turno se elige al abrir el turno (R-341), porque la API la guarda en el turno.
 - **Monitor de Ciclo de Vida del Estudio (`/estudios/:id`):**
   - Barra de progreso del estudio (Días 1 a 8, turnos M y T).
-  - Botones de transición de estado (`EN_EJECUCION`, `FINALIZADO`, `CERRADO`) protegidos con diálogo de confirmación.
+  - Botón de transición al siguiente estado (`PLANIFICADO` → `EN_EJECUCION` → `EN_DEPURACION` → `CERRADO`, y reapertura con motivo) protegido con diálogo de confirmación.
   - Si una transición está bloqueada por reglas de negocio (ej. registros pendientes de verificación, RN-014), el sistema muestra el motivo exacto en un cuadro explicativo rojo (R-332, CA-309).
 
 ### 5.5 Flujo de Registro en Campo (Móvil First, 5 Pasos)
