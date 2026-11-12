@@ -3,6 +3,7 @@ package com.ecopoint.persistence;
 import com.ecopoint.model.VerifiableRecord;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Storage contract for the double registration (spec 002, R-030): stores the
@@ -28,4 +29,14 @@ public interface VerificationRepository {
      * @return pending records ordered by shift
      */
     List<PendingRecord> findPendingByStudy(Long studyId);
+
+    /**
+     * Returns the shift of a verifiable record.
+     *
+     * @param recordType record type as {@code VerifiableRecord.getRecordType()} names it,
+     *                   e.g. "Bolsa" or "Población del turno"
+     * @param recordId   record id
+     * @return the shift id, or empty if the record does not exist
+     */
+    Optional<Long> findShiftOfRecord(String recordType, Long recordId);
 }

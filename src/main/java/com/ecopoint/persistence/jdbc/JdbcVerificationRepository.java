@@ -13,6 +13,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * PostgreSQL implementation of {@link VerificationRepository}. It writes the
@@ -24,6 +26,11 @@ import java.util.List;
  */
 @Repository
 public class JdbcVerificationRepository implements VerificationRepository {
+
+    /** Table of each verifiable record type; the table names are fixed, never user input. */
+    private static final Map<String, String> TABLE_BY_RECORD_TYPE = Map.of(
+            "Población del turno", "POBLACION_TURNO", "Bolsa", "BOLSA", "Cuarteo", "CUARTEO",
+            "Medición de densidad", "MEDICION_DENSIDAD");
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -54,6 +61,17 @@ public class JdbcVerificationRepository implements VerificationRepository {
                         new MapSqlParameterSource("estudio", studyId),
                         (rs, row) -> new PendingRecord(rs.getString("tipo_registro"), rs.getLong("id_registro"),
                                 rs.getLong("id_turno"))));
+    }
+
+    @Override
+    public Optional<Long> findShiftOfRecord(String recordType, Long recordId) {
+        String table = TABLE_BY_RECORD_TYPE.get(recordType);
+        if (table == null) {
+            return Optional.empty();
+        }
+        return DataAccessTranslator.execute("buscar el turno del registro " + recordId,
+                () -> jdbc.queryForList("SELECT id_turno FROM " + table + " WHERE id = :id",
+                        new MapSqlParameterSource("id", recordId), Long.class).stream().findFirst());
     }
 
     private static String tableOf(VerifiableRecord record) {
