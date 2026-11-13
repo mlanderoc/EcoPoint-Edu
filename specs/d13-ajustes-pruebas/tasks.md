@@ -56,7 +56,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
   *Verificación:* `@WebMvcTest` de las rutas y permisos (403 para el estudiante); IT de cancelar, eliminar, cambiar contraseña y `GET /users?q=`.
   *Ajuste:* el perfil se consulta con una sola ruta, `GET /auth/me/profile` (datos, cuadrillas y totales), en vez de `/auth/me/activity`. El docente ve los totales de cada usuario en `GET /users`, así que no hace falta `GET /users/{id}/activity`. Las pruebas de las rutas nuevas están en `AdjustmentsD13IT`.
 
-- [ ] **A08. Mensajes sin códigos.** Quitar "(RN-021)" y cualquier otro código de los mensajes de excepción visibles para el usuario (R-134). *(Estefanía)*
+- [x] **A08. Mensajes sin códigos.** Quitar "(RN-021)" y cualquier otro código de los mensajes de excepción visibles para el usuario (R-134). *(Estefanía)*
   *Verificación:* prueba que recorre los mensajes de `BusinessRuleException` en las pruebas del dominio y busca el patrón.
 
 ## Fase 3 — Frontend común

@@ -309,7 +309,7 @@ public class SamplingShift {
     private void requireOpen() {
         if (!isOpen()) {
             throw new BusinessRuleException("El turno " + getCode()
-                    + " está cerrado y no admite cambios (RN-021).");
+                    + " está cerrado y no admite cambios.");
         }
     }
 
