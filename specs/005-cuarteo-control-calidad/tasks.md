@@ -29,13 +29,13 @@ Reglas: en orden, un commit por responsable, `./mvnw verify`, `npm test`, `npm r
 
 ## Fase 3 — Verificación, historial y alertas
 
-- [ ] **T405. Bandeja de verificación y resumen.** Selector de estudio y turno, resumen de depuración, lista de registros con filtros, "Coincide con el papel", selección múltiple. *(Carlos)*
+- [x] **T405. Bandeja de verificación y resumen.** Selector de estudio y turno, resumen de depuración, lista de registros con filtros, "Coincide con el papel", selección múltiple. *(Carlos)*
   *Verificación:* CA-408 y CA-410 en Vitest.
 
-- [ ] **T406. Registro, corrección e historial.** *(Carlos)*
+- [x] **T406. Registro, corrección e historial.** *(Carlos)*
   *Verificación:* CA-404 (re-pesaje como corrección), CA-409 y CA-412.
 
-- [ ] **T407. Alertas.** Bandeja con filtros, enlace al registro, atención con observación y contador en el menú. *(Carlos)*
+- [x] **T407. Alertas.** Bandeja con filtros, enlace al registro, atención con observación y contador en el menú. *(Carlos)*
   *Verificación:* CA-411.
 
 ## Fase 4 — Cierre

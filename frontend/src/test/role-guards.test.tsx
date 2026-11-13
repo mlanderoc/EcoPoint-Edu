@@ -67,7 +67,7 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311, RN-081)',
       </MemoryRouter>
     )
     expect(screen.getByText('Campo')).toBeInTheDocument()
-    expect(screen.getByText('Bolsas')).toBeInTheDocument()
+    expect(screen.getByText('Calidad')).toBeInTheDocument()
     expect(screen.queryByText('Estudios')).toBeNull()
     expect(screen.queryByText('Admin')).toBeNull()
   })

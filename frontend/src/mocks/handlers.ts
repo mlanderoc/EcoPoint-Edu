@@ -19,8 +19,12 @@ import {
   mockUsers,
 } from './data/seedData'
 import {
+  Alert,
   CharacterizationStudy,
+  CorrectionEntry,
   Crew,
+  RecordField,
+  VerifiableRecord,
   DensityMeasurement,
   Quartering,
   WasteGroup,
@@ -55,9 +59,11 @@ let crewsState: Crew[] = [...mockCrews]
 let categoriesState: WasteCategory[] = [...mockCategories]
 let studiesState: CharacterizationStudy[] = [{ ...mockStudy }]
 let shiftsState: MockShift[] = cloneShifts()
-let bagsState: WasteBag[] = [...mockBags]
+let bagsState: WasteBag[] = structuredClone(mockBags)
 let quarteringsState: Quartering[] = []
 let densitiesState: DensityMeasurement[] = []
+let alertsState: Alert[] = []
+let correctionsState: { type: string; id: number; entry: CorrectionEntry }[] = []
 let nextId = 1000
 
 function newId(): number {
@@ -461,6 +467,9 @@ export const handlers = [
         verifiedBy: null, verifiedAt: null },
     }
     bagsState.push(created)
+    if (created.atypical) {
+      raiseAlert('VALOR_ATIPICO', 'Bolsa', created.id, `Valor atípico en la bolsa ${created.label}. Revise antes de verificar.`)
+    }
     return HttpResponse.json(created, { status: 201 })
   }),
 
@@ -498,6 +507,9 @@ export const handlers = [
     const body = (await request.json()) as { sampleWeight: number; results: { categoryId: number; weight: number }[] }
     const quartering = buildQuartering(shift, Number(body.sampleWeight), body.results)
     quarteringsState.push(quartering)
+    if (quartering.qualityStatus === 'NO_CONFORME') {
+      raiseAlert('CUARTEO_NO_CONFORME', 'Cuarteo', quartering.id, `Cuarteo no conforme en el turno ${shiftCode(shift.dayNumber, shift.type)}: la diferencia supera el 2 %. Vuelva a pesar.`)
+    }
     return HttpResponse.json(quartering, { status: 201 })
   }),
 
@@ -540,7 +552,199 @@ export const handlers = [
     densitiesState.push(density)
     return HttpResponse.json(density, { status: 201 })
   }),
+
+  // --- DOUBLE ENTRY, HISTORY AND ALERTS (spec 005) ---
+  http.get('/api/v1/studies/:id/verification-summary', ({ params }) => {
+    const shifts = shiftsState.filter((shift) => shift.studyId === Number(params.id)).map((shift) => {
+      const records = recordsOf(shift)
+      const count = (status: string) => records.filter((record) => record.verification.status === status).length
+      const quartering = quarteringsState.find((item) => item.shiftId === shift.id)
+      return { shiftId: shift.id, dayNumber: shift.dayNumber, type: shift.type, code: shiftCode(shift.dayNumber, shift.type),
+        pending: count('PENDIENTE'), verified: count('VERIFICADO'), corrected: count('CORREGIDO'),
+        nonConformingQuartering: quartering?.qualityStatus === 'NO_CONFORME' }
+    })
+    const sum = (key: 'pending' | 'verified' | 'corrected') => shifts.reduce((total, shift) => total + shift[key], 0)
+    const nonConforming = shifts.filter((shift) => shift.nonConformingQuartering).length
+    return HttpResponse.json({ shifts, pending: sum('pending'), verified: sum('verified'), corrected: sum('corrected'),
+      nonConformingQuarterings: nonConforming, readyToClose: sum('pending') === 0 && nonConforming === 0 })
+  }),
+
+  http.get('/api/v1/shifts/:shiftId/records', ({ params }) => {
+    const shift = findShift(params)
+    return shift ? HttpResponse.json(recordsOf(shift)) : notFound(`/api/v1/shifts/${params.shiftId}/records`, 'Turno')
+  }),
+
+  http.get('/api/v1/records/:type/:id/history', ({ params }) => HttpResponse.json(
+    correctionsState.filter((item) => item.type === params.type && item.id === Number(params.id)).map((item) => item.entry))),
+
+  http.get('/api/v1/records/:type/:id', ({ params }) => {
+    const record = findRecord(String(params.type), Number(params.id))
+    return record ? HttpResponse.json(record) : notFound(`/api/v1/records/${params.type}/${params.id}`, 'Registro')
+  }),
+
+  http.post('/api/v1/verifications/:type/:id', ({ params }) => {
+    const path = `/api/v1/verifications/${params.type}/${params.id}`
+    const target = findTarget(String(params.type), Number(params.id))
+    if (!target) return notFound(path, 'Registro')
+    if (target.verification.enteredBy === activeUser?.id) {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'No puede verificar un registro que usted mismo digitó: debe hacerlo otra persona (doble registro).', path)
+    }
+    if (target.verification.status !== 'PENDIENTE') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'El registro ya fue verificado.', path)
+    }
+    Object.assign(target.verification, { status: 'VERIFICADO', verifiedBy: activeUser?.id ?? null, verifiedAt: new Date().toISOString() })
+    return HttpResponse.json(findRecord(String(params.type), Number(params.id)))
+  }),
+
+  http.post('/api/v1/verifications/:type/:id/correct', async ({ params, request }) => {
+    const path = `/api/v1/verifications/${params.type}/${params.id}/correct`
+    const type = String(params.type)
+    const id = Number(params.id)
+    const target = findTarget(type, id)
+    if (!target) return notFound(path, 'Registro')
+    if (target.verification.enteredBy === activeUser?.id) {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'No puede corregir un registro que usted mismo digitó: debe hacerlo otra persona (doble registro).', path)
+    }
+    const body = (await request.json()) as { values: Record<string, number>; reason?: string }
+    if (!body.reason?.trim()) {
+      return apiError(400, 'ERR_INVALID_DATA', 'El motivo de la corrección es obligatorio.', path,
+        [{ field: 'reason', message: 'El motivo de la corrección es obligatorio.' }])
+    }
+    const changed = applyCorrection(type, id, body.values, body.reason.trim())
+    if (changed === 0) {
+      return apiError(400, 'ERR_INVALID_DATA', 'No hay cambios que corregir: los valores son iguales.', path)
+    }
+    Object.assign(target.verification, { status: 'CORREGIDO', verifiedBy: activeUser?.id ?? null, verifiedAt: new Date().toISOString() })
+    return HttpResponse.json(findRecord(type, id))
+  }),
+
+  http.get('/api/v1/alerts', ({ request }) => {
+    const url = new URL(request.url)
+    const attended = url.searchParams.get('attended')
+    const type = url.searchParams.get('type')
+    const items = alertsState
+      .filter((alert) => attended === null || String(alert.attended) === attended)
+      .filter((alert) => !type || alert.type === type)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    return HttpResponse.json(page(items, url))
+  }),
+
+  http.post('/api/v1/alerts/:id/attend', async ({ params, request }) => {
+    const path = `/api/v1/alerts/${params.id}/attend`
+    const alert = alertsState.find((item) => item.id === Number(params.id))
+    if (!alert) return notFound(path, 'Alerta')
+    if (alert.attended) return apiError(422, 'ERR_BUSINESS_RULE', 'La alerta ya fue atendida.', path)
+    const body = (await request.json()) as { reason?: string }
+    if (!body.reason?.trim()) {
+      return apiError(400, 'ERR_INVALID_DATA', 'Escriba una observación sobre cómo se atendió la alerta.', path,
+        [{ field: 'reason', message: 'Escriba una observación sobre cómo se atendió la alerta.' }])
+    }
+    Object.assign(alert, { attended: true, attendedBy: activeUser?.id ?? null, attendedAt: new Date().toISOString(),
+      note: body.reason.trim() })
+    return HttpResponse.json(alert)
+  }),
 ]
+
+type MockVerification = WasteBag['verification']
+
+function field(name: string, label: string, value: number | string | null, editable: boolean): RecordField {
+  return { field: name, label, value, editable }
+}
+
+function recordsOf(shift: MockShift): VerifiableRecord[] {
+  const code = shiftCode(shift.dayNumber, shift.type)
+  const base = { shiftId: shift.id, shiftCode: code }
+  const records: VerifiableRecord[] = []
+  if (shift.population) {
+    const population = shift.population
+    records.push({ ...base, recordType: 'population', recordName: 'Población del turno', recordId: population.id ?? 0,
+      title: `Población del turno ${code}`, verification: population.verification as MockVerification,
+      fields: [field('students', 'Estudiantes', population.students, true), field('teachers', 'Docentes', population.teachers, true),
+        field('staff', 'Personal', population.staff, true), field('total', 'Total', population.total, false)] })
+  }
+  bagsState.filter((bag) => bag.shiftId === shift.id).forEach((bag) => records.push({ ...base, recordType: 'bag',
+    recordName: 'Bolsa', recordId: bag.id, title: `Bolsa ${bag.label}`, verification: bag.verification,
+    fields: [field('source', 'Fuente', bag.sourceCode, false), field('grossWeight', 'Peso bruto (kg)', bag.grossWeight, true),
+      field('tare', 'Tara (kg)', bag.tare, true), field('volume', 'Volumen (m³)', bag.volume, true),
+      field('netWeight', 'Peso neto (kg)', bag.netWeight, false), field('density', 'Densidad (kg/m³)', bag.density, false)] }))
+  const quartering = quarteringsState.find((item) => item.shiftId === shift.id)
+  if (quartering) {
+    records.push({ ...base, recordType: 'quartering', recordName: 'Cuarteo', recordId: quartering.id, title: `Cuarteo ${code}`,
+      verification: quartering.verification,
+      fields: [field('sampleWeight', 'Submuestra (kg)', quartering.sampleWeight, true),
+        ...quartering.results.map((result) => field(`result:${result.categoryId}`, `${result.categoryName} (kg)`, result.weight, true)),
+        field('differencePercent', 'Diferencia (%)', quartering.differencePercent, false),
+        field('qualityStatus', 'Control del 2 %', quartering.qualityStatus === 'CONFORME' ? 'Conforme'
+          : quartering.qualityStatus === 'NO_CONFORME' ? 'No conforme' : 'Anulado', false)] })
+  }
+  const density = densitiesState.find((item) => item.shiftId === shift.id)
+  if (density) {
+    records.push({ ...base, recordType: 'density', recordName: 'Medición de densidad', recordId: density.id,
+      title: `Medición de densidad ${code}`, verification: density.verification,
+      fields: [field('containerVolume', 'Volumen del recipiente (m³)', density.containerVolume, true),
+        field('netWeight', 'Peso neto (kg)', density.netWeight, true), field('density', 'Densidad (kg/m³)', density.density, false)] })
+  }
+  return records
+}
+
+function findRecord(type: string, id: number): VerifiableRecord | undefined {
+  return shiftsState.flatMap(recordsOf).find((record) => record.recordType === type && record.recordId === id)
+}
+
+function findTarget(type: string, id: number): { verification: MockVerification } | undefined {
+  if (type === 'population') {
+    const population = shiftsState.find((shift) => shift.population?.id === id)?.population
+    return population ? { verification: population.verification as MockVerification } : undefined
+  }
+  if (type === 'bag') return bagsState.find((bag) => bag.id === id)
+  if (type === 'quartering') return quarteringsState.find((item) => item.id === id)
+  if (type === 'density') return densitiesState.find((item) => item.id === id)
+  return undefined
+}
+
+function applyCorrection(type: string, id: number, values: Record<string, number>, reason: string): number {
+  const record = findRecord(type, id)
+  let changed = 0
+  for (const [name, value] of Object.entries(values ?? {})) {
+    const current = record?.fields.find((item) => item.field === name)
+    if (!current || !current.editable || Number(current.value) === Number(value)) continue
+    changed += 1
+    correctionsState.push({ type, id, entry: { field: name, oldValue: String(current.value), newValue: String(value), reason,
+      userId: activeUser?.id ?? 0, at: new Date().toISOString() } })
+    if (type === 'population') {
+      const population = shiftsState.find((shift) => shift.population?.id === id)?.population as unknown as Record<string, number>
+      population[name] = Number(value)
+      population.total = population.students + population.teachers + population.staff
+    } else if (type === 'bag') {
+      const bag = bagsState.find((item) => item.id === id) as WasteBag
+      ;(bag as unknown as Record<string, number>)[name] = Number(value)
+      bag.netWeight = round2(bag.grossWeight - bag.tare)
+      bag.density = bag.volume > 0 ? round2(bag.netWeight / bag.volume) : null
+    } else if (type === 'density') {
+      const density = densitiesState.find((item) => item.id === id) as DensityMeasurement
+      ;(density as unknown as Record<string, number>)[name] = Number(value)
+      density.density = density.containerVolume > 0 ? round2(density.netWeight / density.containerVolume) : null
+    } else if (type === 'quartering') {
+      const quartering = quarteringsState.find((item) => item.id === id) as Quartering
+      if (name === 'sampleWeight') quartering.sampleWeight = Number(value)
+      const result = quartering.results.find((item) => `result:${item.categoryId}` === name)
+      if (result) result.weight = Number(value)
+    }
+  }
+  if (type === 'quartering' && changed > 0) {
+    const quartering = quarteringsState.find((item) => item.id === id) as Quartering
+    const shift = shiftsState.find((item) => item.id === quartering.shiftId) as MockShift
+    const rebuilt = buildQuartering(shift, quartering.sampleWeight,
+      quartering.results.map((item) => ({ categoryId: item.categoryId, weight: item.weight })))
+    Object.assign(quartering, { ...rebuilt, id: quartering.id, verification: quartering.verification })
+  }
+  return changed
+}
+
+function raiseAlert(type: Alert['type'], targetType: string, targetId: number, description: string) {
+  alertsState.push({ id: newId(), type, targetType, targetId, description, createdAt: new Date().toISOString(),
+    attended: false, attendedBy: null, attendedAt: null, note: null })
+}
 
 function pendingVerification() {
   return { status: 'PENDIENTE' as const, enteredBy: activeUser?.id ?? null, enteredAt: new Date().toISOString(),
@@ -572,11 +776,7 @@ function buildQuartering(shift: MockShift, sampleWeight: number,
 }
 
 function cloneShifts(): MockShift[] {
-  return mockShifts.map((shift) => ({
-    ...shift,
-    population: shift.population ? { ...shift.population } : null,
-    sourcesWithoutGeneration: [...shift.sourcesWithoutGeneration],
-  }))
+  return structuredClone(mockShifts)
 }
 
 /** Resets the mock state between tests; null leaves the user logged out. */
@@ -592,9 +792,11 @@ export function resetMockState(userRole?: UserRole | null) {
   studiesState = [{ ...mockStudy, days: mockStudy.days.map((day) => ({ ...day })),
     participatingSourceIds: [...mockStudy.participatingSourceIds] }]
   shiftsState = cloneShifts()
-  bagsState = [...mockBags]
+  bagsState = structuredClone(mockBags)
   quarteringsState = []
   densitiesState = []
+  alertsState = []
+  correctionsState = []
   nextId = 1000
 }
 
