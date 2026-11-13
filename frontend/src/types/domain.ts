@@ -183,3 +183,39 @@ export interface WasteBag {
   atypical: boolean
   verification: Verification
 }
+
+export interface QuarteringResultItem {
+  categoryId: number
+  categoryName: string
+  group: WasteGroup
+  weight: number
+  percentage: number | null
+}
+
+/** QuarteringResponse of the API (RN-050 to RN-054). */
+export interface Quartering {
+  id: number
+  shiftId: number
+  shiftNetWeight: number
+  sampleWeight: number
+  totalClassifiedWeight: number
+  differenceKg: number
+  differencePercent: number
+  qualityStatus: QualityStatus
+  results: QuarteringResultItem[]
+  groupComposition: Record<WasteGroup, number>
+  annulReason: string | null
+  annulledBy: number | null
+  annulledAt: string | null
+  verification: Verification
+}
+
+/** DensityDto of the API (RN-057). */
+export interface DensityMeasurement {
+  id: number
+  shiftId: number
+  containerVolume: number
+  netWeight: number
+  density: number | null
+  verification: Verification
+}

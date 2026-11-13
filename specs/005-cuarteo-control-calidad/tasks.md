@@ -21,10 +21,10 @@ Reglas: en orden, un commit por responsable, `./mvnw verify`, `npm test`, `npm r
 - [x] **T402. Utilidad de control en vivo.** Suma, diferencia en kg y %, estado contra la tolerancia, rango de submuestra y "muestra completa". *(Carlos)*
   *Verificación:* CA-400, CA-401, CA-402, CA-403.
 
-- [ ] **T403. Pantalla de cuarteo.** Subcategorías por grupo, aviso de peligrosos, barra en vivo, guardado, composición, aviso de no conforme y anulación con motivo. Accesos desde el turno. *(Carlos)*
+- [x] **T403. Pantalla de cuarteo.** Subcategorías por grupo, aviso de peligrosos, barra en vivo, guardado, composición, aviso de no conforme y anulación con motivo. Accesos desde el turno. *(Carlos)*
   *Verificación:* CA-403, CA-405, CA-406 en Vitest.
 
-- [ ] **T404. Pantalla de densidad.** Volumen y peso con la densidad en vivo y los recipientes frecuentes. *(Carlos)*
+- [x] **T404. Pantalla de densidad.** Volumen y peso con la densidad en vivo y los recipientes frecuentes. *(Carlos)*
   *Verificación:* CA-407.
 
 ## Fase 3 — Verificación, historial y alertas

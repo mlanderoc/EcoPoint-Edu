@@ -21,6 +21,9 @@ import {
 import {
   CharacterizationStudy,
   Crew,
+  DensityMeasurement,
+  Quartering,
+  WasteGroup,
   GenerationSource,
   Institution,
   SamplingShift,
@@ -53,6 +56,8 @@ let categoriesState: WasteCategory[] = [...mockCategories]
 let studiesState: CharacterizationStudy[] = [{ ...mockStudy }]
 let shiftsState: MockShift[] = cloneShifts()
 let bagsState: WasteBag[] = [...mockBags]
+let quarteringsState: Quartering[] = []
+let densitiesState: DensityMeasurement[] = []
 let nextId = 1000
 
 function newId(): number {
@@ -134,8 +139,8 @@ function toShiftResponse(shift: MockShift): SamplingShift {
     bagCount: bags.length,
     totalNetWeight: round2(bags.reduce((sum, bag) => sum + bag.netWeight, 0)),
     sourcesWithoutGeneration: [...shift.sourcesWithoutGeneration].sort((a, b) => a - b),
-    hasQuartering: false,
-    hasDensity: false,
+    hasQuartering: quarteringsState.some((item) => item.shiftId === shift.id),
+    hasDensity: densitiesState.some((item) => item.shiftId === shift.id),
     sources: progressOf(shift),
   }
 }
@@ -475,7 +480,96 @@ export const handlers = [
     shift.sourcesWithoutGeneration = shift.sourcesWithoutGeneration.filter((id) => id !== Number(params.sourceId))
     return HttpResponse.json(toShiftResponse(shift))
   }),
+
+  // --- QUARTERING AND DENSITY (section 5.3) ---
+  http.get('/api/v1/shifts/:shiftId/quartering', ({ params }) => {
+    const quartering = quarteringsState.find((item) => item.shiftId === Number(params.shiftId))
+    return quartering ? HttpResponse.json(quartering)
+      : notFound(`/api/v1/shifts/${params.shiftId}/quartering`, 'Cuarteo del turno')
+  }),
+
+  http.post('/api/v1/shifts/:shiftId/quartering', async ({ params, request }) => {
+    const path = `/api/v1/shifts/${params.shiftId}/quartering`
+    const shift = findShift(params)
+    if (!shift) return notFound(path, 'Turno')
+    if (quarteringsState.some((item) => item.shiftId === shift.id)) {
+      return apiError(422, 'ERR_BUSINESS_RULE', `El turno ${shiftCode(shift.dayNumber, shift.type)} ya tiene un cuarteo registrado.`, path)
+    }
+    const body = (await request.json()) as { sampleWeight: number; results: { categoryId: number; weight: number }[] }
+    const quartering = buildQuartering(shift, Number(body.sampleWeight), body.results)
+    quarteringsState.push(quartering)
+    return HttpResponse.json(quartering, { status: 201 })
+  }),
+
+  http.post('/api/v1/shifts/:shiftId/quartering/annul', async ({ params, request }) => {
+    const path = `/api/v1/shifts/${params.shiftId}/quartering/annul`
+    const quartering = quarteringsState.find((item) => item.shiftId === Number(params.shiftId))
+    if (!quartering) return notFound(path, 'Cuarteo del turno')
+    if (quartering.qualityStatus !== 'NO_CONFORME') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Solo se puede anular un cuarteo no conforme.', path)
+    }
+    const body = (await request.json()) as { reason?: string }
+    if (!body.reason?.trim()) {
+      return apiError(400, 'ERR_INVALID_DATA', 'Debe escribir el motivo para anular el cuarteo.', path,
+        [{ field: 'reason', message: 'Debe escribir el motivo para anular el cuarteo.' }])
+    }
+    Object.assign(quartering, { qualityStatus: 'ANULADO', annulReason: body.reason.trim(),
+      annulledBy: activeUser?.id ?? null, annulledAt: new Date().toISOString() })
+    return HttpResponse.json(quartering)
+  }),
+
+  http.get('/api/v1/shifts/:shiftId/density', ({ params }) => {
+    const density = densitiesState.find((item) => item.shiftId === Number(params.shiftId))
+    return density ? HttpResponse.json(density)
+      : notFound(`/api/v1/shifts/${params.shiftId}/density`, 'Medición de densidad del turno')
+  }),
+
+  http.post('/api/v1/shifts/:shiftId/density', async ({ params, request }) => {
+    const path = `/api/v1/shifts/${params.shiftId}/density`
+    const shift = findShift(params)
+    if (!shift) return notFound(path, 'Turno')
+    if (densitiesState.some((item) => item.shiftId === shift.id)) {
+      return apiError(422, 'ERR_BUSINESS_RULE', `El turno ${shiftCode(shift.dayNumber, shift.type)} ya tiene una medición de densidad.`, path)
+    }
+    const body = (await request.json()) as { containerVolume: number; netWeight: number }
+    const density: DensityMeasurement = {
+      id: newId(), shiftId: shift.id, containerVolume: Number(body.containerVolume), netWeight: Number(body.netWeight),
+      density: Number(body.containerVolume) > 0 ? round2(Number(body.netWeight) / Number(body.containerVolume)) : null,
+      verification: pendingVerification(),
+    }
+    densitiesState.push(density)
+    return HttpResponse.json(density, { status: 201 })
+  }),
 ]
+
+function pendingVerification() {
+  return { status: 'PENDIENTE' as const, enteredBy: activeUser?.id ?? null, enteredAt: new Date().toISOString(),
+    verifiedBy: null, verifiedAt: null }
+}
+
+function buildQuartering(shift: MockShift, sampleWeight: number,
+                         inputs: { categoryId: number; weight: number }[]): Quartering {
+  const results = inputs.map((input) => {
+    const category = categoriesState.find((item) => item.id === input.categoryId)
+    return { categoryId: input.categoryId, categoryName: category?.name ?? `#${input.categoryId}`,
+      group: (category?.group ?? 'NEGRO') as WasteGroup, weight: Number(input.weight), percentage: null as number | null }
+  })
+  const total = round2(results.reduce((sum, item) => sum + item.weight, 0))
+  results.forEach((item) => { item.percentage = total > 0 ? round2((item.weight * 100) / total) : 0 })
+  const groupComposition = { BLANCO: 0, VERDE: 0, NEGRO: 0, SIN_COLOR: 0 } as Record<WasteGroup, number>
+  for (const group of Object.keys(groupComposition) as WasteGroup[]) {
+    const weight = results.filter((item) => item.group === group).reduce((sum, item) => sum + item.weight, 0)
+    groupComposition[group] = total > 0 ? round2((weight * 100) / total) : 0
+  }
+  const differenceKg = round2(Math.abs(sampleWeight - total))
+  const differencePercent = round2((differenceKg * 100) / sampleWeight)
+  const shiftNet = round2(bagsState.filter((bag) => bag.shiftId === shift.id).reduce((sum, bag) => sum + bag.netWeight, 0))
+  return {
+    id: newId(), shiftId: shift.id, shiftNetWeight: shiftNet, sampleWeight, totalClassifiedWeight: total,
+    differenceKg, differencePercent, qualityStatus: differenceKg * 100 <= sampleWeight * 2 + 1e-9 ? 'CONFORME' : 'NO_CONFORME',
+    results, groupComposition, annulReason: null, annulledBy: null, annulledAt: null, verification: pendingVerification(),
+  }
+}
 
 function cloneShifts(): MockShift[] {
   return mockShifts.map((shift) => ({
@@ -499,6 +593,8 @@ export function resetMockState(userRole?: UserRole | null) {
     participatingSourceIds: [...mockStudy.participatingSourceIds] }]
   shiftsState = cloneShifts()
   bagsState = [...mockBags]
+  quarteringsState = []
+  densitiesState = []
   nextId = 1000
 }
 
