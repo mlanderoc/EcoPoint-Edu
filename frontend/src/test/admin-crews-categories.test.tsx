@@ -51,7 +51,7 @@ describe('Crews and Categories Administration (T313, R-323, R-324, RN-085)', () 
 
     // RN-085 visual warning test for the crew without teacher
     expect(await screen.findByText('Cuadrilla Sin Docente')).toBeInTheDocument()
-    const warning = await screen.findByText(/Alerta Preventiva RN-085/i)
+    const warning = await screen.findByText(/Cuadrilla sin docente responsable/i)
     expect(warning).toBeInTheDocument()
     expect(screen.getByText(/no cuenta con un docente responsable asignado/i)).toBeInTheDocument()
   })
@@ -84,7 +84,7 @@ describe('Crews and Categories Administration (T313, R-323, R-324, RN-085)', () 
 
     // If teacher is cleared, warning is shown and button is disabled
     await user.selectOptions(teacherSelect, '')
-    expect(await screen.findByText(/Alerta RN-085: Es obligatorio asignar un docente responsable/i)).toBeInTheDocument()
+    expect(await screen.findByText(/Es obligatorio asignar un docente responsable/i)).toBeInTheDocument()
     expect(saveBtn).toBeDisabled()
 
     // Select teacher and submit

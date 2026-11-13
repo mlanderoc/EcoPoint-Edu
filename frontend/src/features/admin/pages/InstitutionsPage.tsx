@@ -74,7 +74,7 @@ export function InstitutionsPage() {
             Instituciones Educativas
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            Gestión de planteles educativos participantes en el muestreo de caracterización (R-320).
+            Gestión de planteles educativos participantes en el muestreo de caracterización.
           </p>
         </div>
         <Button

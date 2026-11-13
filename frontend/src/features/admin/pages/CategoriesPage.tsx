@@ -99,7 +99,7 @@ export function CategoriesPage() {
             Subcategorías de Residuos
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            Clasificación oficial de subcategorías según los 4 códigos de color de la Res. 2184/2019 (R-324).
+            Clasificación oficial de subcategorías según los 4 códigos de color de la Res. 2184/2019.
           </p>
         </div>
         <Button

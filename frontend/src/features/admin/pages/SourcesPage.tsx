@@ -92,7 +92,7 @@ export function SourcesPage() {
             Fuentes de Generación
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            Puntos ecológicos y áreas físicas de generación de residuos en la institución (R-321).
+            Puntos ecológicos y áreas físicas de generación de residuos en la institución.
           </p>
         </div>
         <Button

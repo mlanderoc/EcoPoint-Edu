@@ -132,7 +132,7 @@ export function UsersPage() {
             Usuarios del Sistema
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            Gestión de docentes responsables y estudiantes universitarios participantes en la caracterización (R-322).
+            Gestión de docentes responsables y estudiantes universitarios participantes en la caracterización.
           </p>
         </div>
         <Button

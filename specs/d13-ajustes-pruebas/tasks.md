@@ -61,18 +61,18 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 
 ## Fase 3 — Frontend común
 
-- [ ] **A09. Cursor de mano.** Regla base en `index.css` (decisión T12). *(Carlos)*
+- [x] **A09. Cursor de mano.** Regla base en `index.css` (decisión T12). *(Carlos)*
   *Verificación:* revisión en el navegador; `npm run check:mobile`.
 
-- [ ] **A10. Atrás y Descartar.**
+- [x] **A10. Atrás y Descartar.**
   - `BackButton`, `useUnsavedChanges` y `ConfirmDiscardModal`.
   - Atrás en Población, Pesar bolsa, Turno, Cuarteo, Densidad, Registro, Detalle y Nuevo estudio.
   - Guardar y Descartar en los formularios de campo y administración.
 
-  *(Carlos)*
+  *Ajuste:* las ventanas de administración pasan a Guardar y Descartar en A14 y A15, que rehacen esas pantallas. Los botones Atrás miden 48 px, como pide R-301 en las pantallas de campo. *(Carlos)*
   *Verificación:* CA-316.
 
-- [ ] **A11. Sin códigos en pantalla.** Quitar los códigos de títulos y mensajes. Agregar la prueba que recorre las pantallas (decisión T13). *(Carlos)*
+- [x] **A11. Sin códigos en pantalla.** Quitar los códigos de títulos y mensajes. Agregar la prueba que recorre las pantallas (decisión T13). *(Carlos)*
   *Verificación:* CA-317.
 
 ## Fase 4 — Pantallas
