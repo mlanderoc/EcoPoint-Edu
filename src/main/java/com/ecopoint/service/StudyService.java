@@ -109,9 +109,8 @@ public class StudyService {
     @Transactional
     public CharacterizationStudy create(User actor, Long institutionId, List<LocalDate> dates) {
         AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
-        if (institutions.findById(institutionId).isEmpty()) {
-            throw new ResourceNotFoundException("Institución", institutionId);
-        }
+        StudyValidator.validateInstitutionAcceptsStudies(institutions.findById(institutionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Institución", institutionId)));
         CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
         study.scheduleDates(dates);
         StudyValidator.validate(study);
@@ -199,6 +198,36 @@ public class StudyService {
         return studies.save(study);
     }
 
+    /**
+     * Cancels a study being executed or cleaned, with a reason (RN-018). Its
+     * data is kept and its dates become free for another study.
+     *
+     * @param actor  teacher that acts
+     * @param id     study id
+     * @param reason reason for the cancellation
+     * @return the cancelled study
+     */
+    @Transactional
+    public CharacterizationStudy cancel(User actor, Long id, String reason) {
+        AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
+        CharacterizationStudy study = get(id);
+        study.cancel(actor.getId(), reason, LocalDateTime.now(clock));
+        return studies.save(study);
+    }
+
+    /**
+     * Deletes a planned study with its days and participating sources (RN-019).
+     *
+     * @param actor teacher that acts
+     * @param id    study id
+     */
+    @Transactional
+    public void delete(User actor, Long id) {
+        AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
+        get(id).requireDeletable();
+        studies.delete(id);
+    }
+
     private int activeParticipatingSources(CharacterizationStudy study) {
         Set<Long> participating = studies.findParticipatingSources(study.getId());
         return (int) sources.findByInstitution(study.getInstitutionId()).stream()
@@ -208,6 +237,9 @@ public class StudyService {
 
     private CharacterizationStudy editable(Long id) {
         CharacterizationStudy study = get(id);
+        if (study.getStatus() == StudyStatus.CANCELADO) {
+            throw new BusinessRuleException("El estudio está cancelado: no admite cambios.");
+        }
         if (study.getStatus().isReadOnly()) {
             throw new BusinessRuleException("El estudio está cerrado: reábralo para hacer cambios.");
         }

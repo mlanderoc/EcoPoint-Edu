@@ -30,6 +30,7 @@ import java.util.Set;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -49,6 +50,7 @@ class StudyServiceTest {
 
     private StudyRepository studies;
     private GenerationSourceRepository sources;
+    private InstitutionRepository institutions;
     private StudyService service;
     private final User teacher = new User(10L, "Daniela", "Arias", "d@unicesar.edu.co", UserRole.DOCENTE, INSTITUTION);
     private final User student = new User(11L, "Laura", "Pérez", "l@unicesar.edu.co",
@@ -59,7 +61,7 @@ class StudyServiceTest {
     void setUp() {
         studies = mock(StudyRepository.class);
         sources = mock(GenerationSourceRepository.class);
-        InstitutionRepository institutions = mock(InstitutionRepository.class);
+        institutions = mock(InstitutionRepository.class);
         Clock clock = Clock.fixed(Instant.parse("2026-11-12T12:00:00Z"), ZoneOffset.UTC);
         service = new StudyService(studies, institutions, sources, clock);
 
@@ -194,5 +196,51 @@ class StudyServiceTest {
         List<LocalDate> dates = new ArrayList<>();
         IntStream.range(0, 8).forEach(i -> dates.add(first.plusDays(i)));
         return dates;
+    }
+
+    @Test
+    void ca015_executingStudyIsCancelledWithReasonDateAndTeacher() {
+        stored(StudyStatus.EN_EJECUCION);
+
+        assertThrows(InvalidDataException.class, () -> service.cancel(teacher, 7L, ""));
+        CharacterizationStudy cancelled = service.cancel(teacher, 7L, "Fechas equivocadas");
+
+        assertEquals(StudyStatus.CANCELADO, cancelled.getStatus());
+        assertEquals(10L, cancelled.getCancellation().userId());
+        assertEquals(LocalDateTime.of(2026, 11, 12, 12, 0), cancelled.getCancellation().at());
+        assertThrows(AccessDeniedException.class, () -> service.cancel(student, 7L, "Motivo"));
+    }
+
+    @Test
+    void ca016_closedStudyCannotBeCancelledNorRescheduledWhenCancelled() {
+        stored(StudyStatus.CERRADO);
+        assertThrows(BusinessRuleException.class, () -> service.cancel(teacher, 7L, "Motivo"));
+
+        stored(StudyStatus.CANCELADO);
+        BusinessRuleException error = assertThrows(BusinessRuleException.class,
+                () -> service.reschedule(teacher, 7L, eightDays(MONDAY)));
+        assertTrue(error.getMessage().contains("cancelado"));
+    }
+
+    @Test
+    void ca017_onlyPlannedStudyIsDeleted() {
+        stored(StudyStatus.EN_EJECUCION);
+        assertThrows(BusinessRuleException.class, () -> service.delete(teacher, 7L));
+        verify(studies, never()).delete(7L);
+
+        stored(StudyStatus.PLANIFICADO);
+        service.delete(teacher, 7L);
+        verify(studies).delete(7L);
+        assertThrows(AccessDeniedException.class, () -> service.delete(student, 7L));
+    }
+
+    @Test
+    void ca005_inactiveInstitutionDoesNotAcceptNewStudies() {
+        Institution inactive = new Institution(INSTITUTION, "I.E.", "V");
+        inactive.deactivate();
+        when(institutions.findById(INSTITUTION)).thenReturn(Optional.of(inactive));
+
+        assertThrows(BusinessRuleException.class, () -> service.create(teacher, INSTITUTION, eightDays(MONDAY)));
+        verify(studies, never()).save(any());
     }
 }

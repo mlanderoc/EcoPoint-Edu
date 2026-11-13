@@ -4,6 +4,8 @@ import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
+import com.ecopoint.persistence.UserActivity;
+import com.ecopoint.persistence.UserActivityRepository;
 import com.ecopoint.persistence.UserRepository;
 import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.UserValidator;
@@ -13,6 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,32 +31,50 @@ public class UserService {
 
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
+    private final UserActivityRepository activity;
 
     /**
      * Creates the service.
      *
      * @param users           user repository
-     * @param passwordEncoder BCrypt password encoder
+     * @param passwordEncoder password hashing
+     * @param activity        totals of records by user
      */
-    public UserService(UserRepository users, PasswordEncoder passwordEncoder) {
+    public UserService(UserRepository users, PasswordEncoder passwordEncoder, UserActivityRepository activity) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
+        this.activity = activity;
     }
 
     /**
-     * Lists the users of the institution of the actor, with optional filters.
+     * Lists the users of the institution of the actor, with optional filters
+     * (R-322).
      *
-     * @param actor  user that asks
-     * @param role   role to keep, or null for all
-     * @param active true or false to filter by state, or null for all
-     * @return users ordered by last name and first name
+     * @param actor  teacher that acts
+     * @param role   role to keep, or null for both
+     * @param active true for the active ones, false for the inactive ones, null for all
+     * @param text   text to look for in the first name, last name or email, or null
+     * @return the users that match
      */
-    public List<User> list(User actor, UserRole role, Boolean active) {
+    public List<User> list(User actor, UserRole role, Boolean active, String text) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        String wanted = text == null ? "" : text.trim().toLowerCase(Locale.ROOT);
         return users.findByInstitution(actor.getInstitutionId()).stream()
                 .filter(user -> role == null || user.getRole() == role)
                 .filter(user -> active == null || user.isActive() == active)
+                .filter(user -> wanted.isEmpty() || matches(user, wanted))
                 .toList();
+    }
+
+    /**
+     * Returns the totals of records of every user, for the users table (R-322).
+     *
+     * @param actor teacher that acts
+     * @return the totals by user id
+     */
+    public Map<Long, UserActivity> activities(User actor) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        return activity.findAll();
     }
 
     /**
@@ -123,7 +145,8 @@ public class UserService {
     }
 
     /**
-     * Deactivates a user: it can no longer log in, but what it registered is kept.
+     * Deactivates a university student: he can no longer log in, but what he
+     * registered is kept. A teacher is never deactivated (RN-087).
      *
      * @param actor teacher that acts
      * @param id    user id
@@ -132,9 +155,29 @@ public class UserService {
     public User deactivate(User actor, Long id) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
         User user = find(id);
+        UserValidator.validateDeactivation(user);
         users.deactivate(id);
         user.deactivate();
         return user;
+    }
+
+    /**
+     * Activates a user again, so he can log in (RN-087).
+     *
+     * @param actor teacher that acts
+     * @param id    user id
+     * @return the user, now active
+     */
+    public User activate(User actor, Long id) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        User user = find(id);
+        user.activate();
+        return users.save(user);
+    }
+
+    private static boolean matches(User user, String wanted) {
+        return (user.getFirstName() + " " + user.getLastName() + " " + user.getEmail())
+                .toLowerCase(Locale.ROOT).contains(wanted);
     }
 
     private User find(Long id) {

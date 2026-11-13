@@ -33,12 +33,16 @@ public class InstitutionService {
     }
 
     /**
-     * Lists all institutions.
+     * Lists the institutions, optionally only the active or the inactive ones
+     * (R-325).
      *
-     * @return institutions ordered by name
+     * @param active true for the active ones, false for the inactive ones, null for all
+     * @return the institutions ordered by name
      */
-    public List<Institution> list() {
-        return institutions.findAll();
+    public List<Institution> list(Boolean active) {
+        return institutions.findAll().stream()
+                .filter(institution -> active == null || institution.isActive() == active)
+                .toList();
     }
 
     /**
@@ -90,6 +94,35 @@ public class InstitutionService {
             requireFreeName(current.getName());
         }
         return institutions.save(current);
+    }
+
+    /**
+     * Activates an institution again (RN-006).
+     *
+     * @param actor teacher that acts
+     * @param id    institution id
+     * @return the institution, now active
+     */
+    public Institution activate(User actor, Long id) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        Institution institution = get(id);
+        institution.activate();
+        return institutions.save(institution);
+    }
+
+    /**
+     * Deactivates an institution: its data is kept, but it does not admit new
+     * studies (RN-006).
+     *
+     * @param actor teacher that acts
+     * @param id    institution id
+     * @return the institution, now inactive
+     */
+    public Institution deactivate(User actor, Long id) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        Institution institution = get(id);
+        institution.deactivate();
+        return institutions.save(institution);
     }
 
     private void requireFreeName(String name) {
