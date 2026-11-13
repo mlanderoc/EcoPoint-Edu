@@ -15,7 +15,9 @@ import com.ecopoint.model.UserRole;
 import com.ecopoint.model.VerificationInfo;
 import com.ecopoint.model.WasteBag;
 import com.ecopoint.model.WasteGroup;
+import com.ecopoint.persistence.CorrectionRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
+import com.ecopoint.persistence.InstitutionRepository;
 import com.ecopoint.persistence.ShiftRepository;
 import com.ecopoint.persistence.StudyRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -53,7 +55,8 @@ class IndicatorServiceTest {
     private final StudyRepository studies = mock(StudyRepository.class);
     private final ShiftRepository shifts = mock(ShiftRepository.class);
     private final GenerationSourceRepository sources = mock(GenerationSourceRepository.class);
-    private final IndicatorService service = new IndicatorService(studies, shifts, sources);
+    private final IndicatorService service = new IndicatorService(studies, shifts, sources,
+            mock(InstitutionRepository.class), mock(CorrectionRepository.class));
     private final User teacher = new User(1L, "Ana", "Ríos", "a@unicesar.edu.co", UserRole.DOCENTE, 1L);
     private final List<SamplingShift> studyShifts = new ArrayList<>();
     private long nextId = 1;
