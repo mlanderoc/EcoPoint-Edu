@@ -38,6 +38,11 @@ El backend ya expone la API REST completa del registro en campo, el cuarteo y la
    ./sql/recrear-base.sh            # Git Bash
    ```
    El mismo comando la vuelve a dejar como nueva cuando quieras.
+4. **Si tu base se creó antes del 13 de noviembre de 2026**, agrégale los ajustes D13 sin perder datos:
+   ```powershell
+   psql -U postgres -d ecopoint -v ON_ERROR_STOP=1 -f sql/003_ajustes_d13.sql
+   ```
+   Agrega la columna `activa` de las instituciones y el estado `CANCELADO` de los estudios. Se puede ejecutar varias veces. Una base nueva no lo necesita.
 
 Variables opcionales: `ECOPOINT_DB_URL` (por defecto `jdbc:postgresql://localhost:5432/ecopoint`), `ECOPOINT_DB_USER` (por defecto `postgres`) y `ECOPOINT_TEST_DB_URL` (por defecto `.../ecopoint_test`). Ver [`.env.example`](.env.example).
 

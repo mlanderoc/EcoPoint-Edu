@@ -113,7 +113,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 
 ## Fase 5 — Cierre
 
-- [ ] **A18. Documentación.** `README.md`, `frontend/README.md` y `docs/base-de-datos.md` con lo nuevo (script de actualización 003, rutas y pantallas). *(Merlín)*
+- [x] **A18. Documentación.** `README.md`, `frontend/README.md` y `docs/base-de-datos.md` con lo nuevo (script de actualización 003, rutas y pantallas). *(Merlín)*
 
 - [ ] **A19. Revisión y PR.** Suite completa en verde y revisión de Antigravity. PR a `develop` con la descripción de las 9 observaciones. *(Merlín)*
 

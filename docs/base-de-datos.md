@@ -39,6 +39,7 @@ erDiagram
     INSTITUCION {
         bigint id PK
         varchar nombre UK
+        boolean activa
         numeric centro_latitud
         numeric centro_longitud
         numeric peso_min_submuestra
@@ -56,6 +57,9 @@ erDiagram
         bigint id PK
         bigint id_institucion FK
         estado_estudio estado
+        bigint cancelado_por FK
+        timestamp cancelado_en
+        text motivo_cancelacion
     }
     TURNO {
         bigint id PK
@@ -108,7 +112,7 @@ erDiagram
 | `SUBCATEGORIA_RESIDUO` | `WasteCategory` | Catálogo de subcategorías (papel, cartón, pilas…) ligadas a los 4 grupos de la Res. 2184 de 2019 |
 | `USUARIO` | `User` | Docentes y estudiantes universitarios, con su rol y el hash de su contraseña |
 | `CUADRILLA`, `CUADRILLA_INTEGRANTE` | `Crew` | Cuadrillas de campo con su docente responsable |
-| `ESTUDIO` | `CharacterizationStudy` | Estudio de caracterización y su estado |
+| `ESTUDIO` | `CharacterizationStudy` | Estudio de caracterización, su estado y, si se canceló, quién, cuándo y por qué (`StudyCancellation`) |
 | `DIA_MUESTREO` | `SamplingDay` | Los 8 días del estudio con su fecha |
 | `REAPERTURA_ESTUDIO` | `StudyReopening` | Quién reabrió un estudio cerrado, cuándo y por qué |
 | `FUENTE_ESTUDIO` | — | Fuentes que participan en cada estudio |
@@ -139,6 +143,8 @@ Vistas:
 | **Columnas de verificación iguales** en las 4 tablas verificables | Población, bolsa, cuarteo y densidad se verifican igual, y la vista de pendientes las une. |
 | **Políticas de borrado `RESTRICT` por defecto** | No se borra nada que tenga registros que dependen de él (una fuente con bolsas, una subcategoría con resultados…). Excepciones: `CASCADE` del cuarteo a sus resultados y de las tablas puente, y `SET NULL` de la cuadrilla en el turno. Cada política está comentada en el script. |
 | **Transacciones** | Un cuarteo con sus resultados, una cuadrilla con sus integrantes y un estudio con sus días se guardan todo o nada (`@Transactional`). |
+| **Nada se borra salvo un estudio planificado** (ajustes D13) | Instituciones, fuentes, subcategorías y estudiantes se **desactivan** (`activa`/`activo`). Un estudio iniciado se **cancela** (estado `CANCELADO`, con un `CHECK` que exige quién, cuándo y por qué) y sus fechas quedan libres. Solo un estudio `PLANIFICADO` se elimina: sus días y fuentes participantes se borran en cascada, y los turnos lo impiden con `RESTRICT`. |
+| **Script de actualización** (`sql/003_ajustes_d13.sql`) | Agrega los ajustes D13 a una base creada antes, sin borrar datos, y se puede ejecutar varias veces. `001_schema.sql` ya los trae para las bases nuevas. |
 | **Contraseña fuera del repositorio** | La conexión se lee de `ECOPOINT_DB_URL`, `ECOPOINT_DB_USER` y `ECOPOINT_DB_PASSWORD`. |
 
 ## 4. Datos de demostración
