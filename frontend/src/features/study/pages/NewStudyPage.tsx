@@ -1,25 +1,24 @@
 /**
  * New characterization study: dates of the 8 days and participating sources
- * (Spec 004, T314 and T315; R-330, R-331, R-333, CA-301).
+ * (Spec 004, T314 and T315; R-330, R-331, R-333, CA-301, CA-311).
  * Crews are assigned when each shift is opened (R-341), because the API keeps
  * the crew in the shift.
  *
  * @author craulgomez
  */
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Info } from 'lucide-react'
-import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { useAuth } from '@/features/auth'
 import { adminService } from '@/features/admin/services/adminService'
 import { ApiError } from '@/services/apiClient'
 import { GenerationSource } from '@/types'
 import { studyService } from '../services/studyService'
-import { calculateSamplingDays, formatDate, isWeekend } from '../utils/samplingDays'
-
-const DAY_COUNT = 8
+import { StudyDatesEditor } from '../components/StudyDatesEditor'
+import { DAY_COUNT } from '../utils/samplingDays'
 
 export function NewStudyPage() {
   const navigate = useNavigate()
@@ -41,19 +40,6 @@ export function NewStudyPage() {
       })
       .catch(() => setError('No se pudieron cargar las fuentes de generación.'))
   }, [institutionId])
-
-  const weekendDays = useMemo(
-    () => dates.map((date, index) => (date && isWeekend(date) ? index + 1 : null)).filter(Boolean),
-    [dates]
-  )
-
-  const handleFirstDay = (firstDay: string) => {
-    setDates(firstDay ? [firstDay, ...calculateSamplingDays(firstDay)] : Array(DAY_COUNT).fill(''))
-  }
-
-  const handleDay = (index: number, value: string) => {
-    setDates((previous) => previous.map((date, position) => (position === index ? value : date)))
-  }
 
   const toggleSource = (id: number) => {
     setSelected((previous) => {
@@ -116,37 +102,8 @@ export function NewStudyPage() {
               <CalendarDays className="w-5 h-5" /> Días de muestreo
             </CardTitle>
           </CardHeader>
-          <CardContent className="flex flex-col gap-4">
-            <AlertBanner
-              variant="info"
-              title="Día 1: Día de descarte: no entra en los cálculos"
-              message="Los residuos del día 1 se acumularon antes del estudio; se pesan pero no cuentan para la línea base."
-            />
-            <p className="text-sm text-[var(--color-text-muted)]">
-              Al elegir el día 1 se proponen los 7 días hábiles siguientes (lunes a viernes). Cambie los que caigan en
-              festivos o jornadas especiales.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {dates.map((date, index) => (
-                <Input
-                  key={index}
-                  id={`study-day-${index + 1}`}
-                  type="date"
-                  label={index === 0 ? 'Día 1 (descarte)' : `Día ${index + 1}`}
-                  value={date}
-                  onChange={(event) => (index === 0 ? handleFirstDay(event.target.value) : handleDay(index, event.target.value))}
-                  helperText={date ? formatDate(date) : undefined}
-                  disabled={isSaving}
-                  required={index === 0}
-                />
-              ))}
-            </div>
-            {weekendDays.length > 0 && (
-              <AlertBanner
-                variant="warning"
-                message={`Los días ${weekendDays.join(', ')} caen en fin de semana. Revise que haya clases esos días.`}
-              />
-            )}
+          <CardContent>
+            <StudyDatesEditor dates={dates} onChange={setDates} disabled={isSaving} />
           </CardContent>
         </Card>
 
