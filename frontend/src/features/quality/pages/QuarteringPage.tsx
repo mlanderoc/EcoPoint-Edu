@@ -9,7 +9,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertTriangle } from 'lucide-react'
-import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Input, Modal } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input, Modal } from '@/components/ui'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { WasteGroupBadge } from '@/components/waste'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
@@ -45,6 +46,11 @@ export function QuarteringPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [isAnnulling, setIsAnnulling] = useState(false)
   const [reason, setReason] = useState('')
+  const [proposedSample, setProposedSample] = useState('')
+  const shiftPath = `/campo/turno/${shiftId}`
+  const isDirty = !quartering && !isSaving
+    && (sample !== proposedSample || Object.values(weights).some((weight) => weight.trim() !== ''))
+  const { confirmLeave, discardDialog } = useUnsavedChanges(isDirty)
 
   useEffect(() => {
     Promise.all([fieldService.getShift(shiftId), qualityService.getQuartering(shiftId), adminService.getCategories()])
@@ -53,7 +59,11 @@ export function QuarteringPage() {
         setQuartering(loadedQuartering)
         setCategories(loadedCategories.filter((category) => category.active))
         const full = proposedFullSample(loadedShift.totalNetWeight)
-        if (full !== null) setSample(String(full).replace('.', ','))
+        if (full !== null) {
+          const proposed = String(full).replace('.', ',')
+          setSample(proposed)
+          setProposedSample(proposed)
+        }
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'No se pudo cargar el cuarteo.'))
     adminService.getInstitutions()
@@ -112,6 +122,7 @@ export function QuarteringPage() {
     const nonConforming = quartering.qualityStatus === 'NO_CONFORME'
     return (
       <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+        <BackButton to={shiftPath} label="Atrás al turno" />
         <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Cuarteo · Turno {shift.code}</h1>
         {error && <AlertBanner variant="danger" message={error} />}
         {nonConforming && (
@@ -134,14 +145,11 @@ export function QuarteringPage() {
             <CompositionChart results={quartering.results} groups={quartering.groupComposition} />
           </CardContent>
         </Card>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Button variant="outline" className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${shiftId}`)}>
-            Volver al turno
+        {nonConforming && canAnnul && (
+          <Button variant="danger" className="min-h-[48px] sm:self-start" onClick={() => setIsAnnulling(true)}>
+            Anular cuarteo
           </Button>
-          {nonConforming && canAnnul && (
-            <Button variant="danger" className="min-h-[48px]" onClick={() => setIsAnnulling(true)}>Anular cuarteo</Button>
-          )}
-        </div>
+        )}
         <Modal open={isAnnulling} onClose={() => setIsAnnulling(false)} title="Anular cuarteo"
           description="El cuarteo anulado no cuenta para la composición. El motivo queda registrado.">
           <div className="flex flex-col gap-4 mt-2">
@@ -160,7 +168,8 @@ export function QuarteringPage() {
 
   const conforming = check.status === 'CONFORME'
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5 pb-36">
+    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5 pb-48">
+      <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
       <div>
         <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Cuarteo · Turno {shift.code}</h1>
         <p className="text-sm text-[var(--color-text-muted)]" data-testid="shift-net">
@@ -229,9 +238,14 @@ export function QuarteringPage() {
               disabled={isSaving || !!sampleMessage || !hasWeights || shift.status !== 'ABIERTO'}>
               Guardar cuarteo
             </Button>
+            <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
+              onClick={() => confirmLeave(() => navigate(shiftPath))}>
+              Descartar
+            </Button>
           </div>
         </div>
       </form>
+      {discardDialog}
     </div>
   )
 }

@@ -7,7 +7,8 @@
 
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, Button, Card, CardContent, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
 import { fieldService } from '../services/fieldService'
 
@@ -26,6 +27,8 @@ export function PopulationPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const total = count(students) + count(teachers) + count(staff)
+  const shiftPath = `/campo/turno/${shiftId}`
+  const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && (students + teachers + staff) !== '')
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -37,7 +40,7 @@ export function PopulationPage() {
     try {
       setIsSaving(true)
       await fieldService.registerPopulation(shiftId, count(students), count(teachers), count(staff))
-      navigate(`/campo/turno/${shiftId}`)
+      navigate(shiftPath)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo registrar la población.')
       setIsSaving(false)
@@ -51,6 +54,7 @@ export function PopulationPage() {
 
   return (
     <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
+      <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
       <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Población del turno</h1>
       {error && <AlertBanner variant="danger" message={error} />}
       <Card>
@@ -65,9 +69,14 @@ export function PopulationPage() {
             <Button type="submit" className="min-h-[56px] text-lg" isLoading={isSaving} disabled={isSaving}>
               Guardar población
             </Button>
+            <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
+              onClick={() => confirmLeave(() => navigate(shiftPath))}>
+              Descartar
+            </Button>
           </form>
         </CardContent>
       </Card>
+      {discardDialog}
     </div>
   )
 }

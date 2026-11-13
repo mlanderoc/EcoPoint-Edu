@@ -10,7 +10,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { CalendarDays, Info } from 'lucide-react'
-import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { useAuth } from '@/features/auth'
 import { adminService } from '@/features/admin/services/adminService'
 import { ApiError } from '@/services/apiClient'
@@ -29,6 +30,7 @@ export function NewStudyPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && dates.some((date) => date !== ''))
 
   useEffect(() => {
     adminService.getSources(institutionId)
@@ -97,6 +99,7 @@ export function NewStudyPage() {
 
   return (
     <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
+      <BackButton to="/estudios" label="Atrás a los estudios" onLeave={confirmLeave} />
       <div>
         <h1 className="text-2xl font-bold text-[var(--color-brand-dark)]">Nuevo estudio de caracterización</h1>
         <p className="text-sm text-[var(--color-text-muted)]">
@@ -178,15 +181,16 @@ export function NewStudyPage() {
         </Card>
 
         <div className="flex justify-end gap-3">
-          <Button type="button" variant="outline" className="min-h-[48px]" onClick={() => navigate('/estudios')}
-            disabled={isSaving}>
-            Cancelar
+          <Button type="button" variant="outline" className="min-h-[48px]"
+            onClick={() => confirmLeave(() => navigate('/estudios'))} disabled={isSaving}>
+            Descartar
           </Button>
           <Button type="submit" className="min-h-[48px]" isLoading={isSaving} disabled={isSaving}>
             Crear estudio
           </Button>
         </div>
       </form>
+      {discardDialog}
     </div>
   )
 }

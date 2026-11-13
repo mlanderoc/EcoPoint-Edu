@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Input, Modal } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input, Modal } from '@/components/ui'
 import { ApiError } from '@/services/apiClient'
 import { CharacterizationStudy, ShiftSlot } from '@/types'
 import { cn } from '@/utils/cn'
@@ -79,6 +79,7 @@ export function StudyDetailPage() {
 
   return (
     <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
+      <BackButton to="/estudios" label="Atrás a los estudios" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-bold text-[var(--color-brand-dark)]">{studyTitle(study)}</h1>

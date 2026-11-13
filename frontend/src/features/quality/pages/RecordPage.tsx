@@ -7,8 +7,8 @@
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { useParams } from 'react-router-dom'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
@@ -20,7 +20,6 @@ export function RecordPage() {
   const { tipo, id } = useParams()
   const type = tipo as RecordType
   const recordId = Number(id)
-  const navigate = useNavigate()
   const { user } = useAuth()
   const [record, setRecord] = useState<VerifiableRecord | null>(null)
   const [history, setHistory] = useState<CorrectionEntry[]>([])
@@ -85,6 +84,7 @@ export function RecordPage() {
 
   return (
     <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+      <BackButton to="/calidad/verificacion" label="Atrás a la verificación" />
       <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">{record.title}</h1>
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       <RecordCard record={record}>
@@ -137,9 +137,6 @@ export function RecordPage() {
         </CardContent>
       </Card>
 
-      <Button variant="outline" className="min-h-[48px]" onClick={() => navigate('/calidad/verificacion')}>
-        Volver a la verificación
-      </Button>
     </div>
   )
 }
