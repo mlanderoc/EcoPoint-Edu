@@ -29,13 +29,13 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
   *(Carlos)*
   *Verificación:* CA-005, CA-015 (fechas libres), CA-082.
 
-- [ ] **A04. Repositorios.**
+- [x] **A04. Repositorios.**
   - Institución: `active`, filtro por estado, activar y desactivar.
   - Estudio: cancelación y borrado.
   - Subcategorías e instituciones: `active` al crear.
   - Usuarios: filtro `q`.
 
-  *(Merlín)*
+  *Ajuste:* las subcategorías ya guardaban `activa`, y el filtro `q` de usuarios se hace en `UserService` (A06), igual que los filtros de rol y estado que ya existen. *(Merlín)*
   *Verificación:* IT de cada repositorio contra `ecopoint_test`.
 
 - [ ] **A05. Totales de registros.** `UserActivityRepository` con una consulta por usuario y una agrupada para la tabla (decisión T7). *(Merlín)*

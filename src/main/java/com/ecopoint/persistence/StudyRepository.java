@@ -50,6 +50,14 @@ public interface StudyRepository {
     void updateStatus(Long studyId, StudyStatus status);
 
     /**
+     * Deletes a planned study with its days and participating sources (RN-019).
+     * The database rejects it if the study already has shifts.
+     *
+     * @param studyId study id
+     */
+    void delete(Long studyId);
+
+    /**
      * Replaces the set of sources taking part in the study.
      *
      * @param studyId   study id
