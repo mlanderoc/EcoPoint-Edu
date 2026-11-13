@@ -102,8 +102,8 @@
 
 ## Fase 4 — Reporte en Hoja de Cálculo Excel (Merlín)
 
-- [ ] **T508. Servicio de exportación Excel con Apache POI (R-531, CA-508).** *(Merlín)*
-  En `com.ecopoint.service.report`, crear `ExcelReportService` y su implementación `ExcelReportServiceImpl`. Diseñar el libro `.xlsx` con 8 hojas temáticas estructuradas:
+- [x] **T508. Servicio de exportación Excel con Apache POI (R-531, CA-508).** *(Merlín)*
+  En `com.ecopoint.service.report`, crear `ExcelReportService` (clase concreta) y `ReportNumbers` con el mismo redondeo de la API; los datos los carga una sola vez `IndicatorService.report()`. Diseñar el libro `.xlsx` con 8 hojas temáticas estructuradas:
   1. `Resumen Indicadores`: Metadatos institucionales y los 6 KPIs principales.
   2. `Generación Diaria`: Tabla día por día con días 2 a 8 activos y día 1 marcado como descarte.
   3. `Generación por Fuente`: Matriz de fuentes x días con promedios y porcentajes.
@@ -115,9 +115,9 @@
   Garantizar el formato visual con estilos de encabezados en verde institucional, fuentes negritas, bordes delgados y formatos numéricos consistentes (`0.00` y `0.000`).
   *Verificación:* Prueba unitaria que genera el archivo en un `ByteArrayOutputStream` y valida la presencia de las 8 hojas y el contenido de celdas clave.
 
-- [ ] **T509. Endpoint `GET /api/v1/studies/{id}/reports/excel` y prueba de integración (CA-508).** *(Merlín)*
+- [x] **T509. Endpoint `GET /api/v1/studies/{id}/reports/excel` y prueba de integración (CA-508).** *(Merlín)*
   En `IndicatorController`, exponer la ruta `/studies/{id}/reports/excel` configurando las cabeceras `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet` y `Content-Disposition: attachment; filename="ecopoint-reporte-estudio-{id}.xlsx"`.
-  En `src/test/java/com/ecopoint/service/report/ExcelReportServiceIT.java`, implementar la prueba de integración `ca508_excelSheetsAndBagsSumMatchesAverage()`: descargar el archivo generado de la base de prueba, inspeccionar con Apache POI la hoja `Registro de Bolsas`, sumar los pesos netos de los días 2 a 8, dividir entre 7 y verificar que coincida con exactitud matemática con la celda de generación diaria promedio de la hoja `Resumen Indicadores`.
+  En `src/test/java/com/ecopoint/api/ExcelReportServiceIT.java`, implementar la prueba de integración `ca508_excelSheetsAndBagsSumMatchesAverage()`: descargar el archivo generado de la base de prueba, inspeccionar con Apache POI la hoja `Registro de Bolsas`, sumar los pesos netos de los días 2 a 8, dividir entre 7 y verificar que coincida con exactitud matemática con la celda de generación diaria promedio de la hoja `Resumen Indicadores`.
   *Verificación:* `./mvnw test -Dtest=ExcelReportServiceIT` pasa en verde.
 
 ---
