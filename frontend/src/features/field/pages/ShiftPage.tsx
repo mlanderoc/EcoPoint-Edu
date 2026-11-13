@@ -12,7 +12,8 @@ import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Modal } 
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
 import { ApiError } from '@/services/apiClient'
-import { SamplingShift, SourceProgress } from '@/types'
+import { QualityStatus, SamplingShift, SourceProgress } from '@/types'
+import { qualityService } from '@/features/quality/services/qualityService'
 import { cn } from '@/utils/cn'
 import { fieldService } from '../services/fieldService'
 import { formatNumber, plural } from '../utils/fieldMath'
@@ -48,6 +49,7 @@ export function ShiftPage() {
   const { user } = useAuth()
   const canClose = hasPermission(user?.role, 'MANAGE_SHIFTS')
   const [shift, setShift] = useState<SamplingShift | null>(null)
+  const [quarteringStatus, setQuarteringStatus] = useState<QualityStatus | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [busySource, setBusySource] = useState<number | null>(null)
   const [isConfirming, setIsConfirming] = useState(false)
@@ -55,7 +57,11 @@ export function ShiftPage() {
 
   const load = useCallback(async () => {
     try {
-      setShift(await fieldService.getShift(shiftId))
+      const loaded = await fieldService.getShift(shiftId)
+      setShift(loaded)
+      if (loaded.hasQuartering) {
+        setQuarteringStatus((await qualityService.getQuartering(shiftId))?.qualityStatus ?? null)
+      }
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo cargar el turno.')
     }
@@ -118,6 +124,10 @@ export function ShiftPage() {
       </div>
 
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
+      {quarteringStatus === 'NO_CONFORME' && (
+        <AlertBanner variant="danger" title="Cuarteo no conforme: repesar"
+          message="La diferencia supera la tolerancia del 2 %. Revise el cuarteo." />
+      )}
 
       <Card>
         <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
@@ -139,6 +149,17 @@ export function ShiftPage() {
           )}
         </CardContent>
       </Card>
+
+      {shift.population && shift.bagCount > 0 && (
+        <div className="grid grid-cols-2 gap-3">
+          <Button variant="outline" className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/cuarteo`)}>
+            {shift.hasQuartering ? 'Ver cuarteo' : 'Cuarteo'}
+          </Button>
+          <Button variant="outline" className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/densidad`)}>
+            {shift.hasDensity ? 'Ver densidad' : 'Densidad'}
+          </Button>
+        </div>
+      )}
 
       <Card>
         <CardHeader>

@@ -33,7 +33,7 @@ describe('Layout and Menu per Role (T307, CA-300, CA-307)', () => {
   it('ca300_studentMenuAndButtonsRestricted: Student does NOT see Admin or Studies in BottomNav', () => {
     render(<BottomNav role={studentUser.role} />)
     expect(screen.getByText('Campo')).toBeInTheDocument()
-    expect(screen.getByText('Bolsas')).toBeInTheDocument()
+    expect(screen.getByText('Calidad')).toBeInTheDocument()
     expect(screen.queryByText('Estudios')).toBeNull()
     expect(screen.queryByText('Admin')).toBeNull()
   })

@@ -9,10 +9,13 @@ import {
   MapPin,
   Users,
   Tags,
+  ShieldCheck,
 } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
+import { useEffect, useState } from 'react'
 import { useOptionalAuth } from '@/features/auth/hooks/useAuth'
+import { alertService } from '@/features/quality/services/verificationService'
 
 export interface NavItem {
   label: string
@@ -38,6 +41,14 @@ export function Sidebar({
 
   const role = roleProp ?? authRole
 
+  const [pendingAlerts, setPendingAlerts] = useState(0)
+
+  // Counter of pending alerts in the menu (spec 005, R-432)
+  useEffect(() => {
+    if (!role) return
+    alertService.pendingCount().then(setPendingAlerts).catch(() => setPendingAlerts(0))
+  }, [role, currentPath])
+
   // Without role or session, do not render menu
   if (!role) {
     return null
@@ -62,7 +73,12 @@ export function Sidebar({
         ]
       : []),
     {
-      label: 'Alertas',
+      label: 'Verificación',
+      href: '/calidad/verificacion',
+      icon: <ShieldCheck className="w-5 h-5" />,
+    },
+    {
+      label: pendingAlerts > 0 ? `Alertas (${pendingAlerts})` : 'Alertas',
       href: '/alertas',
       icon: <Bell className="w-5 h-5" />,
     },

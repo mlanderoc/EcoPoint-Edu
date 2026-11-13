@@ -1,5 +1,5 @@
 import React from 'react'
-import { ClipboardList, Calendar, Bell, UserCheck, Settings, ShoppingBag } from 'lucide-react'
+import { ClipboardList, Calendar, Bell, UserCheck, Settings, ShieldCheck } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
 import { useOptionalAuth } from '@/features/auth/hooks/useAuth'
@@ -31,12 +31,13 @@ export function BottomNav({
     ? [
         { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
         { label: 'Estudios', href: '/estudios', icon: <Calendar className="w-5 h-5" /> },
+        { label: 'Calidad', href: '/calidad/verificacion', icon: <ShieldCheck className="w-5 h-5" /> },
         { label: 'Admin', href: '/admin/instituciones', icon: <Settings className="w-5 h-5" /> },
         { label: 'Alertas', href: '/alertas', icon: <Bell className="w-5 h-5" /> },
       ]
     : [
         { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
-        { label: 'Bolsas', href: '/campo/bolsas', icon: <ShoppingBag className="w-5 h-5" /> },
+        { label: 'Calidad', href: '/calidad/verificacion', icon: <ShieldCheck className="w-5 h-5" /> },
         { label: 'Alertas', href: '/alertas', icon: <Bell className="w-5 h-5" /> },
         { label: 'Perfil', href: '/perfil', icon: <UserCheck className="w-5 h-5" /> },
       ]

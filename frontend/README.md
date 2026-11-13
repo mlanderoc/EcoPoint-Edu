@@ -1,6 +1,6 @@
 # Frontend de EcoPoint Edu
 
-Aplicación web en **React + Vite + TypeScript** para el registro en campo de la caracterización de residuos (spec [004](../specs/004-registro-en-campo/spec.md)). Consume la API REST de la spec [003](../specs/003-api-rest-seguridad/spec.md).
+Aplicación web en **React + Vite + TypeScript** para el registro en campo de la caracterización de residuos (spec [004](../specs/004-registro-en-campo/spec.md)) y su control de calidad (spec [005](../specs/005-cuarteo-control-calidad/spec.md)). Consume la API REST de la spec [003](../specs/003-api-rest-seguridad/spec.md).
 
 | Pantalla | Ruta | Quién |
 | --- | --- | --- |
@@ -9,6 +9,11 @@ Aplicación web en **React + Vite + TypeScript** para el registro en campo de la
 | Turno: población, fuentes, "sin generación" y cierre | `/campo/turno/:id` | Todos (cerrar: docente) |
 | Población del turno | `/campo/turno/:id/poblacion` | Todos |
 | Pesaje de bolsa con rótulo gigante | `/campo/turno/:id/bolsas/nueva` | Todos |
+| Cuarteo con control del 2 % y composición | `/campo/turno/:id/cuarteo` | Todos (anular: docente) |
+| Densidad del turno | `/campo/turno/:id/densidad` | Todos |
+| Verificación del doble registro por turno | `/calidad/verificacion` | Quien no digitó el registro |
+| Registro: corrección con motivo e historial | `/calidad/registro/:tipo/:id` | Quien no digitó el registro |
+| Alertas de calidad y su atención | `/alertas` | Docente |
 | Estudios: lista, nuevo y ciclo de vida | `/estudios`, `/estudios/nuevo`, `/estudios/:id` | Docente |
 | Administración: instituciones, fuentes, usuarios, cuadrillas y subcategorías | `/admin/*` | Docente |
 
@@ -56,7 +61,8 @@ src/
 │   ├── auth/     sesión, permisos RN-081 y guardas de ruta
 │   ├── admin/    administración (spec 004, fase 3)
 │   ├── study/    estudios y su ciclo de vida (fase 4)
-│   └── field/    registro en campo (fase 5)
+│   ├── field/    registro en campo (fase 5)
+│   └── quality/  cuarteo, densidad, doble registro y alertas (spec 005)
 ├── mocks/        API simulada con MSW (mismo contrato que la spec 003)
 ├── services/     cliente HTTP: cookies, token CSRF y errores en español
 └── types/        tipos iguales a los DTO de la API
