@@ -38,7 +38,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
   *Ajuste:* las subcategorías ya guardaban `activa`, y el filtro `q` de usuarios se hace en `UserService` (A06), igual que los filtros de rol y estado que ya existen. *(Merlín)*
   *Verificación:* IT de cada repositorio contra `ecopoint_test`.
 
-- [ ] **A05. Totales de registros.** `UserActivityRepository` con una consulta por usuario y una agrupada para la tabla (decisión T7). *(Merlín)*
+- [x] **A05. Totales de registros.** `UserActivityRepository` con una consulta por usuario y una agrupada para la tabla (decisión T7). *(Merlín)*
   *Verificación:* IT con la semilla: los totales coinciden con un conteo manual.
 
 ## Fase 2 — Servicios y API
