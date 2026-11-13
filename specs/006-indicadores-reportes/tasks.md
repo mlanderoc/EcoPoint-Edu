@@ -36,8 +36,8 @@
 
 ## Fase 1 — Motor Matemático en Backend (Estefanía)
 
-- [ ] **T502. Implementación de `IndicatorService` con precisión `BigDecimal`.** *(Estefanía)*
-  En `com.ecopoint.service`, crear la interfaz `IndicatorService` y su implementación `IndicatorServiceImpl`. Implementar las fórmulas rigurosas de la sección 5.2 de la spec:
+- [x] **T502. Implementación de `IndicatorService` con precisión `BigDecimal`.** *(Estefanía)*
+  En `com.ecopoint.service`, crear el servicio `IndicatorService` (clase concreta, como el resto de servicios del proyecto) y la clase sin estado `IndicatorCalculator` con las fórmulas. Implementar las fórmulas rigurosas de la sección 5.2 de la spec:
   - Exclusión estricta del Día 1 de todos los promedios e indicadores consolidados ($n=7$, días 2 a 8, R-500).
   - Exclusión de cuarteos en estado `ANULADO` (R-501).
   - Cálculo de generación del turno $G(d,t)$, diaria $G(d)$ y promedio $\bar{G}$.
@@ -52,7 +52,7 @@
   - Redondeo `RoundingMode.HALF_UP` aplicado exclusivamente al ensamblar los valores del DTO final (pesos a 2 decimales, PPC a 3, porcentajes a 2, densidad a 2, R-511).
   *Verificación:* Compilación limpia de `IndicatorServiceImpl` respetando la regla de arquitectura que prohíbe importar controladores en el servicio.
 
-- [ ] **T503. Pruebas unitarias de las fórmulas matemáticas (CA-500 a CA-503, CA-509).** *(Estefanía)*
+- [x] **T503. Pruebas unitarias de las fórmulas matemáticas (CA-500 a CA-503, CA-509).** *(Estefanía)*
   Crear la suite `src/test/java/com/ecopoint/service/IndicatorServiceTest.java` verificando con exactitud los casos de prueba de la spec:
   - `ca500_dailyAverageGenerationExcludesDayOne()`: verifica que con $G(1)=150$ kg y $G(2..8)=[60, 62, 58, 64, 56, 60, 60]$ kg, la generación diaria promedio sea exactamente **60,00 kg/día** (CA-500).
   - `ca501_ppcAverageStdDevAndCvCalculated()`: con población de 400 personas y los datos de CA-500, comprueba que la $\overline{PPC}$ sea **0,150 kg/persona/día**, la desviación estándar muestral sea **0,006 kg/persona/día** (0,006455) y el $CV$ sea **4,30 %** (CA-501).
