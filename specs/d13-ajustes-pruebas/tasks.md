@@ -13,7 +13,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 - [x] **A01. Script de actualización de la base.** `sql/003_ajustes_d13.sql` (idempotente) y `001_schema.sql` actualizado: `activa` en institución, estado CANCELADO con sus tres datos y su CHECK. *Ajuste:* `recrear-base` no ejecuta el 003, porque `001_schema.sql` ya trae los cambios; el 003 es solo para bases creadas antes. *(Merlín)*
   *Verificación:* `SchemaIT` (R-016); la base `ecopoint` de desarrollo se actualiza sin perder datos.
 
-- [ ] **A02. Modelo.**
+- [x] **A02. Modelo.**
   - `Institution` con `active`, `activate()` y `deactivate()`.
   - `StudyStatus.CANCELADO`, fuera de `canTransitionTo`.
   - `CharacterizationStudy.cancel(userId, reason, at)`: solo desde EN_EJECUCION o EN_DEPURACION, con motivo.

@@ -12,11 +12,11 @@ import java.util.stream.IntStream;
 
 /**
  * Characterization study: the 8-day sampling campaign of one institution
- * that produces its waste baseline (RN-010 to RN-017). It is the Information
+ * that produces its waste baseline (RN-010 to RN-019). It is the Information
  * Expert for its days, its date range and its lifecycle.
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
 public class CharacterizationStudy {
 
@@ -28,6 +28,7 @@ public class CharacterizationStudy {
     private StudyStatus status;
     private final List<SamplingDay> days;
     private final List<StudyReopening> reopenings;
+    private StudyCancellation cancellation;
 
     /**
      * Creates a planned study with its 8 days still without dates.
@@ -60,6 +61,25 @@ public class CharacterizationStudy {
      */
     public static CharacterizationStudy restore(Long id, Long institutionId, StudyStatus status,
                                                 List<LocalDate> dates, List<StudyReopening> reopenings) {
+        return restore(id, institutionId, status, dates, reopenings, null);
+    }
+
+    /**
+     * Rebuilds a study read from the database, including its cancellation
+     * (RN-018). Only the persistence layer must use it.
+     *
+     * @param id            study id
+     * @param institutionId institution id
+     * @param status        stored status
+     * @param dates         the 8 stored dates in order (an element may be null)
+     * @param reopenings    stored reopenings, oldest first
+     * @param cancellation  stored cancellation, or null if the study was not cancelled
+     * @return the rebuilt study
+     * @throws InvalidDataException if there are not exactly 8 dates
+     */
+    public static CharacterizationStudy restore(Long id, Long institutionId, StudyStatus status,
+                                                List<LocalDate> dates, List<StudyReopening> reopenings,
+                                                StudyCancellation cancellation) {
         CharacterizationStudy study = new CharacterizationStudy(id, institutionId);
         if (dates == null || dates.size() != SAMPLING_DAYS) {
             throw new InvalidDataException("fechas",
@@ -72,6 +92,7 @@ public class CharacterizationStudy {
         if (reopenings != null) {
             study.reopenings.addAll(reopenings);
         }
+        study.cancellation = cancellation;
         return study;
     }
 
@@ -204,6 +225,43 @@ public class CharacterizationStudy {
         reopenings.add(new StudyReopening(userId, reason.trim(), at));
     }
 
+    /**
+     * Cancels a study being executed or cleaned and records who did it, why and
+     * when (RN-018). Its data is kept. The permission of the user is checked by
+     * the caller.
+     *
+     * @param userId identifier of the teacher cancelling the study
+     * @param reason reason for the cancellation
+     * @param at     date and time of the cancellation
+     * @throws BusinessRuleException if the study is planned, closed or already cancelled
+     * @throws InvalidDataException  if the reason is missing
+     */
+    public void cancel(Long userId, String reason, LocalDateTime at) {
+        if (!status.allowsCancellation()) {
+            throw new BusinessRuleException("Solo se puede cancelar un estudio en ejecución o en depuración. "
+                    + "Este estudio está " + status.getDisplayName().toLowerCase() + ".");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new InvalidDataException("motivo", "Debe indicar el motivo para cancelar el estudio.");
+        }
+        this.status = StudyStatus.CANCELADO;
+        this.cancellation = new StudyCancellation(userId, reason.trim(), at);
+    }
+
+    /**
+     * Checks that the study may be deleted: only while it is planned, because
+     * it has no field data yet (RN-019).
+     *
+     * @throws BusinessRuleException if the study is not planned
+     */
+    public void requireDeletable() {
+        if (status != StudyStatus.PLANIFICADO) {
+            throw new BusinessRuleException("Solo se puede eliminar un estudio planificado. Este estudio está "
+                    + status.getDisplayName().toLowerCase() + (status.allowsCancellation()
+                    ? ": si ya no se va a usar, cancélelo." : "."));
+        }
+    }
+
     public Long getId() {
         return id;
     }
@@ -240,5 +298,14 @@ public class CharacterizationStudy {
      */
     public List<StudyReopening> getReopenings() {
         return Collections.unmodifiableList(reopenings);
+    }
+
+    /**
+     * Returns the cancellation of the study.
+     *
+     * @return who, why and when it was cancelled, or null if it was not cancelled
+     */
+    public StudyCancellation getCancellation() {
+        return cancellation;
     }
 }

@@ -133,4 +133,50 @@ class CharacterizationStudyTest {
         closed.changeStatus(StudyStatus.CERRADO);
         assertThrows(InvalidDataException.class, () -> closed.reopen(7L, " ", LocalDateTime.now()));
     }
+
+    @Test
+    void ca015_executingStudyIsCancelledWithAReasonAndItIsRecorded() {
+        CharacterizationStudy study = scheduledStudy(1L, 2, 3, 4, 5, 6, 9, 10, 11);
+        study.changeStatus(StudyStatus.EN_EJECUCION);
+        LocalDateTime at = LocalDateTime.of(2026, 3, 5, 10, 0);
+
+        assertThrows(InvalidDataException.class, () -> study.cancel(7L, "  ", at));
+        study.cancel(7L, " Fechas equivocadas ", at);
+
+        assertEquals(StudyStatus.CANCELADO, study.getStatus());
+        assertEquals(new StudyCancellation(7L, "Fechas equivocadas", at), study.getCancellation());
+        assertThrows(BusinessRuleException.class, () -> study.cancel(7L, "Otra vez", at));
+    }
+
+    @Test
+    void ca016_plannedOrClosedStudyCannotBeCancelled() {
+        CharacterizationStudy planned = scheduledStudy(1L, 2, 3, 4, 5, 6, 9, 10, 11);
+        CharacterizationStudy closed = CharacterizationStudy.restore(2L, 1L, StudyStatus.CERRADO,
+                march(2, 3, 4, 5, 6, 9, 10, 11), List.of());
+
+        assertThrows(BusinessRuleException.class, () -> planned.cancel(7L, "Motivo", LocalDateTime.now()));
+        assertThrows(BusinessRuleException.class, () -> closed.cancel(7L, "Motivo", LocalDateTime.now()));
+        assertNull(closed.getCancellation());
+    }
+
+    @Test
+    void ca017_onlyPlannedStudyCanBeDeleted() {
+        CharacterizationStudy planned = scheduledStudy(1L, 2, 3, 4, 5, 6, 9, 10, 11);
+        CharacterizationStudy executing = scheduledStudy(2L, 2, 3, 4, 5, 6, 9, 10, 11);
+        executing.changeStatus(StudyStatus.EN_EJECUCION);
+
+        planned.requireDeletable();
+        BusinessRuleException error = assertThrows(BusinessRuleException.class, executing::requireDeletable);
+        assertTrue(error.getMessage().contains("cancélelo"));
+    }
+
+    @Test
+    void r016_restoreKeepsTheStoredCancellation() {
+        StudyCancellation cancellation = new StudyCancellation(7L, "Fechas equivocadas", LocalDateTime.now());
+
+        CharacterizationStudy study = CharacterizationStudy.restore(3L, 1L, StudyStatus.CANCELADO,
+                march(2, 3, 4, 5, 6, 9, 10, 11), List.of(), cancellation);
+
+        assertEquals(cancellation, study.getCancellation());
+    }
 }

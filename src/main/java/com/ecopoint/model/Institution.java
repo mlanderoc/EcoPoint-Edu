@@ -3,10 +3,11 @@ package com.ecopoint.model;
 /**
  * Educational institution (school or university) whose solid waste is
  * characterized. It holds where its map opens (center and zoom) and the
- * configurable parameters of its characterization studies.
+ * configurable parameters of its characterization studies. An institution is
+ * never deleted: it is deactivated (RN-006).
  *
  * @author EstefaniaMarquez
- * @version 2.0
+ * @version 3.0
  */
 public class Institution {
 
@@ -19,6 +20,7 @@ public class Institution {
     private GeoPoint mapCenter;
     private int mapZoom;
     private CharacterizationSettings settings;
+    private boolean active;
 
     /**
      * Creates an empty institution with the default map zoom and the default
@@ -26,6 +28,7 @@ public class Institution {
      */
     public Institution() {
         this.mapZoom = DEFAULT_MAP_ZOOM;
+        this.active = true;
         this.settings = CharacterizationSettings.defaults();
     }
 
@@ -42,6 +45,30 @@ public class Institution {
         this.id = id;
         this.name = name;
         this.address = address;
+    }
+
+    /**
+     * Indicates whether new studies may be created in this institution (RN-006).
+     *
+     * @return true if the institution is active
+     */
+    public boolean isActive() {
+        return active;
+    }
+
+    /**
+     * Deactivates the institution; its studies, sources and records are kept,
+     * but it does not admit new studies (RN-006).
+     */
+    public void deactivate() {
+        this.active = false;
+    }
+
+    /**
+     * Activates the institution again.
+     */
+    public void activate() {
+        this.active = true;
     }
 
     /**

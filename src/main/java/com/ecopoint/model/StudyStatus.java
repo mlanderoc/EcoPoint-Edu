@@ -5,17 +5,19 @@ package com.ecopoint.model;
  * A study only moves forward one step at a time:
  * PLANIFICADO, EN_EJECUCION, EN_DEPURACION, CERRADO.
  * The only way back is reopening a closed study for data cleaning
- * (CERRADO to EN_DEPURACION).
+ * (CERRADO to EN_DEPURACION). A study being executed or cleaned can also be
+ * cancelled (RN-018); CANCELADO is final and is not part of the normal order.
  *
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 2.0
  */
 public enum StudyStatus {
 
     PLANIFICADO("Planificado"),
     EN_EJECUCION("En ejecución"),
     EN_DEPURACION("En depuración"),
-    CERRADO("Cerrado");
+    CERRADO("Cerrado"),
+    CANCELADO("Cancelado");
 
     private final String displayName;
 
@@ -47,6 +49,7 @@ public enum StudyStatus {
             case EN_EJECUCION -> target == EN_DEPURACION;
             case EN_DEPURACION -> target == CERRADO;
             case CERRADO -> target == EN_DEPURACION;
+            case CANCELADO -> false;
         };
     }
 
@@ -70,11 +73,21 @@ public enum StudyStatus {
     }
 
     /**
-     * Indicates whether the study is read-only because its baseline is official.
+     * Indicates whether the study is read-only: its baseline is official or it
+     * was cancelled.
      *
-     * @return true when the study is closed
+     * @return true when the study is closed or cancelled
      */
     public boolean isReadOnly() {
-        return this == CERRADO;
+        return this == CERRADO || this == CANCELADO;
+    }
+
+    /**
+     * Indicates whether the study may be cancelled (RN-018).
+     *
+     * @return true while executing or cleaning the data
+     */
+    public boolean allowsCancellation() {
+        return this == EN_EJECUCION || this == EN_DEPURACION;
     }
 }

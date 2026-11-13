@@ -38,7 +38,10 @@ class StudyStatusTest {
             "CERRADO,       PLANIFICADO,   false",
             "CERRADO,       EN_EJECUCION,  false",
             "CERRADO,       EN_DEPURACION, true",
-            "CERRADO,       CERRADO,       false"
+            "CERRADO,       CERRADO,       false",
+            "EN_EJECUCION,  CANCELADO,     false",
+            "CANCELADO,     EN_EJECUCION,  false",
+            "CANCELADO,     EN_DEPURACION, false"
     })
     void rn014_studyOnlyMovesOneStepForwardOrReopensForCleaning(
             StudyStatus from, StudyStatus to, boolean allowed) {
@@ -67,8 +70,20 @@ class StudyStatusTest {
     }
 
     @Test
-    void rn014_onlyClosedStudyIsReadOnly() {
+    void rn014_onlyClosedOrCancelledStudyIsReadOnly() {
         assertTrue(StudyStatus.CERRADO.isReadOnly());
+        assertTrue(StudyStatus.CANCELADO.isReadOnly());
         assertFalse(StudyStatus.EN_DEPURACION.isReadOnly());
+    }
+
+    @Test
+    void rn018_onlyExecutingOrCleaningStudyCanBeCancelled() {
+        assertFalse(StudyStatus.PLANIFICADO.allowsCancellation());
+        assertTrue(StudyStatus.EN_EJECUCION.allowsCancellation());
+        assertTrue(StudyStatus.EN_DEPURACION.allowsCancellation());
+        assertFalse(StudyStatus.CERRADO.allowsCancellation());
+        assertFalse(StudyStatus.CANCELADO.allowsCancellation());
+        assertFalse(StudyStatus.CANCELADO.allowsFieldRegistration());
+        assertFalse(StudyStatus.CANCELADO.allowsVerification());
     }
 }
