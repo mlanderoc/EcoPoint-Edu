@@ -63,7 +63,7 @@ CREATE TYPE tipo_fuente AS ENUM
 CREATE TYPE grupo_residuo AS ENUM ('BLANCO', 'VERDE', 'NEGRO', 'SIN_COLOR');
 CREATE TYPE tipo_turno AS ENUM ('MANANA', 'TARDE');
 CREATE TYPE estado_turno AS ENUM ('ABIERTO', 'CERRADO');
-CREATE TYPE estado_estudio AS ENUM ('PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION', 'CERRADO');
+CREATE TYPE estado_estudio AS ENUM ('PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION', 'CERRADO', 'CANCELADO');
 CREATE TYPE estado_verificacion AS ENUM ('PENDIENTE', 'VERIFICADO', 'CORREGIDO');
 CREATE TYPE estado_calidad AS ENUM ('CONFORME', 'NO_CONFORME', 'ANULADO');
 CREATE TYPE rol_usuario AS ENUM ('DOCENTE', 'ESTUDIANTE_UNIVERSITARIO');
@@ -77,6 +77,7 @@ CREATE TABLE INSTITUCION (
     id                     BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     nombre                 VARCHAR(150)  NOT NULL CHECK (btrim(nombre) <> ''),
     direccion              VARCHAR(200)  NOT NULL CHECK (btrim(direccion) <> ''),
+    activa                 BOOLEAN       NOT NULL DEFAULT TRUE,                  -- RN-006
     centro_latitud         NUMERIC(10,7) CHECK (centro_latitud BETWEEN -90 AND 90),
     centro_longitud        NUMERIC(10,7) CHECK (centro_longitud BETWEEN -180 AND 180),
     zoom_mapa              SMALLINT      NOT NULL DEFAULT 17 CHECK (zoom_mapa BETWEEN 0 AND 22),
@@ -155,7 +156,15 @@ CREATE TABLE ESTUDIO (
     id              BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     -- Política: RESTRICT. Una institución con estudios no se borra.
     id_institucion  BIGINT         NOT NULL REFERENCES INSTITUCION (id) ON DELETE RESTRICT,
-    estado          estado_estudio NOT NULL DEFAULT 'PLANIFICADO'                -- RN-014
+    estado          estado_estudio NOT NULL DEFAULT 'PLANIFICADO',               -- RN-014
+    -- Cancelación (RN-018): quién, cuándo y por qué. Política: RESTRICT, es historia del estudio.
+    cancelado_por       BIGINT     REFERENCES USUARIO (id) ON DELETE RESTRICT,
+    cancelado_en        TIMESTAMP,
+    motivo_cancelacion  TEXT       CHECK (btrim(motivo_cancelacion) <> ''),
+    CONSTRAINT ck_estudio_cancelacion CHECK (
+        (estado = 'CANCELADO') = (cancelado_por IS NOT NULL)
+        AND (cancelado_por IS NULL) = (cancelado_en IS NULL)
+        AND (cancelado_por IS NULL) = (motivo_cancelacion IS NULL))
     -- RN-013 (sin estudios solapados) lo valida StudyValidator: las fechas viven en DIA_MUESTREO.
 );
 

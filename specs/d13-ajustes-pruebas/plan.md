@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **BORRADOR**, pendiente de aprobación |
+| Estado | **APROBADO** (13 nov 2026) |
 | Specs | Ajustes D13 de las specs [001](../001-dominio-caracterizacion/spec.md), [002](../002-persistencia-postgresql/spec.md), [003](../003-api-rest-seguridad/spec.md) y [004](../004-registro-en-campo/spec.md) (aprobados el 13 nov 2026) |
 | Redacta / implementa | Claude |
 | Revisa | Antigravity y equipo |
@@ -47,7 +47,7 @@ Las pruebas de uso del 12 y 13 de noviembre dejaron nueve observaciones. Ya se a
 
 ## 3. Base de datos
 
-Script nuevo `sql/003_ajustes_d13.sql`, idempotente, para las bases ya creadas; `001_schema.sql` se actualiza con lo mismo para las bases nuevas.
+Script de actualización `sql/003_ajustes_d13.sql`: agrega los cambios a las bases ya creadas, sin borrar ni mover datos, y se puede ejecutar varias veces sin efecto adicional; `001_schema.sql` se actualiza con lo mismo para las bases nuevas.
 
 ```sql
 ALTER TABLE INSTITUCION ADD COLUMN IF NOT EXISTS activa BOOLEAN NOT NULL DEFAULT TRUE;   -- RN-006
@@ -58,7 +58,7 @@ ALTER TABLE ESTUDIO ADD COLUMN IF NOT EXISTS cancelado_por    BIGINT REFERENCES 
 -- CHECK: los tres datos de cancelación van juntos y solo en estado CANCELADO.
 ```
 
-Los días (`DIA_MUESTREO`) y las fuentes participantes (`FUENTE_ESTUDIO`) ya se borran en cascada con el estudio; los turnos lo impiden con `RESTRICT` (RN-019). `recrear-base.ps1` y `recrear-base.sh` ejecutan también el script 003.
+Los días (`DIA_MUESTREO`) y las fuentes participantes (`FUENTE_ESTUDIO`) ya se borran en cascada con el estudio; los turnos lo impiden con `RESTRICT` (RN-019). `recrear-base.ps1` y `recrear-base.sh` no lo necesitan, porque crean la base con `001_schema.sql`, que ya trae los cambios.
 
 ## 4. API
 

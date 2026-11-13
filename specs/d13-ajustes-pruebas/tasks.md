@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **BORRADOR**, pendiente de aprobación |
+| Estado | **APROBADO** (13 nov 2026) |
 | Plan | [plan.md](plan.md) |
 | Rama | `fix/observaciones-pruebas` |
 
@@ -10,8 +10,8 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 
 ## Fase 1 — Base de datos y dominio
 
-- [ ] **A01. Script de migración.** `sql/003_ajustes_d13.sql` (idempotente) y `001_schema.sql` actualizado: `activa` en institución, estado CANCELADO con sus tres datos y su CHECK. `recrear-base.ps1` y `recrear-base.sh` ejecutan el 003. *(Merlín)*
-  *Verificación:* `SchemaIT` (R-016); la base `ecopoint` de desarrollo se migra sin perder datos.
+- [x] **A01. Script de actualización de la base.** `sql/003_ajustes_d13.sql` (idempotente) y `001_schema.sql` actualizado: `activa` en institución, estado CANCELADO con sus tres datos y su CHECK. *Ajuste:* `recrear-base` no ejecuta el 003, porque `001_schema.sql` ya trae los cambios; el 003 es solo para bases creadas antes. *(Merlín)*
+  *Verificación:* `SchemaIT` (R-016); la base `ecopoint` de desarrollo se actualiza sin perder datos.
 
 - [ ] **A02. Modelo.**
   - `Institution` con `active`, `activate()` y `deactivate()`.
@@ -111,7 +111,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 
 ## Fase 5 — Cierre
 
-- [ ] **A18. Documentación.** `README.md`, `frontend/README.md` y `docs/base-de-datos.md` con lo nuevo (migración 003, rutas y pantallas). *(Merlín)*
+- [ ] **A18. Documentación.** `README.md`, `frontend/README.md` y `docs/base-de-datos.md` con lo nuevo (script de actualización 003, rutas y pantallas). *(Merlín)*
 
 - [ ] **A19. Revisión y PR.** Suite completa en verde y revisión de Antigravity. PR a `develop` con la descripción de las 9 observaciones. *(Merlín)*
 

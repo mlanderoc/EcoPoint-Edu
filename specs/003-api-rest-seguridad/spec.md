@@ -8,7 +8,7 @@
 | Requerimientos | RF-11 (roles y permisos); expone RF-01 a RF-14 |
 | Depende de | Spec 002 aprobada; decisiones D3, D9 |
 | Fecha | 2026-11-11 |
-| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Pendientes de aprobación.** |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). |
 
 ## 1. Objetivo
 

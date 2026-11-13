@@ -8,7 +8,7 @@
 | Requerimientos | Todos (almacenamiento de RF-01 a RF-14) |
 | Depende de | Spec 001 aprobada |
 | Fecha | 2026-11-11 |
-| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Pendientes de aprobación.** |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). |
 
 ## 1. Objetivo
 
@@ -56,7 +56,7 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
   - columna `activa` en `INSTITUCION` (RN-006);
   - estado `CANCELADO` en el tipo de estado del estudio, con quién, cuándo y por qué se canceló (RN-018);
   - al eliminar un estudio PLANIFICADO se borran en cascada sus días, fuentes participantes y cuadrillas asignadas; la base rechaza el borrado si el estudio tiene turnos (RN-019);
-  - un script de migración actualiza las bases ya creadas sin perder datos.
+  - un script de actualización agrega estos cambios a las bases ya creadas, sin borrar ni mover datos.
 
 ### 5.3 Transacciones
 
