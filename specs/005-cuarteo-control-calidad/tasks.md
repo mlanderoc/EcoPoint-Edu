@@ -18,7 +18,7 @@ Reglas: en orden, un commit por responsable, `./mvnw verify`, `npm test`, `npm r
 
 ## Fase 2 — Cuarteo y densidad
 
-- [ ] **T402. Utilidad de control en vivo.** Suma, diferencia en kg y %, estado contra la tolerancia, rango de submuestra y "muestra completa". *(Carlos)*
+- [x] **T402. Utilidad de control en vivo.** Suma, diferencia en kg y %, estado contra la tolerancia, rango de submuestra y "muestra completa". *(Carlos)*
   *Verificación:* CA-400, CA-401, CA-402, CA-403.
 
 - [ ] **T403. Pantalla de cuarteo.** Subcategorías por grupo, aviso de peligrosos, barra en vivo, guardado, composición, aviso de no conforme y anulación con motivo. Accesos desde el turno. *(Carlos)*
