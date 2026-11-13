@@ -4,6 +4,7 @@ import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.QualityControlException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Institution;
 import com.ecopoint.model.SamplingDay;
 import com.ecopoint.model.StudyStatus;
 
@@ -58,8 +59,9 @@ public final class StudyValidator {
 
     /**
      * Validates that the study does not overlap with another study of the same
-     * institution (RN-013). The study itself, studies of other institutions and
-     * studies without dates are ignored.
+     * institution (RN-013). The study itself, studies of other institutions,
+     * cancelled studies (their dates are free again, RN-018) and studies without
+     * dates are ignored.
      *
      * @param study  study being created or rescheduled
      * @param others other studies to compare with
@@ -73,11 +75,27 @@ public final class StudyValidator {
         for (CharacterizationStudy other : others) {
             boolean sameStudy = study.getId() != null && Objects.equals(study.getId(), other.getId());
             boolean sameInstitution = Objects.equals(study.getInstitutionId(), other.getInstitutionId());
-            if (!sameStudy && sameInstitution && study.overlaps(other)) {
+            boolean cancelled = other.getStatus() == StudyStatus.CANCELADO;
+            if (!sameStudy && sameInstitution && !cancelled && study.overlaps(other)) {
                 throw new BusinessRuleException("Las fechas del estudio se cruzan con otro estudio de la misma "
                         + "institución (del " + format(other.getStartDate()) + " al "
                         + format(other.getEndDate()) + ").");
             }
+        }
+    }
+
+    /**
+     * Validates that the institution admits new studies: an inactive
+     * institution keeps its data but does not admit new studies (RN-006).
+     *
+     * @param institution institution of the new study
+     * @throws BusinessRuleException if the institution is inactive
+     */
+    public static void validateInstitutionAcceptsStudies(Institution institution) {
+        ValidationSupport.requireNonNull(institution, "institucion", "El estudio debe pertenecer a una institución.");
+        if (!institution.isActive()) {
+            throw new BusinessRuleException("La institución " + institution.getName()
+                    + " está inactiva: actívela antes de crear un estudio.");
         }
     }
 

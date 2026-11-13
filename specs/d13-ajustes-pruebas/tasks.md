@@ -22,7 +22,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
   *(Estefanía)*
   *Verificación:* CA-015 (dominio), CA-016, CA-017.
 
-- [ ] **A03. Validadores.**
+- [x] **A03. Validadores.**
   - `StudyValidator`: excluye los CANCELADOS del solapamiento (RN-013) y rechaza una institución inactiva (RN-006).
   - `UserValidator`: rechaza desactivar a un DOCENTE (RN-087).
 

@@ -83,4 +83,13 @@ class UserValidatorTest {
         assertThrows(InvalidDataException.class, () -> UserValidator.validatePassword("x".repeat(73)));
         UserValidator.validatePassword("EcoPoint2026");
     }
+
+    @Test
+    void ca082_onlyStudentsCanBeDeactivated() {
+        User teacher = new User(1L, "Rosa", "Díaz", "rosa@unicesar.edu.co", UserRole.DOCENTE, 1L);
+
+        assertDoesNotThrow(() -> UserValidator.validateDeactivation(student("ana@unicesar.edu.co")));
+        assertThrows(BusinessRuleException.class, () -> UserValidator.validateDeactivation(teacher));
+        assertThrows(InvalidDataException.class, () -> UserValidator.validateDeactivation(null));
+    }
 }
