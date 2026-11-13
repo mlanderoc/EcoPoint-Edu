@@ -104,10 +104,11 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
   *(Carlos)*
   *Verificación:* CA-313; sin desplazamiento horizontal a 360 px.
 
-- [ ] **A16. Mi Perfil.** Datos del usuario, mis registros y cambiar contraseña. Reemplaza la página provisional. *(Carlos)*
+- [x] **A16. Mi Perfil.** Datos del usuario, mis registros y cambiar contraseña. Reemplaza la página provisional. *(Carlos)*
   *Verificación:* CA-314; cambio de contraseña con la actual errónea muestra el error en el campo.
 
-- [ ] **A17. Datos simulados.** Rutas y manejadores nuevos en MSW con el mismo contrato que la API. *(Carlos)*
+- [x] **A17. Datos simulados.** Rutas y manejadores nuevos en MSW con el mismo contrato que la API. *(Carlos)*
+  *Ajuste:* cada manejador se agregó junto con su pantalla (A13 a A16), porque las pruebas de cada tarea los necesitan.
   *Verificación:* `npm test` con `VITE_USE_MOCK_API` por defecto.
 
 ## Fase 5 — Cierre

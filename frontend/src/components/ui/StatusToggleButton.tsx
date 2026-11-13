@@ -22,7 +22,7 @@ export function StatusToggleButton({ active, itemName, onToggle, disabled = fals
     <Button
       type="button"
       variant="outline"
-      className="min-h-[40px] px-3 text-xs"
+      className="min-h-[48px] px-3 text-xs"
       onClick={onToggle}
       disabled={disabled}
       aria-label={`${action} ${itemName}`}

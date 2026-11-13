@@ -154,25 +154,25 @@ export function SourcesPage() {
               <table className="w-full text-left text-sm">
                 <thead>
                   <tr className="border-b border-slate-200 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
-                    <th className="py-3 px-3">Código</th>
-                    <th className="py-3 px-3">Nombre</th>
-                    <th className="py-3 px-3 hidden sm:table-cell">Tipo</th>
-                    <th className="py-3 px-3">Estado</th>
-                    <th className="py-3 px-3"><span className="sr-only">Acciones</span></th>
+                    <th className="py-3 px-2">Código</th>
+                    <th className="py-3 px-2">Nombre</th>
+                    <th className="py-3 px-2 hidden sm:table-cell">Tipo</th>
+                    <th className="py-3 px-2 hidden sm:table-cell">Estado</th>
+                    <th className="py-3 px-2"><span className="sr-only">Acciones</span></th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-medium">
                   {visible.map((s) => (
                     <tr key={s.id} className={cn('hover:bg-slate-50 transition-colors', !s.active && 'opacity-60')}
                       data-testid={`source-row-${s.code}`}>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-2">
                         <span className="font-mono font-black text-xs px-2.5 py-1 rounded-md bg-[var(--color-primary-light)] text-[var(--color-primary)] border border-emerald-200">
                           {s.code}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-semibold text-slate-800">{s.name}</td>
-                      <td className="py-3 px-3 text-slate-600 hidden sm:table-cell">{TYPE_LABELS[s.type] ?? s.type}</td>
-                      <td className="py-3 px-3">
+                      <td className="py-3 px-2 font-semibold text-slate-800">{s.name}</td>
+                      <td className="py-3 px-2 text-slate-600 hidden sm:table-cell">{TYPE_LABELS[s.type] ?? s.type}</td>
+                      <td className="py-3 px-2 hidden sm:table-cell">
                         {s.active ? (
                           <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
                             <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Activo
@@ -183,7 +183,7 @@ export function SourcesPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3 px-3 text-right">
+                      <td className="py-3 px-2 text-right">
                         <StatusToggleButton active={s.active} itemName={s.code} onToggle={() => handleToggle(s)}
                           disabled={togglingId === s.id} />
                       </td>

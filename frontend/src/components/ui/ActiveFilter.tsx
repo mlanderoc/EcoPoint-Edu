@@ -53,7 +53,7 @@ export function ActiveFilter({ value, onChange, inactiveCount }: ActiveFilterPro
         onClick={() => onChange(showingInactive ? 'activos' : 'todos')}
         aria-label={showingInactive ? 'Ocultar inactivos' : 'Mostrar inactivos'}
         title={showingInactive ? 'Ocultar inactivos' : 'Mostrar inactivos'}
-        className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+        className="min-h-[48px] min-w-[48px] inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
       >
         {showingInactive ? <Eye className="w-4 h-4" aria-hidden="true" /> : <EyeOff className="w-4 h-4" aria-hidden="true" />}
       </button>
@@ -65,7 +65,7 @@ export function ActiveFilter({ value, onChange, inactiveCount }: ActiveFilterPro
             aria-pressed={value === option.value}
             onClick={() => onChange(option.value)}
             className={cn(
-              'min-h-[36px] px-3 rounded-md text-sm font-semibold transition-colors',
+              'min-h-[44px] px-3 rounded-md text-sm font-semibold transition-colors',
               value === option.value
                 ? 'bg-[var(--color-primary)] text-white'
                 : 'text-slate-600 hover:bg-slate-100'

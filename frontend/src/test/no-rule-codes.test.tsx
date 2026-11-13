@@ -12,7 +12,8 @@ import { AuthProvider } from '@/features/auth'
 import { CategoriesPage, CrewsPage, InstitutionsPage, SourcesPage, UsersPage } from '@/features/admin'
 import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/features/field'
 import { AlertsPage, DensityPage, QuarteringPage, VerificationPage } from '@/features/quality'
-import { NewStudyPage, StudiesPage } from '@/features/study'
+import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
+import { ProfilePage } from '@/features/profile'
 import { mockUsers } from '@/mocks/data/seedData'
 import { resetMockState } from '@/mocks/handlers'
 
@@ -36,6 +37,8 @@ const SCREENS: Array<[string, string, string, ReactElement]> = [
   ['Densidad', '/campo/turno/:id/densidad', `/campo/turno/${OPEN_SHIFT}/densidad`, <DensityPage />],
   ['Verificación', '/calidad/verificacion', '/calidad/verificacion', <VerificationPage />],
   ['Alertas', '/alertas', '/alertas', <AlertsPage />],
+  ['Detalle del estudio', '/estudios/:id', '/estudios/2', <StudyDetailPage />],
+  ['Mi Perfil', '/perfil', '/perfil', <ProfilePage />],
 ]
 
 describe('Sin códigos de reglas en pantalla (R-306, CA-317)', () => {
