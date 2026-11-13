@@ -8,6 +8,7 @@
 | Requerimientos | Todos (almacenamiento de RF-01 a RF-14) |
 | Depende de | Spec 001 aprobada |
 | Fecha | 2026-11-11 |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Pendientes de aprobación.** |
 
 ## 1. Objetivo
 
@@ -51,6 +52,11 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
 - **R-013** (Debe). Listas cerradas (tipo de fuente, grupo, turno, estados, roles, tipos de alerta) como tipos `ENUM` o tablas de catálogo.
 - **R-014** (Debe). El peso neto y la densidad de la bolsa **no** se guardan digitados: se calculan (columna generada o vista), para que nunca contradigan bruto, tara y volumen.
 - **R-015** (Debe). Políticas de borrado: `RESTRICT` por defecto (no se borra lo que tiene registros dependientes); `CASCADE` solo de cuarteo a sus resultados. Cada política lleva un comentario con su porqué.
+- **R-016** (Debe). Ajustes D13:
+  - columna `activa` en `INSTITUCION` (RN-006);
+  - estado `CANCELADO` en el tipo de estado del estudio, con quién, cuándo y por qué se canceló (RN-018);
+  - al eliminar un estudio PLANIFICADO se borran en cascada sus días, fuentes participantes y cuadrillas asignadas; la base rechaza el borrado si el estudio tiene turnos (RN-019);
+  - un script de migración actualiza las bases ya creadas sin perder datos.
 
 ### 5.3 Transacciones
 

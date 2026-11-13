@@ -67,6 +67,7 @@ Decisiones D1–D9 del plan de reestructuración, confirmadas el 11 nov 2026:
 | D10 | Toda la persistencia en **PostgreSQL 16+, instalado localmente** por cada integrante. Nada de archivos planos. El esquema se diseña desde cero; el script del modelo anterior no se usa. |
 | D11 | El código del modelo anterior (Swing, repositorios de archivos, puntos ecológicos) se **elimina al empezar** la spec 001. Antes se marca con un tag de git para poder consultarlo. |
 | D12 | Mientras no lleguen los datos reales de la I.E. Prudencia Daza, los datos semilla son **ficticios pero realistas**. |
+| D13 | **Ajustes por las pruebas de uso** (13 nov 2026): fechas del estudio recalculadas con días hábiles y festivos de Colombia; activar y desactivar fuentes, subcategorías e instituciones, con filtro de inactivos; sin códigos de reglas en pantalla; botones Atrás, Guardar y Descartar, y cursor de mano; pantalla Mi Perfil; eliminar un estudio planificado y cancelar uno iniciado; solo los estudiantes se desactivan; usuarios en tabla con filtros. Afecta las specs 001 a 004. |
 
 ### Diferencias con el Requerimiento Técnico oficial (registro de riesgo)
 

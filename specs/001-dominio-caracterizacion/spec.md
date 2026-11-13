@@ -8,6 +8,7 @@
 | Requerimientos | RF-01 a RF-12 (reglas del dominio) |
 | Depende de | Decisiones D1, D6, D8, D9 |
 | Fecha | 2026-11-11 |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Pendientes de aprobación.** |
 
 ## 1. Objetivo
 
@@ -46,14 +47,15 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 - **RN-002** (Debe). El código de la fuente tiene de 2 a 6 caracteres, solo letras mayúsculas y dígitos (ej. `AU`, `AU2`, `PAE`, `LAB`). Es único dentro de la institución.
 - **RN-003** (Debe). El tipo de fuente es uno de: AULAS, OFICINAS, TIENDA_ESCOLAR, PAE, ZONAS_VERDES, BANOS, LABORATORIO, OTRA.
 - **RN-004** (Debe). Si una fuente tiene polígono, debe ser cerrado (primer vértice = último), tener al menos 3 vértices distintos, y cada vértice debe tener latitud entre −90 y 90 y longitud entre −180 y 180.
-- **RN-005** (Debe). Una fuente con registros (bolsas) no se borra; solo se desactiva. Una fuente inactiva no aparece para nuevos registros.
+- **RN-005** (Debe). Una fuente con registros (bolsas) no se borra; solo se desactiva. Una fuente inactiva no aparece para nuevos registros. Una fuente se puede **crear inactiva** y se puede **volver a activar** (D13).
+- **RN-006** (Debe). Una institución no se borra; se **desactiva** y se puede volver a activar. Una institución inactiva no admite estudios nuevos; sus estudios, fuentes y registros se conservan (D13).
 
 ### 3.2 Estudio de caracterización
 
 - **RN-010** (Debe). Un estudio pertenece a una institución y tiene exactamente **8 días de muestreo**, numerados del 1 al 8.
-- **RN-011** (Debe). Cada día tiene una fecha. Las fechas van en orden estrictamente creciente (el día 2 es posterior al día 1, etc.). No se exige que sean días calendario seguidos, porque fines de semana y festivos no tienen clases (ver pregunta P1).
+- **RN-011** (Debe). Cada día tiene una fecha. Las fechas van en orden estrictamente creciente (el día 2 es posterior al día 1, etc.). No se exige que sean días calendario seguidos, porque fines de semana y festivos no tienen clases (ver pregunta P1). La propuesta de fechas de la pantalla omite sábados, domingos y **festivos de Colombia** (spec 004, R-330).
 - **RN-012** (Debe). El **día 1 queda marcado como excluido**: se registra igual que los demás, pero no entra en los cálculos de la línea base. Los cálculos usan los días 2 a 8 (n = 7).
-- **RN-013** (Debe). Una institución no puede tener dos estudios con fechas que se solapen.
+- **RN-013** (Debe). Una institución no puede tener dos estudios con fechas que se solapen. Los estudios **CANCELADOS** no cuentan: sus fechas quedan libres (D13).
 - **RN-014** (Debe). El estudio tiene estos estados, y solo avanza en este orden:
 
   | Estado | Qué se puede hacer |
@@ -62,10 +64,15 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
   | EN_EJECUCION | Registrar población, bolsas, cuarteos y densidades. |
   | EN_DEPURACION | No se registran datos nuevos; solo verificar y corregir. |
   | CERRADO | Solo lectura. La línea base es oficial. |
+  | CANCELADO | Solo lectura. Se conservan los datos, pero el estudio no entra en indicadores ni en el registro en campo (RN-018). |
+
+  La única salida del orden es **cancelar**: desde EN_EJECUCION o EN_DEPURACION se puede pasar a CANCELADO (RN-018). CANCELADO es definitivo.
 
 - **RN-015** (Debe). Para pasar a EN_EJECUCION, el estudio necesita al menos una fuente activa y las 8 fechas definidas.
 - **RN-016** (Debe). Para pasar a CERRADO, no puede quedar ningún registro en estado PENDIENTE de verificación ni ningún cuarteo NO_CONFORME sin resolver (ver RN-052 y RN-062).
 - **RN-017** (Debería). Un estudio CERRADO puede reabrirse a EN_DEPURACION solo por un DOCENTE, indicando el motivo. Queda registrado.
+- **RN-018** (Debe). Un DOCENTE puede **cancelar** un estudio EN_EJECUCION o EN_DEPURACION, con motivo obligatorio. Queda registrado quién, cuándo y por qué. Los datos no se borran. Un estudio CERRADO no se cancela, porque su línea base ya es oficial; si tiene errores, se reabre (RN-017) (D13).
+- **RN-019** (Debe). Un DOCENTE puede **eliminar** un estudio solo mientras está PLANIFICADO, porque aún no tiene datos de campo. Se eliminan con él sus días, fuentes participantes y cuadrillas asignadas (D13).
 
 ### 3.3 Turnos y población
 
@@ -100,6 +107,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 - **RN-041** (Debe). Cada subcategoría pertenece a un solo grupo. El nombre de la subcategoría es único en todo el sistema.
 - **RN-042** (Debe). Una subcategoría que ya tiene resultados registrados no se borra ni cambia de grupo.
+- **RN-043** (Debe). Una subcategoría se puede **crear inactiva**, **desactivar** y **volver a activar**. Una subcategoría inactiva no se ofrece en cuarteos nuevos; los resultados ya registrados se conservan y siguen contando en la composición (D13).
 
 ### 3.6 Cuarteo y densidad
 
@@ -142,6 +150,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
   | --- | --- | --- |
   | Gestionar instituciones, fuentes y usuarios | Sí | No |
   | Crear estudio y cambiar su estado | Sí | No |
+  | Eliminar un estudio planificado o cancelar uno iniciado | Sí | No |
   | Abrir, cerrar y reabrir turnos | Sí | No |
   | Registrar población | Sí | Sí |
   | Registrar bolsas | Sí | Sí |
@@ -157,6 +166,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 - **RN-084** (Debe). El correo del usuario es único en el sistema.
 - **RN-085** (Debe). Toda cuadrilla tiene un DOCENTE responsable.
 - **RN-086** (Podría). Al abrir un turno se registra la verificación de EPP de la cuadrilla: guantes, tapabocas, bata u overol (sí/no cada uno).
+- **RN-087** (Debe). Ningún usuario se borra. Un DOCENTE puede **desactivar y volver a activar** a un ESTUDIANTE_UNIVERSITARIO. Un DOCENTE **no** se puede desactivar ni eliminar, ni siquiera a sí mismo, para que la institución nunca se quede sin quien la administre (D13).
 
 ### 3.10 Evidencias
 
@@ -179,6 +189,8 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 - **CA-001.** Dado un código `au` (minúsculas), `A` (1 carácter) o `AULAS12` (7 caracteres), cuando se valida la fuente, entonces se rechaza por formato (RN-002); `AULAS1` (6 caracteres) sí es válido.
 - **CA-002.** Dada una institución con una fuente `AU`, cuando se crea otra fuente `AU` en la misma institución, entonces se rechaza; en otra institución sí se acepta.
 - **CA-003.** Dado un polígono de 3 puntos sin cerrar, o con una latitud de 95, cuando se valida, entonces se rechaza (RN-004).
+- **CA-004.** Dada una fuente creada inactiva, cuando se consulta, entonces sigue inactiva; cuando se activa, queda activa (RN-005).
+- **CA-005.** Dada una institución inactiva, cuando se crea un estudio en ella, entonces se rechaza; cuando se vuelve a activar, se acepta (RN-006).
 
 **Estudio**
 
@@ -187,6 +199,9 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 - **CA-012.** Dado un estudio del 3 al 14 de marzo, cuando se crea otro estudio en la misma institución del 10 al 21 de marzo, entonces se rechaza por solapamiento (RN-013).
 - **CA-013.** Dado un estudio PLANIFICADO, cuando se intenta pasar directo a CERRADO, entonces se rechaza (RN-014).
 - **CA-014.** Dado un estudio con una bolsa PENDIENTE, cuando se intenta cerrar, entonces se rechaza indicando cuántos registros faltan (RN-016).
+- **CA-015.** Dado un estudio EN_EJECUCION del 3 al 14 de marzo, cuando el docente lo cancela sin motivo, entonces se rechaza; con el motivo "Fechas equivocadas", queda CANCELADO, conserva sus bolsas, y un estudio nuevo del 3 al 14 de marzo en la misma institución se acepta (RN-013, RN-018).
+- **CA-016.** Dado un estudio CERRADO, cuando se intenta cancelar, entonces se rechaza (RN-018).
+- **CA-017.** Dado un estudio EN_EJECUCION, cuando se intenta eliminar, entonces se rechaza; dado uno PLANIFICADO, se elimina con sus días y fuentes participantes (RN-019).
 
 **Turnos y población**
 
@@ -211,6 +226,7 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 - **CA-054.** Dadas subcategorías papel 10 kg, restos de comida 25 kg e icopor 15 kg, cuando se calcula la composición, entonces papel = 20,00 %, restos de comida = 50,00 %, icopor = 30,00 %, y los grupos quedan BLANCO 20 %, VERDE 50 %, NEGRO 30 %, SIN_COLOR 0 %.
 - **CA-055.** Dado un turno que ya tiene un cuarteo, cuando se registra otro, entonces se rechaza (RN-050).
 - **CA-056.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando registra un peso de la subcategoría "Pilas" (SIN_COLOR), entonces se acepta, porque su rol tiene el permiso de residuos peligrosos (RN-056, RN-081).
+- **CA-057.** Dada la subcategoría "Icopor" inactiva, cuando se registra un cuarteo nuevo con un peso de icopor, entonces se rechaza; los cuarteos anteriores con icopor no cambian (RN-043).
 
 **Verificación**
 
@@ -222,6 +238,7 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 
 - **CA-080.** Dado un usuario con un correo ya registrado, cuando se crea, entonces se rechaza (RN-084).
 - **CA-081.** Dada una cuadrilla cuyo responsable es un ESTUDIANTE_UNIVERSITARIO, o sin responsable, cuando se valida, entonces se rechaza (RN-085).
+- **CA-082.** Dado un ESTUDIANTE_UNIVERSITARIO activo, cuando el docente lo desactiva y luego lo activa, entonces queda activo de nuevo; dado un DOCENTE, cuando se intenta desactivarlo (incluso él mismo), entonces se rechaza (RN-087).
 
 **Errores**
 

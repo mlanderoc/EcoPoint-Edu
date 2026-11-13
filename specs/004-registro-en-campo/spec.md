@@ -8,6 +8,7 @@
 | Requerimientos | RF-01, RF-02, RF-03, RF-04, RF-05, RF-11 |
 | Depende de | Spec 003 aprobada; decisión D4 |
 | Fecha | 2026-11-11 |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Pendientes de aprobación.** |
 
 ## 1. Objetivo
 
@@ -52,6 +53,10 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **R-303** (Debe). Los errores de la API (formato de la spec 003) se muestran junto al campo afectado, o en un aviso si no son de un campo. Siempre en español.
 - **R-304** (Debe). Se usa la paleta de colores del logo de EcoPoint Edu. Los grupos de residuos se muestran siempre con su color (Blanco, Verde, Negro, gris para Sin color) **y** con su nombre escrito, para que el color no sea la única pista.
 - **R-305** (Debe). Mientras se espera una respuesta, el botón queda deshabilitado para evitar envíos dobles.
+- **R-306** (Debe). Ninguna pantalla ni mensaje muestra códigos de reglas (R-, RN-, CA-). Esos códigos quedan solo en el código y las pruebas (D13).
+- **R-307** (Debe). Toda pantalla interna (que no es del menú) tiene un botón **Atrás** que vuelve a la pantalla anterior (D13).
+- **R-308** (Debe). Todo formulario tiene **Guardar** y **Descartar**. Si hay cambios sin guardar, Descartar o Atrás preguntan "¿Descartar los cambios?" antes de salir (D13).
+- **R-309** (Debe). Todo lo que se puede tocar o hacer clic (botones, enlaces, casillas, listas desplegables, filas seleccionables) muestra el cursor de mano; lo deshabilitado, el cursor de prohibido (D13).
 
 ### 5.2 Inicio de sesión y menú
 
@@ -61,18 +66,22 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 
 ### 5.3 Administración (solo docente)
 
-- **R-320** (Debe). **Instituciones**: listar, crear y editar (nombre, dirección).
-- **R-321** (Debe). **Fuentes de generación**: listar, crear, editar y desactivar, con código, nombre, tipo y estado. El polígono se dibuja en la spec 007.
-- **R-322** (Debe). **Usuarios**: listar, crear, editar y desactivar, con nombre, apellido, correo y rol (DOCENTE o ESTUDIANTE_UNIVERSITARIO).
+- **R-320** (Debe). **Instituciones**: listar, crear, editar (nombre, dirección), **activar y desactivar** (RN-006).
+- **R-321** (Debe). **Fuentes de generación**: listar, crear, editar, **activar y desactivar**, con código, nombre, tipo y estado. La casilla "activa" del formulario se respeta al crear. El polígono se dibuja en la spec 007.
+- **R-322** (Debe). **Usuarios**: listar, crear y editar, con nombre, apellido, correo y rol (DOCENTE o ESTUDIANTE_UNIVERSITARIO). Se muestran en una **tabla** (no en tarjetas) con nombre, correo, rol, estado y total de registros; con filtros por **rol** y por **estado**, buscador por nombre o correo, y **paginación**. Cada fila de estudiante tiene **Activar** o **Desactivar**; las filas de docentes no tienen esa opción (RN-087).
 - **R-323** (Debe). **Cuadrillas**: crear, nombrar, asignar docente responsable e integrantes. Avisa si la cuadrilla no tiene un docente responsable (RN-085).
-- **R-324** (Debe). **Subcategorías de residuos**: listar por grupo; crear y editar.
+- **R-324** (Debe). **Subcategorías de residuos**: listar por grupo; crear, editar, **activar y desactivar** (RN-043). La casilla "activa" del formulario se respeta al crear.
+- **R-325** (Debe). En Instituciones, Fuentes y Subcategorías, la lista muestra por defecto **solo los activos**, con un filtro **Activos / Inactivos / Todos** y un ícono de ojo para mostrar u ocultar los inactivos. Los inactivos se ven atenuados y con la etiqueta "Inactivo" (D13).
 
 ### 5.4 Configuración del estudio (solo docente)
 
-- **R-330** (Debe). Crear un estudio: institución, fecha del día 1 y fechas de los días 2 a 8. El sistema propone los siguientes 7 días hábiles (lunes a viernes) y el docente puede cambiarlos.
+- **R-330** (Debe). Crear un estudio: institución, fecha del día 1 y fechas de los días 2 a 8. El sistema propone los siguientes 7 días hábiles y el docente puede cambiarlos. **Día hábil** = de lunes a viernes y que no sea festivo en Colombia (incluidos los festivos que se trasladan al lunes y los de Semana Santa). Al cambiar **cualquier** día, todos los días posteriores se recalculan como los días hábiles siguientes, aunque se hubieran cambiado a mano (D13).
 - **R-331** (Debe). Elegir qué fuentes participan (por defecto, todas las activas) y asignar cuadrillas a cada turno.
 - **R-332** (Debe). Ver el estado del estudio y los botones para avanzarlo (RN-014), con una confirmación antes de cada cambio. Si un cambio no es posible, se explica por qué (ej. "Quedan 4 registros pendientes de verificación").
 - **R-333** (Debe). El día 1 se muestra con la etiqueta "Día de descarte: no entra en los cálculos".
+- **R-334** (Debe). En el detalle de un estudio PLANIFICADO se pueden **editar las fechas** con la misma regla de R-330 (D13).
+- **R-335** (Debe). En el detalle de un estudio PLANIFICADO hay un botón **Eliminar estudio**, con confirmación (RN-019) (D13).
+- **R-336** (Debe). En el detalle de un estudio EN_EJECUCION o EN_DEPURACION hay un botón **Cancelar estudio**, que pide el motivo y advierte que es definitivo (RN-018). La lista de estudios muestra los cancelados con su etiqueta; no aparecen en Registro en campo ni en Indicadores (D13).
 
 ### 5.5 Registro en campo
 
@@ -87,6 +96,12 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **R-348** (Debería). Corregir una bolsa del turno abierto mientras siga PENDIENTE de verificación. Después de verificada, se corrige solo desde la pantalla de verificación (spec 005).
 - **R-349** (Podría). Lista de verificación de EPP al abrir el turno (RN-086).
 
+### 5.6 Mi Perfil (todos los roles)
+
+- **R-350** (Debe). Muestra nombre, apellido, correo, rol, institución y cuadrillas del usuario (D13).
+- **R-351** (Debe). Muestra **sus propios** totales de registros: poblaciones, bolsas, cuarteos y densidades digitados, verificaciones hechas y correcciones que recibieron sus datos. Un estudiante no ve los totales de otros; el docente los ve en la tabla de Usuarios (R-322) (D13).
+- **R-352** (Debe). Permite **cambiar la contraseña**, pidiendo la actual, la nueva y su confirmación (D13).
+
 ## 6. Criterios de aceptación
 
 - **CA-300.** Dado un ESTUDIANTE_UNIVERSITARIO, cuando inicia sesión, entonces el menú no muestra Administración ni Configuración del estudio, y en el registro en campo no ve los botones de abrir ni cerrar turno.
@@ -100,6 +115,13 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **CA-308.** Dado el flujo de CA-307, cuando lo hace un usuario entrenado, entonces registrar una bolsa toma menos de 30 segundos.
 - **CA-309.** Dado un estudio con registros pendientes, cuando el docente intenta cerrarlo, entonces ve el motivo exacto y el estado no cambia.
 - **CA-310.** Dado un doble clic rápido en "Guardar bolsa", cuando se procesa, entonces se crea una sola bolsa.
+- **CA-311.** Dado un estudio nuevo con día 1 el viernes 13 de noviembre de 2026, cuando se elige el día 1, entonces se proponen del 17 al 20 y del 23 al 25 de noviembre: se saltan el fin de semana y el lunes 16, festivo. Si luego se cambia el día 4 al lunes 23, los días 5 a 8 pasan a ser del 24 al 27 (R-330).
+- **CA-312.** Dada una fuente creada con la casilla "activa" desmarcada, cuando se guarda, entonces no aparece en la lista por defecto, aparece con el filtro "Inactivos" y se puede activar desde ahí (R-321, R-325).
+- **CA-313.** Dados 50 estudiantes y 2 docentes, cuando el docente abre Usuarios, entonces ve una tabla paginada; al filtrar por rol Estudiante y estado Inactivo, solo ve los estudiantes inactivos; las filas de docentes no tienen el botón Desactivar (R-322).
+- **CA-314.** Dado un estudiante que registró 3 bolsas, cuando abre Mi Perfil, entonces ve sus datos y "3 bolsas", y no ve totales de otros usuarios (R-350, R-351).
+- **CA-315.** Dado un estudio EN_EJECUCION, cuando el docente pulsa Cancelar estudio sin escribir motivo, entonces no se puede confirmar; con motivo, el estudio queda Cancelado y desaparece de Registro en campo (R-336).
+- **CA-316.** Dado un formulario con datos escritos sin guardar, cuando se pulsa Atrás o Descartar, entonces se pregunta "¿Descartar los cambios?" y, si se responde que no, los datos siguen ahí (R-307, R-308).
+- **CA-317.** Dada cualquier pantalla, cuando se revisa su texto, entonces no contiene códigos como "R-320" o "RN-085" (R-306).
 
 ## 7. Fuera de alcance
 

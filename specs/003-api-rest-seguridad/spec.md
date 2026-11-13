@@ -8,6 +8,7 @@
 | Requerimientos | RF-11 (roles y permisos); expone RF-01 a RF-14 |
 | Depende de | Spec 002 aprobada; decisiones D3, D9 |
 | Fecha | 2026-11-11 |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Pendientes de aprobación.** |
 
 ## 1. Objetivo
 
@@ -82,6 +83,9 @@ La API es el **contrato** entre backend y frontend. Una vez aprobada, los dos la
 - **R-125** (Debe). `GET /api/v1/auth/me` devuelve el usuario actual con su rol y su institución, para que el frontend arme el menú.
 - **R-126** (Debería). Después de 5 intentos fallidos seguidos, la cuenta se bloquea 15 minutos.
 - **R-127** (Debe). Solo se aceptan peticiones del origen del frontend (CORS configurado; nada de `*`).
+- **R-132** (Debe). Cada usuario puede **cambiar su contraseña** indicando la actual. La nueva cumple las mismas reglas que al crear el usuario (D13).
+- **R-133** (Debe). Cada usuario puede consultar **sus propios** totales de registros: poblaciones, bolsas, cuarteos y densidades digitados, verificaciones hechas y correcciones que recibieron sus datos. El docente puede consultar los de cualquier usuario; un estudiante, solo los suyos (D13).
+- **R-134** (Debe). Los mensajes de error de la API no incluyen códigos de reglas (RN-, R-, CA-); explican el problema en palabras (D13).
 
 ### 5.4 Recursos de la API
 
@@ -89,14 +93,14 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 
 | Recurso | Operaciones | Spec que lo usa |
 | --- | --- | --- |
-| `auth` | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me` | Todas |
-| `institutions` | Listar, ver, crear, editar | 004, 007 |
-| `institutions/{id}/sources` | Listar, ver, crear, editar, desactivar fuentes | 004, 007 |
+| `auth` | `POST /auth/login`, `POST /auth/logout`, `GET /auth/me`; cambiar mi contraseña; ver mis totales de registros | Todas |
+| `institutions` | Listar (filtro por estado), ver, crear, editar, activar, desactivar | 004, 007 |
+| `institutions/{id}/sources` | Listar (filtro por estado), ver, crear (activa o inactiva), editar, activar, desactivar fuentes | 004, 007 |
 | `institutions/{id}/map` | Ver el plano: GeoJSON de fuentes con sus indicadores | 007 |
-| `waste-categories` | Listar grupos y subcategorías; crear y editar (docente) | 005 |
-| `users` | Listar, ver, crear, editar, desactivar | 004 |
+| `waste-categories` | Listar grupos y subcategorías (filtro por estado); crear (activa o inactiva), editar, activar y desactivar (docente) | 004, 005 |
+| `users` | Listar con filtros (rol, estado, texto) y paginación, ver, crear, editar; activar y desactivar estudiantes; ver totales de registros | 004 |
 | `crews` | Listar, crear, editar integrantes | 004 |
-| `studies` | Listar, ver, crear, editar, cambiar estado | 004, 006 |
+| `studies` | Listar, ver, crear, editar, cambiar estado, cancelar (con motivo), eliminar si está planificado | 004, 006 |
 | `studies/{id}/days` | Ver y editar fechas de los días | 004 |
 | `studies/{id}/shifts` | Listar turnos con su estado y su avance | 004 |
 | `shifts/{id}` | Ver, abrir, cerrar, reabrir | 004 |
