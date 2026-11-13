@@ -183,3 +183,104 @@ export interface WasteBag {
   atypical: boolean
   verification: Verification
 }
+
+export interface QuarteringResultItem {
+  categoryId: number
+  categoryName: string
+  group: WasteGroup
+  weight: number
+  percentage: number | null
+}
+
+/** QuarteringResponse of the API (RN-050 to RN-054). */
+export interface Quartering {
+  id: number
+  shiftId: number
+  shiftNetWeight: number
+  sampleWeight: number
+  totalClassifiedWeight: number
+  differenceKg: number
+  differencePercent: number
+  qualityStatus: QualityStatus
+  results: QuarteringResultItem[]
+  groupComposition: Record<WasteGroup, number>
+  annulReason: string | null
+  annulledBy: number | null
+  annulledAt: string | null
+  verification: Verification
+}
+
+/** DensityDto of the API (RN-057). */
+export interface DensityMeasurement {
+  id: number
+  shiftId: number
+  containerVolume: number
+  netWeight: number
+  density: number | null
+  verification: Verification
+}
+
+/** Kind of verifiable record in the routes of the API. */
+export type RecordType = 'population' | 'bag' | 'quartering' | 'density'
+
+export interface RecordField {
+  field: string
+  label: string
+  value: number | string | null
+  editable: boolean
+}
+
+/** VerifiableRecordResponse of the API (spec 005, R-420, R-421). */
+export interface VerifiableRecord {
+  recordType: RecordType
+  recordName: string
+  recordId: number
+  shiftId: number
+  shiftCode: string
+  title: string
+  fields: RecordField[]
+  verification: Verification
+}
+
+export interface ShiftVerificationProgress {
+  shiftId: number
+  dayNumber: number
+  type: ShiftType
+  code: string
+  pending: number
+  verified: number
+  corrected: number
+  nonConformingQuartering: boolean
+}
+
+/** VerificationSummaryResponse of the API (spec 005, R-424). */
+export interface VerificationSummary {
+  shifts: ShiftVerificationProgress[]
+  pending: number
+  verified: number
+  corrected: number
+  nonConformingQuarterings: number
+  readyToClose: boolean
+}
+
+export interface CorrectionEntry {
+  field: string
+  oldValue: string | null
+  newValue: string | null
+  reason: string
+  userId: number
+  at: string
+}
+
+export interface Alert {
+  id: number
+  type: AlertType
+  targetType: string
+  targetId: number | null
+  description: string
+  createdAt: string
+  attended: boolean
+  attendedBy: number | null
+  attendedAt: string | null
+  note: string | null
+}

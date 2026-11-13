@@ -62,6 +62,7 @@ class VerificationServiceTest {
     private CorrectionRepository corrections;
     private StudyRepository studies;
     private WasteBagRepository bags;
+    private ShiftRepository shifts;
     private VerificationService service;
     private SamplingShift shift;
     private WasteBag bag;
@@ -76,7 +77,7 @@ class VerificationServiceTest {
         corrections = mock(CorrectionRepository.class);
         studies = mock(StudyRepository.class);
         bags = mock(WasteBagRepository.class);
-        ShiftRepository shifts = mock(ShiftRepository.class);
+        shifts = mock(ShiftRepository.class);
         InstitutionRepository institutions = mock(InstitutionRepository.class);
         service = new VerificationService(verifications, corrections, shifts, studies, bags,
                 mock(QuarteringRepository.class), mock(DensityRepository.class), institutions,
@@ -176,6 +177,43 @@ class VerificationServiceTest {
         assertEquals(RecordKind.DENSITY, RecordKind.fromPath("Density"));
         assertEquals(RecordKind.BAG, RecordKind.fromRecordType("Bolsa"));
         assertThrows(InvalidDataException.class, () -> RecordKind.fromPath("photo"));
+    }
+
+    @Test
+    void ca410_summaryShowsWhatIsPendingAndWhetherTheStudyCanClose() {
+        when(shifts.findByStudy(7L)).thenReturn(List.of(shift));
+
+        VerificationSummary summary = service.summary(checker, 7L);
+        assertEquals(2, summary.pending(), "La población y la bolsa siguen pendientes");
+        assertEquals("D3-M", summary.shifts().get(0).code());
+        assertEquals(false, summary.readyToClose());
+
+        bag.getVerification().markVerified(12L, NOW);
+        shift.getPopulation().getVerification().markCorrected(12L, NOW);
+        VerificationSummary done = service.summary(checker, 7L);
+        assertEquals(0, done.pending());
+        assertEquals(1, done.verified());
+        assertEquals(1, done.corrected());
+        assertEquals(true, done.readyToClose());
+    }
+
+    @Test
+    void r420_shiftRecordsComeWithTheirKindInOrder() {
+        when(shifts.findById(30L)).thenReturn(Optional.of(shift));
+
+        List<RecordView> records = service.shiftRecords(30L);
+
+        assertEquals(List.of(RecordKind.POPULATION, RecordKind.BAG), records.stream().map(RecordView::kind).toList());
+        assertEquals(shift, records.get(1).shift());
+    }
+
+    @Test
+    void r430_recordIsFoundByKindAndIdWithItsShift() {
+        RecordView view = service.record(RecordKind.BAG, 50L);
+
+        assertEquals(bag, view.record());
+        assertEquals(30L, view.shift().getId());
+        assertThrows(ResourceNotFoundException.class, () -> service.record(RecordKind.BAG, 99L));
     }
 
     private void study(StudyStatus status) {

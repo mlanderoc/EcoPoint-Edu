@@ -11,6 +11,7 @@ import { AppLayout } from '@/components/layout'
 import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/features/field'
 import { InstitutionsPage, SourcesPage, UsersPage, CrewsPage, CategoriesPage } from '@/features/admin'
 import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
+import { AlertsPage, DensityPage, QuarteringPage, RecordPage, VerificationPage } from '@/features/quality'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -107,6 +108,23 @@ export function AppRoutes() {
         />
 
         <Route
+          path="/campo/turno/:id/cuarteo"
+          element={
+            <RoutedAppLayout>
+              <QuarteringPage />
+            </RoutedAppLayout>
+          }
+        />
+        <Route
+          path="/campo/turno/:id/densidad"
+          element={
+            <RoutedAppLayout>
+              <DensityPage />
+            </RoutedAppLayout>
+          }
+        />
+
+        <Route
           path="/perfil"
           element={
             <RoutedAppLayout>
@@ -122,10 +140,23 @@ export function AppRoutes() {
           path="/alertas"
           element={
             <RoutedAppLayout>
-              <PlaceholderPage
-                title="Alertas y Notificaciones"
-                description="Registro histórico de alertas de calidad y pesos atípicos."
-              />
+              <AlertsPage />
+            </RoutedAppLayout>
+          }
+        />
+        <Route
+          path="/calidad/verificacion"
+          element={
+            <RoutedAppLayout>
+              <VerificationPage />
+            </RoutedAppLayout>
+          }
+        />
+        <Route
+          path="/calidad/registro/:tipo/:id"
+          element={
+            <RoutedAppLayout>
+              <RecordPage />
             </RoutedAppLayout>
           }
         />
