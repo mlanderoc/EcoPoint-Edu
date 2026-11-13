@@ -23,7 +23,7 @@ export type ShiftType = 'MANANA' | 'TARDE'
 
 export type ShiftStatus = 'ABIERTO' | 'CERRADO'
 
-export type StudyStatus = 'PLANIFICADO' | 'EN_EJECUCION' | 'EN_DEPURACION' | 'CERRADO'
+export type StudyStatus = 'PLANIFICADO' | 'EN_EJECUCION' | 'EN_DEPURACION' | 'CERRADO' | 'CANCELADO'
 
 export type VerificationStatus = 'PENDIENTE' | 'VERIFICADO' | 'CORREGIDO'
 
@@ -113,6 +113,9 @@ export interface CharacterizationStudy {
   days: SamplingDay[]
   participatingSourceIds: number[]
   pendingRecords: number
+  /** Reason of the cancellation (RN-018), or null. */
+  cancellationReason?: string | null
+  cancelledAt?: string | null
 }
 
 export interface Verification {

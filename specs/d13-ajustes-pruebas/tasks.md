@@ -77,14 +77,14 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 
 ## Fase 4 — Pantallas
 
-- [ ] **A12. Fechas del estudio.**
+- [x] **A12. Fechas del estudio.**
   - `holidays.ts` y `recalculateFrom`.
   - `StudyDatesEditor` en Nuevo estudio y en el Detalle del estudio PLANIFICADO (R-334).
 
   *(Carlos)*
   *Verificación:* CA-301, CA-311.
 
-- [ ] **A13. Eliminar y cancelar estudio.** Botones en el detalle, cada uno con su confirmación; el de cancelar pide motivo. La etiqueta "Cancelado" aparece en la lista. Registro en campo ignora los cancelados. *(Carlos)*
+- [x] **A13. Eliminar y cancelar estudio.** Botones en el detalle, cada uno con su confirmación; el de cancelar pide motivo. La etiqueta "Cancelado" aparece en la lista. Registro en campo ignora los cancelados. *(Carlos)*
   *Verificación:* CA-315.
 
 - [ ] **A14. Activar y desactivar en administración.**

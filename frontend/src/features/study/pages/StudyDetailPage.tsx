@@ -1,19 +1,24 @@
 /**
- * Lifecycle of a study: progress of its 8 days and the step to the next status
- * (Spec 004, T316; R-332, R-333, CA-309).
+ * Lifecycle of a study: progress of its 8 days, the step to the next status,
+ * the dates of a planned study, and deleting or cancelling it (Spec 004, T316;
+ * R-332 to R-336, CA-309, CA-315).
  *
  * @author craulgomez
  */
 
 import { useCallback, useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Ban, CalendarDays, Trash2 } from 'lucide-react'
 import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input, Modal } from '@/components/ui'
 import { ApiError } from '@/services/apiClient'
 import { CharacterizationStudy, ShiftSlot } from '@/types'
 import { cn } from '@/utils/cn'
+import { StudyDatesEditor } from '../components/StudyDatesEditor'
 import { studyService } from '../services/studyService'
 import { formatDate } from '../utils/samplingDays'
-import { NEXT_STEP, STATUS_LABELS, studyTitle } from '../utils/studyStatus'
+import { NEXT_STEP, STATUS_LABELS, canCancel, canDelete, studyTitle } from '../utils/studyStatus'
+
+type Dialog = 'status' | 'cancel' | 'delete' | null
 
 function slotLabel(slot: ShiftSlot | undefined): string {
   if (!slot || slot.status === null) return 'Sin abrir'
@@ -27,16 +32,23 @@ function slotStyle(slot: ShiftSlot | undefined): string {
     : 'bg-amber-50 text-amber-900 border-amber-200'
 }
 
+function datesOf(study: CharacterizationStudy): string[] {
+  return study.days.map((day) => day.date ?? '')
+}
+
 export function StudyDetailPage() {
   const { id } = useParams()
   const studyId = Number(id)
+  const navigate = useNavigate()
   const [study, setStudy] = useState<CharacterizationStudy | null>(null)
   const [slots, setSlots] = useState<ShiftSlot[]>([])
   const [loadError, setLoadError] = useState<string | null>(null)
   const [rejection, setRejection] = useState<string | null>(null)
-  const [isConfirming, setIsConfirming] = useState(false)
+  const [dialog, setDialog] = useState<Dialog>(null)
   const [reason, setReason] = useState('')
   const [isSaving, setIsSaving] = useState(false)
+  const [dates, setDates] = useState<string[] | null>(null)
+  const [datesSaved, setDatesSaved] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -60,22 +72,48 @@ export function StudyDetailPage() {
   }
 
   const step = NEXT_STEP[study.status]
+  const editedDates = dates ?? datesOf(study)
+  const datesChanged = editedDates.some((date, index) => date !== datesOf(study)[index])
 
-  const handleConfirm = async () => {
+  const closeDialog = () => {
+    setDialog(null)
+    setReason('')
+  }
+
+  const run = async (action: () => Promise<void>, failure: string) => {
     setRejection(null)
     try {
       setIsSaving(true)
-      const updated = await studyService.changeStatus(study.id, step.target, step.needsReason ? reason : undefined)
-      setStudy(updated)
-      setIsConfirming(false)
-      setReason('')
+      await action()
     } catch (err) {
-      setIsConfirming(false)
-      setRejection(err instanceof ApiError ? err.message : 'No se pudo cambiar el estado del estudio.')
+      setRejection(err instanceof ApiError ? err.message : failure)
     } finally {
       setIsSaving(false)
+      closeDialog()
     }
   }
+
+  const handleStatus = () => run(async () => {
+    if (!step) return
+    setStudy(await studyService.changeStatus(study.id, step.target, step.needsReason ? reason : undefined))
+  }, 'No se pudo cambiar el estado del estudio.')
+
+  const handleCancel = () => run(async () => {
+    setStudy(await studyService.cancel(study.id, reason.trim()))
+  }, 'No se pudo cancelar el estudio.')
+
+  const handleDelete = () => run(async () => {
+    await studyService.remove(study.id)
+    navigate('/estudios')
+  }, 'No se pudo eliminar el estudio.')
+
+  const handleSaveDates = () => run(async () => {
+    const updated = await studyService.reschedule(study.id,
+      editedDates.map((date, index) => ({ dayNumber: index + 1, date: date || null })))
+    setStudy(updated)
+    setDates(null)
+    setDatesSaved(true)
+  }, 'No se pudieron guardar las fechas.')
 
   return (
     <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
@@ -88,18 +126,59 @@ export function StudyDetailPage() {
             <strong>{study.pendingRecords}</strong>
           </p>
         </div>
-        <Button className="min-h-[48px]" onClick={() => setIsConfirming(true)}>
-          {step.action}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          {canCancel(study.status) && (
+            <Button variant="outline" className="min-h-[48px] text-[var(--color-danger)]"
+              onClick={() => setDialog('cancel')}>
+              <Ban className="w-4 h-4 mr-2" aria-hidden="true" /> Cancelar estudio
+            </Button>
+          )}
+          {canDelete(study.status) && (
+            <Button variant="outline" className="min-h-[48px] text-[var(--color-danger)]"
+              onClick={() => setDialog('delete')}>
+              <Trash2 className="w-4 h-4 mr-2" aria-hidden="true" /> Eliminar estudio
+            </Button>
+          )}
+          {step && (
+            <Button className="min-h-[48px]" onClick={() => setDialog('status')}>{step.action}</Button>
+          )}
+        </div>
       </div>
 
+      {study.status === 'CANCELADO' && (
+        <AlertBanner variant="warning" title="Estudio cancelado"
+          message={`Motivo: ${study.cancellationReason ?? 'sin motivo registrado'}. Sus datos se conservan, pero no aparece en Registro en campo ni en Indicadores.`} />
+      )}
       {rejection && (
-        <AlertBanner
-          variant="danger"
-          title="No se pudo cambiar el estado"
-          message={rejection}
-          onDismiss={() => setRejection(null)}
-        />
+        <AlertBanner variant="danger" title="No se pudo completar la acción" message={rejection}
+          onDismiss={() => setRejection(null)} />
+      )}
+
+      {study.status === 'PLANIFICADO' && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <CalendarDays className="w-5 h-5" aria-hidden="true" /> Fechas de los días
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-4">
+            {datesSaved && !datesChanged && (
+              <AlertBanner variant="success" message="Fechas guardadas." onDismiss={() => setDatesSaved(false)} />
+            )}
+            <StudyDatesEditor dates={editedDates} onChange={(next) => { setDates(next); setDatesSaved(false) }}
+              disabled={isSaving} />
+            <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+              <Button variant="outline" className="min-h-[48px]" disabled={!datesChanged || isSaving}
+                onClick={() => setDates(null)}>
+                Descartar
+              </Button>
+              <Button className="min-h-[48px]" disabled={!datesChanged || isSaving || !editedDates[0]}
+                isLoading={isSaving} onClick={handleSaveDates}>
+                Guardar fechas
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       <Card>
@@ -132,22 +211,49 @@ export function StudyDetailPage() {
         </CardContent>
       </Card>
 
-      <Modal open={isConfirming} onClose={() => setIsConfirming(false)} title={step.action}
-        description={step.confirmation}>
+      {step && (
+        <Modal open={dialog === 'status'} onClose={closeDialog} title={step.action} description={step.confirmation}>
+          <div className="flex flex-col gap-4 mt-2">
+            {step.needsReason && (
+              <Input id="status-reason" label="Motivo" value={reason} onChange={(event) => setReason(event.target.value)}
+                disabled={isSaving} required />
+            )}
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" className="min-h-[48px]" onClick={closeDialog} disabled={isSaving}>
+                Volver
+              </Button>
+              <Button className="min-h-[48px]" onClick={handleStatus} isLoading={isSaving}
+                disabled={isSaving || (step.needsReason && !reason.trim())}>
+                Confirmar
+              </Button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      <Modal open={dialog === 'cancel'} onClose={closeDialog} title="Cancelar estudio"
+        description="La cancelación es definitiva: el estudio deja de aparecer en Registro en campo y en Indicadores, y sus fechas quedan libres para otro estudio. Los datos se conservan.">
         <div className="flex flex-col gap-4 mt-2">
-          {step.needsReason && (
-            <Input id="status-reason" label="Motivo" value={reason} onChange={(event) => setReason(event.target.value)}
-              disabled={isSaving} required />
-          )}
+          <Input id="cancel-reason" label="Motivo de la cancelación" value={reason}
+            onChange={(event) => setReason(event.target.value)} disabled={isSaving} required />
           <div className="flex justify-end gap-3">
-            <Button variant="outline" className="min-h-[48px]" onClick={() => setIsConfirming(false)} disabled={isSaving}>
-              Cancelar
-            </Button>
-            <Button className="min-h-[48px]" onClick={handleConfirm} isLoading={isSaving}
-              disabled={isSaving || (step.needsReason && !reason.trim())}>
-              Confirmar
+            <Button variant="outline" className="min-h-[48px]" onClick={closeDialog} disabled={isSaving}>Volver</Button>
+            <Button variant="danger" className="min-h-[48px]" onClick={handleCancel} isLoading={isSaving}
+              disabled={isSaving || !reason.trim()}>
+              Cancelar estudio
             </Button>
           </div>
+        </div>
+      </Modal>
+
+      <Modal open={dialog === 'delete'} onClose={closeDialog} title="Eliminar estudio"
+        description="Se eliminan el estudio, sus fechas y sus fuentes participantes. No se puede deshacer.">
+        <div className="flex justify-end gap-3 mt-2">
+          <Button variant="outline" className="min-h-[48px]" onClick={closeDialog} disabled={isSaving}>Volver</Button>
+          <Button variant="danger" className="min-h-[48px]" onClick={handleDelete} isLoading={isSaving}
+            disabled={isSaving}>
+            Eliminar estudio
+          </Button>
         </div>
       </Modal>
     </div>

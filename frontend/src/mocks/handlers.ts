@@ -49,6 +49,7 @@ const NEXT_STATUS: Record<StudyStatus, StudyStatus | null> = {
   EN_EJECUCION: 'EN_DEPURACION',
   EN_DEPURACION: 'CERRADO',
   CERRADO: null,
+  CANCELADO: null,
 }
 
 let activeUser: User | null = mockUsers[0]
@@ -323,6 +324,53 @@ export const handlers = [
     }
     studiesState.push(created)
     return HttpResponse.json(created, { status: 201 })
+  }),
+
+  http.put('/api/v1/studies/:id/days', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/days`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    const body = (await request.json()) as { days: { dayNumber: number; date: string | null }[] }
+    study.days = study.days.map((day) => ({
+      ...day, date: body.days.find((item) => item.dayNumber === day.dayNumber)?.date ?? null,
+    }))
+    study.startDate = study.days[0].date
+    study.endDate = study.days[7].date
+    return HttpResponse.json(study)
+  }),
+
+  http.post('/api/v1/studies/:id/cancel', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/cancel`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    const body = (await request.json()) as { reason?: string }
+    if (!body.reason?.trim()) {
+      return apiError(400, 'ERR_INVALID_DATA', 'Debe indicar el motivo para cancelar el estudio.', path)
+    }
+    if (study.status !== 'EN_EJECUCION' && study.status !== 'EN_DEPURACION') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Solo se puede cancelar un estudio en ejecución o en depuración.', path)
+    }
+    study.status = 'CANCELADO'
+    study.cancellationReason = body.reason.trim()
+    study.cancelledAt = new Date().toISOString()
+    return HttpResponse.json(study)
+  }),
+
+  http.delete('/api/v1/studies/:id', ({ params }) => {
+    const path = `/api/v1/studies/${params.id}`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    if (study.status !== 'PLANIFICADO') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Solo se puede eliminar un estudio planificado.', path)
+    }
+    studiesState = studiesState.filter((item) => item.id !== study.id)
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.put('/api/v1/studies/:id/sources', async ({ params, request }) => {

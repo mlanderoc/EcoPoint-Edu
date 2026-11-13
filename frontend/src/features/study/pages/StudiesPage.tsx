@@ -58,7 +58,9 @@ export function StudiesPage() {
                     </p>
                   </div>
                 </div>
-                <span className="text-xs font-semibold px-3 py-1 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary-hover)]">
+                <span className={study.status === 'CANCELADO'
+                  ? 'text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-600'
+                  : 'text-xs font-semibold px-3 py-1 rounded-full bg-[var(--color-primary-light)] text-[var(--color-primary-hover)]'}>
                   {STATUS_LABELS[study.status]}
                 </span>
               </CardContent>

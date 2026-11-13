@@ -12,6 +12,7 @@ export const STATUS_LABELS: Record<StudyStatus, string> = {
   EN_EJECUCION: 'En ejecución',
   EN_DEPURACION: 'En depuración',
   CERRADO: 'Cerrado',
+  CANCELADO: 'Cancelado',
 }
 
 /** Next step offered to the teacher: target status, button text and confirmation. */
@@ -22,7 +23,8 @@ export interface StatusStep {
   needsReason: boolean
 }
 
-export const NEXT_STEP: Record<StudyStatus, StatusStep> = {
+/** Next step of each status; a cancelled study has none, because CANCELADO is final (RN-018). */
+export const NEXT_STEP: Record<StudyStatus, StatusStep | null> = {
   PLANIFICADO: {
     target: 'EN_EJECUCION',
     action: 'Iniciar ejecución',
@@ -47,6 +49,17 @@ export const NEXT_STEP: Record<StudyStatus, StatusStep> = {
     confirmation: 'El estudio volverá a depuración. Escriba el motivo: queda registrado con su nombre y la fecha.',
     needsReason: true,
   },
+  CANCELADO: null,
+}
+
+/** A planned study can still be deleted (RN-019). */
+export function canDelete(status: StudyStatus): boolean {
+  return status === 'PLANIFICADO'
+}
+
+/** A study being executed or cleaned can be cancelled (RN-018). */
+export function canCancel(status: StudyStatus): boolean {
+  return status === 'EN_EJECUCION' || status === 'EN_DEPURACION'
 }
 
 /** Name shown for a study, which has no name of its own (plan of Spec 003, R2). */
