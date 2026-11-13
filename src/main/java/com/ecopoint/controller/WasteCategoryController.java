@@ -59,8 +59,9 @@ public class WasteCategoryController implements FieldNameMapping {
      * @return subcategories
      */
     @GetMapping
-    public List<WasteCategoryResponse> list(@RequestParam(required = false) WasteGroup group) {
-        return categories.list(group).stream().map(WasteCategoryResponse::from).toList();
+    public List<WasteCategoryResponse> list(@RequestParam(required = false) WasteGroup group,
+                                            @RequestParam(required = false) Boolean active) {
+        return categories.list(group, active).stream().map(WasteCategoryResponse::from).toList();
     }
 
     /**
@@ -89,5 +90,31 @@ public class WasteCategoryController implements FieldNameMapping {
     public WasteCategoryResponse update(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
                                         @RequestBody WasteCategoryRequest request) {
         return WasteCategoryResponse.from(categories.update(currentUser.of(principal), id, request.toModel()));
+    }
+
+    /**
+     * Activates a subcategory again (RN-043).
+     *
+     * @param principal user of the session
+     * @param id        subcategory id
+     * @return the subcategory, now active
+     */
+    @PostMapping("/{id}/activate")
+    public WasteCategoryResponse activate(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                          @PathVariable Long id) {
+        return WasteCategoryResponse.from(categories.activate(currentUser.of(principal), id));
+    }
+
+    /**
+     * Deactivates a subcategory: it is not offered in new quarterings (RN-043).
+     *
+     * @param principal user of the session
+     * @param id        subcategory id
+     * @return the subcategory, now inactive
+     */
+    @PostMapping("/{id}/deactivate")
+    public WasteCategoryResponse deactivate(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                            @PathVariable Long id) {
+        return WasteCategoryResponse.from(categories.deactivate(currentUser.of(principal), id));
     }
 }

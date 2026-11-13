@@ -43,17 +43,18 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 
 ## Fase 2 — Servicios y API
 
-- [ ] **A06. Servicios.**
+- [x] **A06. Servicios.**
   - `StudyService.cancel` y `delete`.
   - `InstitutionService`, `WasteCategoryService` y `GenerationSourceService`: activar, desactivar y crear con estado.
   - `UserService`: activar, filtro `q` y totales.
   - `AuthService.changePassword`.
 
-  *(Estefanía)*
+  *Ajuste:* el perfil y el cambio de contraseña quedaron en un servicio propio, `ProfileService`, en vez de `AuthService`. *(Estefanía)*
   *Verificación:* pruebas unitarias con dobles de los repositorios; CA-004, CA-057, CA-082.
 
-- [ ] **A07. Rutas y DTO.** Las rutas de la sección 4 del plan, con `active` en los `Request` y `Response` y el DTO `UserActivityResponse`. *(Carlos)*
+- [x] **A07. Rutas y DTO.** Las rutas de la sección 4 del plan, con `active` en los `Request` y `Response` y el DTO `UserActivityResponse`. *(Carlos)*
   *Verificación:* `@WebMvcTest` de las rutas y permisos (403 para el estudiante); IT de cancelar, eliminar, cambiar contraseña y `GET /users?q=`.
+  *Ajuste:* el perfil se consulta con una sola ruta, `GET /auth/me/profile` (datos, cuadrillas y totales), en vez de `/auth/me/activity`. El docente ve los totales de cada usuario en `GET /users`, así que no hace falta `GET /users/{id}/activity`. Las pruebas de las rutas nuevas están en `AdjustmentsD13IT`.
 
 - [ ] **A08. Mensajes sin códigos.** Quitar "(RN-021)" y cualquier otro código de los mensajes de excepción visibles para el usuario (R-134). *(Estefanía)*
   *Verificación:* prueba que recorre los mensajes de `BusinessRuleException` en las pruebas del dominio y busca el patrón.

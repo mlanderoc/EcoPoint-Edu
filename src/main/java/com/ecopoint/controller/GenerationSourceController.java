@@ -61,7 +61,7 @@ public class GenerationSourceController implements FieldNameMapping {
      */
     @GetMapping
     public List<SourceResponse> list(@PathVariable Long institutionId,
-                                     @RequestParam(defaultValue = "false") boolean active) {
+                                     @RequestParam(required = false) Boolean active) {
         return sources.list(institutionId, active).stream().map(SourceResponse::from).toList();
     }
 
@@ -90,7 +90,7 @@ public class GenerationSourceController implements FieldNameMapping {
     public SourceResponse create(@AuthenticationPrincipal EcoPointUserDetails principal,
                                  @PathVariable Long institutionId, @RequestBody SourceRequest request) {
         return SourceResponse.from(sources.create(currentUser.of(principal), institutionId, request.code(),
-                request.name(), request.type()));
+                request.name(), request.type(), request.createActive()));
     }
 
     /**

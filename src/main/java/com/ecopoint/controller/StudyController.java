@@ -1,5 +1,7 @@
 package com.ecopoint.controller;
 
+import org.springframework.web.bind.annotation.DeleteMapping;
+import com.ecopoint.dto.ReasonRequest;
 import com.ecopoint.dto.OpenShiftRequest;
 import com.ecopoint.dto.ShiftResponse;
 import com.ecopoint.dto.ShiftSlotResponse;
@@ -174,6 +176,32 @@ public class StudyController implements FieldNameMapping {
         SamplingShift shift = shifts.open(currentUser.of(principal), id, request.dayNumber(), request.type(),
                 request.crewId());
         return ShiftResponse.from(shift, shifts.progress(shift));
+    }
+
+    /**
+     * Cancels a study being executed or cleaned, with a reason (RN-018).
+     *
+     * @param principal user of the session
+     * @param id        study id
+     * @param request   reason of the cancellation
+     * @return the cancelled study
+     */
+    @PostMapping("/{id}/cancel")
+    public StudyResponse cancel(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
+                                @RequestBody ReasonRequest request) {
+        return toResponse(studies.cancel(currentUser.of(principal), id, request.reason()));
+    }
+
+    /**
+     * Deletes a planned study (RN-019).
+     *
+     * @param principal user of the session
+     * @param id        study id
+     */
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id) {
+        studies.delete(currentUser.of(principal), id);
     }
 
     private StudyResponse toResponse(CharacterizationStudy study) {

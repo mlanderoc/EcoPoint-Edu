@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -54,10 +55,11 @@ public class InstitutionController implements FieldNameMapping {
      * Lists the institutions.
      *
      * @return institutions
+     * @param active true for the active ones, false for the inactive ones, none for all (R-325)
      */
     @GetMapping
-    public List<InstitutionResponse> list() {
-        return institutions.list().stream().map(InstitutionResponse::from).toList();
+    public List<InstitutionResponse> list(@RequestParam(required = false) Boolean active) {
+        return institutions.list(active).stream().map(InstitutionResponse::from).toList();
     }
 
     /**
@@ -97,5 +99,30 @@ public class InstitutionController implements FieldNameMapping {
     public InstitutionResponse update(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
                                       @RequestBody InstitutionRequest request) {
         return InstitutionResponse.from(institutions.update(currentUser.of(principal), id, request.toModel()));
+    }
+
+    /**
+     * Activates an institution again (RN-006).
+     *
+     * @param principal user of the session
+     * @param id        institution id
+     * @return the institution, now active
+     */
+    @PostMapping("/{id}/activate")
+    public InstitutionResponse activate(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id) {
+        return InstitutionResponse.from(institutions.activate(currentUser.of(principal), id));
+    }
+
+    /**
+     * Deactivates an institution: it keeps its data but admits no new studies (RN-006).
+     *
+     * @param principal user of the session
+     * @param id        institution id
+     * @return the institution, now inactive
+     */
+    @PostMapping("/{id}/deactivate")
+    public InstitutionResponse deactivate(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                          @PathVariable Long id) {
+        return InstitutionResponse.from(institutions.deactivate(currentUser.of(principal), id));
     }
 }
