@@ -11,13 +11,14 @@
  */
 import { spawn } from 'node:child_process'
 import { mkdirSync, writeFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 
 const baseUrl = process.env.CHECK_BASE_URL ?? 'http://localhost:5173'
-const outDir = process.env.CHECK_OUT_DIR ?? 'mobile-check'
+const outDir = resolve(process.env.CHECK_OUT_DIR ?? 'mobile-check')
 const paths = process.argv.slice(2).length > 0
   ? process.argv.slice(2)
-  : ['campo', 'campo/turno/14', 'campo/turno/14/poblacion', 'campo/turno/14/bolsas/nueva']
+  : ['campo', 'campo/turno/14', 'campo/turno/14/poblacion', 'campo/turno/14/bolsas/nueva',
+    'campo/turno/14/cuarteo', 'campo/turno/14/densidad', 'calidad/verificacion', 'calidad/registro/bag/101', 'alertas']
 const chromePath = process.env.CHROME_PATH ?? 'C:/Program Files/Google/Chrome/Application/chrome.exe'
 
 const port = 9333
