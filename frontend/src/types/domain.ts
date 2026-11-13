@@ -47,6 +47,29 @@ export interface User {
   permissions?: string[]
 }
 
+/** Totals of the records of a user (spec 003, R-133). */
+export interface UserActivity {
+  populations: number
+  bags: number
+  quarterings: number
+  densities: number
+  typedRecords: number
+  verifications: number
+  correctionsReceived: number
+}
+
+/** One row of the users table, with the totals of the user (R-322). */
+export interface UserRow extends Pick<User, 'id' | 'firstName' | 'lastName' | 'email' | 'role' | 'active'> {
+  activity: UserActivity
+}
+
+/** Data of the "Mi Perfil" screen (R-350, R-351). */
+export interface UserProfile {
+  user: User
+  crews: string[]
+  activity: UserActivity
+}
+
 export interface GeoPoint {
   latitude: number
   longitude: number

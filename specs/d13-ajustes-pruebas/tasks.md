@@ -95,7 +95,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
   *(Carlos)*
   *Verificación:* CA-312.
 
-- [ ] **A15. Usuarios en tabla.**
+- [x] **A15. Usuarios en tabla.**
   - `UsersTable` con filtros por rol y estado, buscador y paginación.
   - Columna de registros.
   - Activar y desactivar solo en estudiantes.

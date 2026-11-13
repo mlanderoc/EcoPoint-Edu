@@ -1,27 +1,53 @@
 /**
- * Users administration page (Spec 004, T312 / R-322 / CA-302).
+ * Users administration page: a table filtered and paginated on the server, with
+ * the totals of records of each user, activate or deactivate students, and the
+ * form to create a user (Spec 004, T312; R-322, R-308, CA-302, CA-313; RN-087).
  *
  * @author craulgomez
  */
 
-import { useEffect, useState } from 'react'
-import { Users, Plus, CheckCircle, XCircle, GraduationCap, Award } from 'lucide-react'
-import { Button, Card, CardHeader, CardTitle, CardContent, Input, Select, Modal, AlertBanner } from '@/components/ui'
-import { User, UserRole } from '@/types'
+import { useCallback, useEffect, useState } from 'react'
+import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
+import { AlertBanner, Button, Card, CardContent, Input, Modal, Select, StatusToggleButton } from '@/components/ui'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
+import { UserRole, UserRow } from '@/types'
+import { cn } from '@/utils/cn'
 import { adminService } from '../services/adminService'
 
 /** Shortest initial password the API accepts (spec 003, UserValidator). */
 const MIN_PASSWORD_LENGTH = 8
+/** Rows per page of the table (plan D13, decision T14). */
+export const USERS_PAGE_SIZE = 20
+const SEARCH_DELAY_MS = 300
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
   { value: 'DOCENTE', label: 'Docente Responsable' },
   { value: 'ESTUDIANTE_UNIVERSITARIO', label: 'Estudiante Universitario' },
 ]
 
+const ROLE_FILTER = [
+  { value: '', label: 'Todos los roles' },
+  { value: 'ESTUDIANTE_UNIVERSITARIO', label: 'Estudiantes' },
+  { value: 'DOCENTE', label: 'Docentes' },
+]
+
+const STATE_FILTER = [
+  { value: '', label: 'Activos e inactivos' },
+  { value: 'true', label: 'Solo activos' },
+  { value: 'false', label: 'Solo inactivos' },
+]
+
 export function UsersPage() {
-  const [users, setUsers] = useState<User[]>([])
+  const [rows, setRows] = useState<UserRow[]>([])
+  const [totalItems, setTotalItems] = useState(0)
+  const [pageNumber, setPageNumber] = useState(0)
+  const [roleFilter, setRoleFilter] = useState<UserRole | ''>('')
+  const [stateFilter, setStateFilter] = useState('')
+  const [text, setText] = useState('')
+  const [searchText, setSearchText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [togglingId, setTogglingId] = useState<number | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -32,22 +58,41 @@ export function UsersPage() {
   const [passwordError, setPasswordError] = useState<string | null>(null)
   const [generalError, setGeneralError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const { confirmLeave, discardDialog } = useUnsavedChanges(
+    isModalOpen && !isSaving && (firstName + lastName + email + password) !== '')
 
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setIsLoading(true)
-      const data = await adminService.getUsers()
-      setUsers(data)
+      const result = await adminService.listUsers({
+        role: roleFilter,
+        active: stateFilter === '' ? undefined : stateFilter === 'true',
+        text: searchText,
+        page: pageNumber,
+        size: USERS_PAGE_SIZE,
+      })
+      setRows(result.items)
+      setTotalItems(result.totalItems)
     } catch {
       setGeneralError('Error al cargar la lista de usuarios.')
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [roleFilter, stateFilter, searchText, pageNumber])
 
   useEffect(() => {
     loadUsers()
-  }, [])
+  }, [loadUsers])
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchText(text)
+      setPageNumber(0)
+    }, SEARCH_DELAY_MS)
+    return () => clearTimeout(timer)
+  }, [text])
+
+  const pageCount = Math.max(1, Math.ceil(totalItems / USERS_PAGE_SIZE))
 
   const resetForm = () => {
     setFirstName('')
@@ -65,12 +110,29 @@ export function UsersPage() {
     setIsModalOpen(true)
   }
 
+  const closeModal = () => confirmLeave(() => {
+    setIsModalOpen(false)
+    resetForm()
+  })
+
+  const handleToggle = async (row: UserRow) => {
+    try {
+      setTogglingId(row.id)
+      setGeneralError(null)
+      const updated = await adminService.setUserActive(row.id, !row.active)
+      setRows((previous) => previous.map((item) => (item.id === updated.id ? { ...item, active: updated.active } : item)))
+    } catch (err: unknown) {
+      setGeneralError(err instanceof Error ? err.message : 'No se pudo cambiar el estado del usuario.')
+    } finally {
+      setTogglingId(null)
+    }
+  }
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
     setEmailError(null)
     setPasswordError(null)
     setGeneralError(null)
-
     if (!firstName.trim()) {
       setGeneralError('El nombre del usuario es obligatorio.')
       return
@@ -87,22 +149,21 @@ export function UsersPage() {
       setPasswordError(`La contraseña inicial debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`)
       return
     }
-
     try {
       setIsSaving(true)
-      const created = await adminService.createUser({
+      await adminService.createUser({
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim().toLowerCase(),
         role,
         password,
       })
-      setUsers((prev) => [...prev, created])
       setIsModalOpen(false)
       resetForm()
+      await loadUsers()
     } catch (err: unknown) {
       if (err instanceof ApiError) {
-        // RN-084 (unique email) is the only business rule of a user's data, so a 422
+        // The unique email is the only business rule of a user's data, so a 422
         // is shown next to the email field (CA-302).
         const emailMessage = err.getFieldError('email') ?? (err.status === 422 ? err.message : undefined)
         const passwordMessage = err.getFieldError('password')
@@ -113,10 +174,8 @@ export function UsersPage() {
         } else {
           setGeneralError(err.message)
         }
-      } else if (err instanceof Error) {
-        setGeneralError(err.message)
       } else {
-        setGeneralError('Error al registrar el usuario.')
+        setGeneralError(err instanceof Error ? err.message : 'Error al registrar el usuario.')
       }
     } finally {
       setIsSaving(false)
@@ -125,204 +184,142 @@ export function UsersPage() {
 
   return (
     <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
-      {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">
-            Usuarios del Sistema
-          </h1>
+          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Usuarios del Sistema</h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Gestión de docentes responsables y estudiantes universitarios participantes en la caracterización.
           </p>
         </div>
-        <Button
-          variant="primary"
-          size="default"
-          className="min-h-[48px]"
-          onClick={handleOpenModal}
-        >
+        <Button variant="primary" className="min-h-[48px]" onClick={handleOpenModal}>
           <Plus className="w-5 h-5 mr-1.5" />
           Nuevo Usuario
         </Button>
       </div>
 
-      {generalError && (
-        <AlertBanner
-          variant="danger"
-          title="Atención"
-          message={generalError}
-          onDismiss={() => setGeneralError(null)}
-        />
+      {generalError && !isModalOpen && (
+        <AlertBanner variant="danger" title="Atención" message={generalError} onDismiss={() => setGeneralError(null)} />
       )}
 
-      {/* Users List */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {isLoading ? (
-          <div className="col-span-full py-12 flex justify-center text-sm font-medium text-[var(--color-text-muted)]">
-            Cargando usuarios...
+      <Card>
+        <CardContent className="py-4 flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-[42px] pointer-events-none" aria-hidden="true" />
+              <Input id="users-search" label="Buscar" placeholder="Nombre o correo" value={text}
+                onChange={(e) => setText(e.target.value)} className="pl-9" />
+            </div>
+            <Select id="users-role" label="Rol" value={roleFilter} options={ROLE_FILTER}
+              onChange={(e) => { setRoleFilter(e.target.value as UserRole | ''); setPageNumber(0) }} />
+            <Select id="users-state" label="Estado" value={stateFilter} options={STATE_FILTER}
+              onChange={(e) => { setStateFilter(e.target.value); setPageNumber(0) }} />
           </div>
-        ) : users.length === 0 ? (
-          <div className="col-span-full py-12 flex flex-col items-center justify-center text-center p-6 border-2 border-dashed rounded-xl bg-slate-50 border-slate-200">
-            <Users className="w-12 h-12 text-slate-400 mb-3" />
-            <h3 className="text-base font-bold text-[var(--color-text-main)]">
-              No hay usuarios registrados
-            </h3>
-            <p className="text-sm text-[var(--color-text-muted)] mt-1">
-              Haga clic en &quot;Nuevo Usuario&quot; para registrar docentes o estudiantes.
+
+          {isLoading && rows.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-muted)]">Cargando usuarios...</p>
+          ) : rows.length === 0 ? (
+            <p className="text-sm text-[var(--color-text-muted)]">No hay usuarios con estos filtros.</p>
+          ) : (
+            <table className="w-full text-left text-sm" data-testid="users-table">
+              <thead>
+                <tr className="border-b border-slate-200 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                  <th className="py-3 px-2">Usuario</th>
+                  <th className="py-3 px-2 hidden sm:table-cell">Rol</th>
+                  <th className="py-3 px-2 hidden sm:table-cell">Estado</th>
+                  <th className="py-3 px-2 hidden md:table-cell text-right">Registros</th>
+                  <th className="py-3 px-2 text-right"><span className="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {rows.map((u) => {
+                  const isTeacher = u.role === 'DOCENTE'
+                  return (
+                    <tr key={u.id} className={cn('align-middle', !u.active && 'opacity-60')} data-testid={`user-row-${u.id}`}>
+                      <td className="py-3 px-2 min-w-0">
+                        <p className="font-semibold text-slate-800 break-words">{u.firstName} {u.lastName}</p>
+                        <p className="text-xs text-[var(--color-text-muted)] break-all">{u.email}</p>
+                        <p className="text-xs text-[var(--color-text-muted)] sm:hidden mt-1">
+                          {isTeacher ? 'Rol docente' : 'Rol estudiante'} · {u.active ? 'activo' : 'inactivo'} ·{' '}
+                          {u.activity.typedRecords} registros
+                        </p>
+                      </td>
+                      <td className="py-3 px-2 hidden sm:table-cell">
+                        <span className={cn('inline-flex px-2.5 py-1 rounded-full text-xs font-bold border',
+                          isTeacher ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                            : 'bg-blue-50 text-blue-700 border-blue-200')}>
+                          {isTeacher ? 'Docente' : 'Estudiante'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 hidden sm:table-cell">
+                        <span className={cn('text-xs font-bold', u.active ? 'text-emerald-700' : 'text-slate-500')}>
+                          {u.active ? 'Activo' : 'Inactivo'}
+                        </span>
+                      </td>
+                      <td className="py-3 px-2 hidden md:table-cell text-right tabular-nums"
+                        title={`${u.activity.bags} bolsas · ${u.activity.verifications} verificaciones`}>
+                        {u.activity.typedRecords}
+                      </td>
+                      <td className="py-3 px-2 text-right">
+                        {isTeacher ? (
+                          <span className="text-xs text-[var(--color-text-muted)]">—</span>
+                        ) : (
+                          <StatusToggleButton active={u.active} itemName={`${u.firstName} ${u.lastName}`}
+                            onToggle={() => handleToggle(u)} disabled={togglingId === u.id} />
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-3 text-sm">
+            <p className="text-[var(--color-text-muted)]" data-testid="users-total">
+              {totalItems} {totalItems === 1 ? 'usuario' : 'usuarios'} · página {pageNumber + 1} de {pageCount}
             </p>
+            <div className="flex gap-2">
+              <Button variant="outline" className="min-h-[40px]" disabled={pageNumber === 0 || isLoading}
+                onClick={() => setPageNumber((current) => current - 1)}>
+                <ChevronLeft className="w-4 h-4 mr-1" aria-hidden="true" /> Anterior
+              </Button>
+              <Button variant="outline" className="min-h-[40px]" disabled={pageNumber + 1 >= pageCount || isLoading}
+                onClick={() => setPageNumber((current) => current + 1)}>
+                Siguiente <ChevronRight className="w-4 h-4 ml-1" aria-hidden="true" />
+              </Button>
+            </div>
           </div>
-        ) : (
-          users.map((u) => {
-            const isDocente = u.role === 'DOCENTE'
-            return (
-              <Card key={u.id} className="border-slate-200 hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-start justify-between gap-3 pb-3">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-sm ${
-                        isDocente
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}
-                    >
-                      {isDocente ? (
-                        <Award className="w-5 h-5" />
-                      ) : (
-                        <GraduationCap className="w-5 h-5" />
-                      )}
-                    </div>
-                    <div>
-                      <CardTitle className="text-base">
-                        {u.firstName} {u.lastName}
-                      </CardTitle>
-                      <p className="text-xs text-[var(--color-text-muted)] mt-0.5">{u.email}</p>
-                    </div>
-                  </div>
-                  <span
-                    className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold ${
-                      isDocente
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-blue-50 text-blue-700 border border-blue-200'
-                    }`}
-                  >
-                    {isDocente ? 'Docente' : 'Estudiante'}
-                  </span>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <div className="flex items-center justify-between text-xs text-[var(--color-text-muted)] pt-2 border-t border-slate-100">
-                    <span className="flex items-center gap-1">
-                      {u.active ? (
-                        <>
-                          <CheckCircle className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700 font-medium">Activo</span>
-                        </>
-                      ) : (
-                        <>
-                          <XCircle className="w-3.5 h-3.5 text-slate-400" />
-                          <span>Inactivo</span>
-                        </>
-                      )}
-                    </span>
-                    <span>ID: {u.id}</span>
-                  </div>
-                </CardContent>
-              </Card>
-            )
-          })
-        )}
-      </div>
+        </CardContent>
+      </Card>
 
-      {/* Modal for Creating User */}
-      <Modal
-        open={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Registrar Nuevo Usuario"
-        description="Agregue un docente responsable o estudiante universitario al sistema."
-      >
+      <Modal open={isModalOpen} onClose={closeModal} title="Registrar Nuevo Usuario"
+        description="Agregue un docente responsable o estudiante universitario al sistema.">
         <form onSubmit={handleCreate} className="flex flex-col gap-4 mt-2">
-          <Input
-            id="user-firstname"
-            label="Nombres"
-            placeholder="Ej. Carlos Raúl"
-            value={firstName}
-            onChange={(e) => setFirstName(e.target.value)}
-            disabled={isSaving}
-            required
-          />
-
-          <Input
-            id="user-lastname"
-            label="Apellidos"
-            placeholder="Ej. Gómez García"
-            value={lastName}
-            onChange={(e) => setLastName(e.target.value)}
-            disabled={isSaving}
-            required
-          />
-
-          <Input
-            id="user-email"
-            label="Correo Institucional"
-            type="email"
-            placeholder="Ej. usuario@unicesar.edu.co"
-            value={email}
-            onChange={(e) => {
-              setEmail(e.target.value)
-              if (emailError) setEmailError(null)
-            }}
-            error={emailError || undefined}
-            disabled={isSaving}
-            required
-          />
-
-          <Select
-            id="user-role"
-            label="Rol en el Sistema"
-            value={role}
-            onChange={(e) => setRole(e.target.value as UserRole)}
-            options={ROLE_OPTIONS}
-            disabled={isSaving}
-          />
-
-          <Input
-            id="user-password"
-            label="Contraseña inicial"
-            type="password"
-            autoComplete="new-password"
-            placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`}
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value)
-              if (passwordError) setPasswordError(null)
-            }}
-            error={passwordError || undefined}
-            disabled={isSaving}
-            required
-          />
-
+          {generalError && <AlertBanner variant="danger" message={generalError} />}
+          <Input id="user-firstname" label="Nombres" placeholder="Ej. Carlos Raúl" value={firstName}
+            onChange={(e) => setFirstName(e.target.value)} disabled={isSaving} required />
+          <Input id="user-lastname" label="Apellidos" placeholder="Ej. Gómez García" value={lastName}
+            onChange={(e) => setLastName(e.target.value)} disabled={isSaving} required />
+          <Input id="user-email" label="Correo Institucional" type="email" placeholder="Ej. usuario@unicesar.edu.co"
+            value={email} onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(null) }}
+            error={emailError || undefined} disabled={isSaving} required />
+          <Select id="user-role" label="Rol en el Sistema" value={role}
+            onChange={(e) => setRole(e.target.value as UserRole)} options={ROLE_OPTIONS} disabled={isSaving} />
+          <Input id="user-password" label="Contraseña inicial" type="password" autoComplete="new-password"
+            placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`} value={password}
+            onChange={(e) => { setPassword(e.target.value); if (passwordError) setPasswordError(null) }}
+            error={passwordError || undefined} disabled={isSaving} required />
           <div className="flex items-center justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
-            <Button
-              type="button"
-              variant="outline"
-              size="default"
-              className="min-h-[48px]"
-              onClick={() => setIsModalOpen(false)}
-              disabled={isSaving}
-            >
-              Cancelar
+            <Button type="button" variant="outline" className="min-h-[48px]" onClick={closeModal} disabled={isSaving}>
+              Descartar
             </Button>
-            <Button
-              type="submit"
-              variant="primary"
-              size="default"
-              className="min-h-[48px]"
-              disabled={isSaving}
-            >
+            <Button type="submit" variant="primary" className="min-h-[48px]" disabled={isSaving}>
               {isSaving ? 'Guardando...' : 'Guardar Usuario'}
             </Button>
           </div>
         </form>
       </Modal>
+      {discardDialog}
     </div>
   )
 }

@@ -159,6 +159,22 @@ function page<T>(items: T[], url: URL) {
   return { items: items.slice(from, from + size), page: pageNumber, size, totalItems: items.length }
 }
 
+/** Totals of the records of a user in the mock data (R-133). */
+function activityOf(userId: number) {
+  const typedBy = <T extends { verification: { enteredBy: number | null } }>(records: T[]) =>
+    records.filter((record) => record.verification.enteredBy === userId).length
+  const verifiedBy = <T extends { verification: { verifiedBy?: number | null } }>(records: T[]) =>
+    records.filter((record) => record.verification.verifiedBy === userId).length
+  const bags = typedBy(bagsState)
+  const quarterings = typedBy(quarteringsState)
+  const densities = typedBy(densitiesState)
+  return {
+    populations: 0, bags, quarterings, densities, typedRecords: bags + quarterings + densities,
+    verifications: verifiedBy(bagsState) + verifiedBy(quarteringsState) + verifiedBy(densitiesState),
+    correctionsReceived: 0,
+  }
+}
+
 function findShift(params: Record<string, unknown>): MockShift | undefined {
   return shiftsState.find((shift) => shift.id === Number(params.shiftId))
 }
@@ -261,7 +277,56 @@ export const handlers = [
     if (denied) return denied
     const url = new URL(request.url)
     const role = url.searchParams.get('role') as UserRole | null
-    return HttpResponse.json(page(usersState.filter((user) => !role || user.role === role), url))
+    const active = url.searchParams.get('active')
+    const text = (url.searchParams.get('q') ?? '').trim().toLowerCase()
+    const matching = usersState
+      .filter((user) => !role || user.role === role)
+      .filter((user) => active === null || String(user.active) === active)
+      .filter((user) => !text || `${user.firstName} ${user.lastName} ${user.email}`.toLowerCase().includes(text))
+      .map((user) => ({ ...user, activity: activityOf(user.id) }))
+    return HttpResponse.json(page(matching, url))
+  }),
+
+  http.post('/api/v1/users/:id/:action', ({ params }) => {
+    const path = `/api/v1/users/${params.id}/${params.action}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const user = usersState.find((item) => item.id === Number(params.id))
+    if (!user) return notFound(path, 'Usuario')
+    if (params.action === 'deactivate' && user.role === 'DOCENTE') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Un docente no se puede desactivar: solo se desactivan estudiantes.', path)
+    }
+    user.active = params.action === 'activate'
+    return HttpResponse.json(user)
+  }),
+
+  http.get('/api/v1/auth/me/profile', () => {
+    const missing = requireSession('/api/v1/auth/me/profile')
+    if (missing) return missing
+    if (!activeUser) return notFound('/api/v1/auth/me/profile', 'Usuario')
+    return HttpResponse.json({
+      user: { ...activeUser, institutionName: mockInstitution.name },
+      crews: crewsState
+        .filter((crew) => crew.responsibleId === activeUser?.id || crew.memberIds.includes(activeUser?.id ?? -1))
+        .map((crew) => crew.name),
+      activity: activityOf(activeUser.id),
+    })
+  }),
+
+  http.post('/api/v1/auth/me/password', async ({ request }) => {
+    const path = '/api/v1/auth/me/password'
+    const missing = requireSession(path)
+    if (missing) return missing
+    const body = (await request.json()) as { currentPassword?: string; newPassword?: string }
+    if (body.currentPassword !== DEMO_PASSWORD) {
+      return apiError(400, 'ERR_INVALID_DATA', 'La contraseña actual no es correcta.', path,
+        [{ field: 'currentPassword', message: 'La contraseña actual no es correcta.' }])
+    }
+    if (!body.newPassword || body.newPassword.length < 8) {
+      return apiError(400, 'ERR_INVALID_DATA', 'La contraseña debe tener al menos 8 caracteres.', path,
+        [{ field: 'newPassword', message: 'La contraseña debe tener al menos 8 caracteres.' }])
+    }
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.post('/api/v1/users', async ({ request }) => {
