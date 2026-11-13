@@ -64,12 +64,12 @@
 
 ## Fase 2 — API REST y Seguridad (Carlos)
 
-- [ ] **T504. Endpoint `GET /api/v1/studies/{id}/indicators` y seguridad por roles.** *(Carlos)*
-  En `com.ecopoint.controller.IndicatorController`, implementar el método `getStudyIndicators(@PathVariable Long id)`. Restringir el acceso mediante `@PreAuthorize("hasAuthority('VIEW_INDICATORS')")` permitiendo la consulta a los roles `DOCENTE` y `ESTUDIANTE_UNIVERSITARIO`. Incorporar en el DTO la etiqueta *"Preliminar"* (si el estudio no está en estado `CERRADO`) o *"Oficial"* (si está `CERRADO`), junto con el porcentaje de registros ya verificados (R-502, CA-504).
+- [x] **T504. Endpoint `GET /api/v1/studies/{id}/indicators` y seguridad por roles.** *(Carlos)*
+  En `com.ecopoint.controller.IndicatorController`, implementar el método `getStudyIndicators(@PathVariable Long id)`. Restringir el acceso con `AccessPolicy.require(actor, VIEW_INDICATORS)` en el servicio, como el resto de la API, permitiendo la consulta a los roles `DOCENTE` y `ESTUDIANTE_UNIVERSITARIO`. Incorporar en el DTO la etiqueta *"Preliminar"* (si el estudio no está en estado `CERRADO`) o *"Oficial"* (si está `CERRADO`), junto con el porcentaje de registros ya verificados (R-502, CA-504).
   *Verificación:* Pruebas unitarias de controlador en Spring MockMvc validando serialización del JSON y respuesta HTTP 200.
 
-- [ ] **T505. Pruebas de integración del endpoint de indicadores (CA-504, CA-505).** *(Carlos)*
-  En `src/test/java/com/ecopoint/controller/IndicatorControllerIT.java`, crear las pruebas de integración contra la base de datos de pruebas:
+- [x] **T505. Pruebas de integración del endpoint de indicadores (CA-504, CA-505).** *(Carlos)*
+  En `src/test/java/com/ecopoint/api/IndicatorControllerIT.java`, crear las pruebas de integración contra la base de datos de pruebas:
   - `ca504_preliminaryStatusWithVerificationPercentageWhenStudyNotClosed()`: comprueba que un estudio en depuración devuelva el estado "Preliminar" y el porcentaje de verificación.
   - `ca504_officialStatusWhenStudyClosed()`: comprueba que un estudio cerrado devuelva el estado "Oficial".
   - `ca505_quarteringCompletenessNoteReported()`: comprueba que cuando faltan turnos con cuarteo, la respuesta incluya la nota de completitud correspondiente.
