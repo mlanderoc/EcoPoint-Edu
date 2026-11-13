@@ -10,6 +10,7 @@ import {
   Users,
   Tags,
   ShieldCheck,
+  BarChart3,
 } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
@@ -76,6 +77,11 @@ export function Sidebar({
       label: 'Verificación',
       href: '/calidad/verificacion',
       icon: <ShieldCheck className="w-5 h-5" />,
+    },
+    {
+      label: 'Indicadores',
+      href: '/indicadores',
+      icon: <BarChart3 className="w-5 h-5" />,
     },
     {
       label: pendingAlerts > 0 ? `Alertas (${pendingAlerts})` : 'Alertas',

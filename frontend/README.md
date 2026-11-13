@@ -14,6 +14,7 @@ Aplicación web en **React + Vite + TypeScript** para el registro en campo de la
 | Verificación del doble registro por turno | `/calidad/verificacion` | Quien no digitó el registro |
 | Registro: corrección con motivo e historial | `/calidad/registro/:tipo/:id` | Quien no digitó el registro |
 | Alertas de calidad y su atención | `/alertas` | Docente |
+| Tablero de indicadores de línea base | `/indicadores` | Todos |
 | Estudios: lista, nuevo y ciclo de vida | `/estudios`, `/estudios/nuevo`, `/estudios/:id` | Docente |
 | Administración: instituciones, fuentes, usuarios, cuadrillas y subcategorías | `/admin/*` | Docente |
 
@@ -62,7 +63,8 @@ src/
 │   ├── admin/    administración (spec 004, fase 3)
 │   ├── study/    estudios y su ciclo de vida (fase 4)
 │   ├── field/    registro en campo (fase 5)
-│   └── quality/  cuarteo, densidad, doble registro y alertas (spec 005)
+│   ├── quality/  cuarteo, densidad, doble registro y alertas (spec 005)
+│   └── indicators/ tablero de indicadores con Recharts (spec 006)
 ├── mocks/        API simulada con MSW (mismo contrato que la spec 003)
 ├── services/     cliente HTTP: cookies, token CSRF y errores en español
 └── types/        tipos iguales a los DTO de la API

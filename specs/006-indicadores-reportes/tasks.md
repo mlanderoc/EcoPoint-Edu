@@ -79,15 +79,15 @@
 
 ## Fase 3 — Tablero Web de Línea Base en Frontend (Carlos)
 
-- [ ] **T506. Estructura base del tablero, cliente HTTP y tarjetas KPI (R-520, R-521, CA-504).** *(Carlos)*
+- [x] **T506. Estructura base del tablero, cliente HTTP y tarjetas KPI (R-520, R-521, CA-504).** *(Carlos)*
   En `frontend/src/features/indicators/`:
   - Crear `services/indicatorService.ts` consumiendo `GET /api/v1/studies/:id/indicators` con `apiClient`.
-  - Crear hook `useIndicators(studyId)` mediante TanStack Query con revalidación y estado de carga.
+  - Crear hook `useIndicators(studyId)` con estado de carga y recarga, como el resto de pantallas (TanStack Query no se usa en el proyecto). El tablero queda en la ruta `/indicadores`, con enlace en el menú y en la barra inferior.
   - Implementar `IndicatorsHeader.tsx` con selector de estudio y badge visual destacado *"Preliminar"* (con tooltip del porcentaje verificado) u *"Oficial"* (R-520, CA-504).
   - Implementar `KpiCardsGrid.tsx` y `KpiCard.tsx` con los 6 indicadores principales del póster: Generación diaria promedio (kg/día), PPC promedio (kg/persona/día), Densidad promedio (kg/m³), Fracción aprovechable (%), Composición física y CV de la PPC (%) (R-521).
   *Verificación:* `test('kpiCardsRenderAccurateValues')` en Vitest valida el renderizado de las tarjetas con los datos esperados.
 
-- [ ] **T507. Gráficos interactivos Recharts y tabla de subcategorías (R-522, R-523, R-524, R-525, R-526, R-527, CA-505).** *(Carlos)*
+- [x] **T507. Gráficos interactivos Recharts y tabla de subcategorías (R-522, R-523, R-524, R-525, R-526, R-527, CA-505).** *(Carlos)*
   Desarrollar los componentes gráficos basados en Recharts:
   - `DailyGenerationChart.tsx`: Gráfico de barras de los días 1 a 8, con la barra del Día 1 diferenciada visualmente en gris y la leyenda destacada *"Día de descarte"* (R-522).
   - `CompositionDonutChart.tsx`: Gráfico Donut de los 4 grupos de la Res. 2184/2019 con sus colores oficiales y etiquetas legibles (R-523).

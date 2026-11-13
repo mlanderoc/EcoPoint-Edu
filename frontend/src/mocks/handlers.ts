@@ -41,6 +41,7 @@ import {
   WasteCategory,
 } from '@/types'
 import { ALL_PERMISSIONS, hasPermission } from '@/features/auth/utils/permissions'
+import { mockIndicators } from './data/indicatorsData'
 
 /** Demo password of every seed user (sql/002_seed.sql). */
 const DEMO_PASSWORD = 'EcoPoint2026'
@@ -296,6 +297,14 @@ export const handlers = [
 
   // --- STUDIES (section 5.2) ---
   http.get('/api/v1/studies', () => HttpResponse.json(studiesState)),
+
+  http.get('/api/v1/studies/:id/indicators', ({ params }) => {
+    const path = `/api/v1/studies/${params.id}/indicators`
+    const denied = requirePermission('VIEW_INDICATORS', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    return study ? HttpResponse.json(mockIndicators(study, study.status === 'CERRADO' ? 100 : 62.5)) : notFound(path, 'Estudio')
+  }),
 
   http.get('/api/v1/studies/:id', ({ params }) => {
     const study = studiesState.find((item) => item.id === Number(params.id))
