@@ -43,6 +43,18 @@ export const adminService = {
     return apiClient.post<GenerationSource>(`/api/v1/institutions/${institutionId}/sources`, data)
   },
 
+  /** Activates or deactivates an institution (RN-006). */
+  setInstitutionActive: async (id: number, active: boolean): Promise<Institution> => {
+    return apiClient.post<Institution>(`/api/v1/institutions/${id}/${active ? 'activate' : 'deactivate'}`)
+  },
+
+  /** Activates or deactivates a source (RN-005). */
+  setSourceActive: async (institutionId: number, sourceId: number, active: boolean): Promise<GenerationSource> => {
+    return apiClient.post<GenerationSource>(
+      `/api/v1/institutions/${institutionId}/sources/${sourceId}/${active ? 'activate' : 'deactivate'}`
+    )
+  },
+
   updateSource: async (
     institutionId: number,
     sourceId: number,
@@ -80,5 +92,10 @@ export const adminService = {
 
   createCategory: async (data: Omit<WasteCategory, 'id'>): Promise<WasteCategory> => {
     return apiClient.post<WasteCategory>('/api/v1/waste-categories', data)
+  },
+
+  /** Activates or deactivates a subcategory (RN-043). */
+  setCategoryActive: async (id: number, active: boolean): Promise<WasteCategory> => {
+    return apiClient.post<WasteCategory>(`/api/v1/waste-categories/${id}/${active ? 'activate' : 'deactivate'}`)
   },
 }

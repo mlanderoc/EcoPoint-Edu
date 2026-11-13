@@ -68,6 +68,8 @@ export interface Institution {
   mapCenter?: GeoPoint | null
   mapZoom?: number
   settings?: CharacterizationSettings
+  /** False when it admits no new studies (RN-006); missing means active. */
+  active?: boolean
 }
 
 export interface GenerationSource {

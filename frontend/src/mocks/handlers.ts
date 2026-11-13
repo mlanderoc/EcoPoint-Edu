@@ -196,7 +196,7 @@ export const handlers = [
     const denied = requirePermission('MANAGE_ADMINISTRATION', '/api/v1/institutions')
     if (denied) return denied
     const body = (await request.json()) as Omit<Institution, 'id'>
-    const created: Institution = { mapZoom: 17, ...body, id: newId() }
+    const created: Institution = { mapZoom: 17, active: true, ...body, id: newId() }
     institutionsState.push(created)
     return HttpResponse.json(created, { status: 201 })
   }),
@@ -209,21 +209,32 @@ export const handlers = [
     return HttpResponse.json(institutionsState[index])
   }),
 
+  http.post('/api/v1/institutions/:id/:action', ({ params }) => {
+    if (params.action !== 'activate' && params.action !== 'deactivate') return undefined
+    const path = `/api/v1/institutions/${params.id}/${params.action}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const institution = institutionsState.find((item) => item.id === Number(params.id))
+    if (!institution) return notFound(path, 'Institución')
+    institution.active = params.action === 'activate'
+    return HttpResponse.json(institution)
+  }),
+
   http.get('/api/v1/institutions/:id/sources', ({ request }) => {
-    const onlyActive = new URL(request.url).searchParams.get('active') === 'true'
-    return HttpResponse.json(sourcesState.filter((source) => !onlyActive || source.active))
+    const active = new URL(request.url).searchParams.get('active')
+    return HttpResponse.json(sourcesState.filter((source) => active === null || String(source.active) === active))
   }),
 
   http.post('/api/v1/institutions/:id/sources', async ({ params, request }) => {
     const path = `/api/v1/institutions/${params.id}/sources`
     const denied = requirePermission('MANAGE_ADMINISTRATION', path)
     if (denied) return denied
-    const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'>
+    const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'> & { active?: boolean }
     if (sourcesState.some((source) => source.code === body.code)) {
       return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${body.code} en esta institución.`, path)
     }
     const created: GenerationSource = {
-      ...body, id: newId(), institutionId: Number(params.id) || 1, active: true, hasGeometry: false,
+      ...body, id: newId(), institutionId: Number(params.id) || 1, active: body.active !== false, hasGeometry: false,
     }
     sourcesState.push(created)
     return HttpResponse.json(created, { status: 201 })
@@ -287,12 +298,22 @@ export const handlers = [
   }),
 
   http.post('/api/v1/waste-categories', async ({ request }) => {
-    const body = (await request.json()) as Omit<WasteCategory, 'id' | 'active'>
+    const body = (await request.json()) as Omit<WasteCategory, 'id' | 'active'> & { active?: boolean }
     const created: WasteCategory = {
-      ...body, id: newId(), active: true, hazardous: body.group === 'SIN_COLOR',
+      ...body, id: newId(), active: body.active !== false, hazardous: body.group === 'SIN_COLOR',
     }
     categoriesState.push(created)
     return HttpResponse.json(created, { status: 201 })
+  }),
+
+  http.post('/api/v1/waste-categories/:id/:action', ({ params }) => {
+    const path = `/api/v1/waste-categories/${params.id}/${params.action}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const category = categoriesState.find((item) => item.id === Number(params.id))
+    if (!category) return notFound(path, 'Subcategoría de residuo')
+    category.active = params.action === 'activate'
+    return HttpResponse.json(category)
   }),
 
   // --- STUDIES (section 5.2) ---

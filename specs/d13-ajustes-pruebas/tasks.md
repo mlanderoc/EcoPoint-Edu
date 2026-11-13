@@ -87,7 +87,7 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 - [x] **A13. Eliminar y cancelar estudio.** Botones en el detalle, cada uno con su confirmación; el de cancelar pide motivo. La etiqueta "Cancelado" aparece en la lista. Registro en campo ignora los cancelados. *(Carlos)*
   *Verificación:* CA-315.
 
-- [ ] **A14. Activar y desactivar en administración.**
+- [x] **A14. Activar y desactivar en administración.**
   - `ActiveFilter` y `StatusToggleButton`.
   - Instituciones, Fuentes y Subcategorías con filtro y botón.
   - La casilla "activa" se respeta al crear.
