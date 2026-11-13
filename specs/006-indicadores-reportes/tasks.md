@@ -28,7 +28,7 @@
   En el backend (`pom.xml`), agregar las dependencias de Apache POI para exportación Excel (`org.apache.poi:poi-ooxml:5.4.0`) y OpenPDF para generación de reportes PDF libres de licencias restrictivas (`com.github.librepdf:openpdf:2.0.3`). En el frontend (`frontend/package.json`), instalar la biblioteca de visualización de datos declarativa `recharts` (`2.15.1` exacta, compatible con React 19).
   *Verificación:* `./mvnw compile` compila exitosamente las nuevas dependencias y `cd frontend && npm install && npm run build` pasa sin advertencias ni conflictos de paquetes.
 
-- [ ] **T501. Definición de contratos DTO de indicadores en backend y frontend.** *(Carlos)*
+- [x] **T501. Definición de contratos DTO de indicadores en backend y frontend.** *(Carlos)*
   En el backend (`com.ecopoint.dto`), crear las clases de transferencia inmutables: `StudyIndicatorsDTO`, `SummaryKPIsDTO`, `DailyGenerationDTO`, `SourceGenerationDTO`, `ShiftComparisonDTO`, `CompositionDTO`, `WasteGroupCompositionDTO`, `WasteSubcategoryCompositionDTO` y `DataQualityDTO`. En el frontend (`frontend/src/features/indicators/types/indicatorTypes.ts`), crear las interfaces TypeScript espejo con tipado estricto.
   *Verificación:* `cd frontend && npm run typecheck` valida los tipos sin errores y las clases de DTO compilan en el backend.
 
