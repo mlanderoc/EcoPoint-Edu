@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **BORRADOR** (12 nov 2026) |
+| Estado | **APROBADO** (12 nov 2026) |
 | Plan | [plan.md](plan.md) |
 | Rama | `feature/006-indicadores-reportes` (desde `develop` o `feature/004-registro-en-campo`) |
 | Responsables | Merlín Landero (`mlanderoc`), Estefanía Márquez (`EstefaniaMarquez`), Carlos Gómez (`craulgomez`) |

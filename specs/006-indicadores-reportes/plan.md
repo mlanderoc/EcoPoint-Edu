@@ -2,11 +2,11 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **BORRADOR** (12 nov 2026) |
+| Estado | **APROBADO** (12 nov 2026) |
 | Spec | [spec.md](spec.md) (aprobada) |
 | Redacta | Merlín Yelenis Landero Cuello (`mlanderoc`) |
 | Revisa | Claude, Estefanía Márquez, Carlos Gómez |
-| Rama | `feature/006-indicadores-reportes` (desde `develop` o `feature/004-registro-en-campo`) |
+| Rama | `feature/006-indicadores-reportes` (incluye la 005: los indicadores usan cuarteo, densidad y verificación) |
 | Fecha | 2026-11-12 |
 
 ---
@@ -513,3 +513,9 @@ Para compatibilizar los tiempos de desarrollo y maximizar la efectividad en la s
 | **CA-507** | PDF de estudio no cerrado lleva marca de agua diagonal "PRELIMINAR – datos sin depurar" en todas las páginas. | T511, T512 | `PdfReportServiceIT.ca507_preliminaryPdfIncludesWatermarkOnAllPages()` |
 | **CA-508** | Archivo Excel tiene las 8 hojas de R-531; suma de pesos netos de bolsas dividida entre 7 coincide exactamente con el resumen. | T509, T510 | `ExcelReportServiceIT.ca508_excelSheetsAndBagsSumMatchesAverage()` |
 | **CA-509** | Pruebas unitarias de las fórmulas de la sección 5.2 con los datos exactos de CA-500 a CA-503. | T503 | `IndicatorServiceTest` suite completa |
+
+## Ajustes de la aprobación (12 nov 2026)
+
+1. La rama incorpora la spec 005, porque los indicadores dependen del cuarteo, la densidad y la verificación.
+2. Logos: el de EcoPoint Edu ya está en `src/main/resources/logo_ecopoint.jpeg`. Los de la UPC y la I.E. Prudencia Daza los entrega el equipo; si no llegan a tiempo, el PDF se genera sin ellos y se agregan después sin cambiar el código.
+3. Recharts: se instala una versión exacta compatible con React 19, comprobada con el build y las pruebas.
