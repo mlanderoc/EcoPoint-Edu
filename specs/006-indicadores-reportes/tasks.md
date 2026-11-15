@@ -151,13 +151,14 @@
   *Verificación:* Pruebas de interacción con `@testing-library/react` verificando la activación de la descarga tras el clic.
   *Ajuste:* los botones están en el componente `ReportDownloads`, dentro de `IndicatorsHeader`. `apiClient.getBlob` descarga el archivo con la sesión y el mismo manejo de errores de la API. MSW simula `GET /studies/{id}/reports/{excel|pdf}`.
 
-- [ ] **T513. Prueba de consistencia cruzada integral (R-533).** *(Merlín)*
+- [x] **T513. Prueba de consistencia cruzada integral (R-533).** *(Merlín)*
   Crear la prueba de integración `src/test/java/com/ecopoint/integration/IndicatorCrossConsistencyIT.java` que consulte el estudio semilla cerrado:
   - Obtener los indicadores desde `IndicatorService`.
   - Parsear los valores de celda del Excel generado por `ExcelReportService`.
   - Extraer los datos textuales del PDF generado por `PdfReportService`.
   - Validar que $\bar{G}$, $\overline{PPC}$, densidad promedio y los porcentajes de composición coincidan de forma idéntica en los tres artefactos hasta el último decimal (R-533).
   *Verificación:* `./mvnw test -Dtest=IndicatorCrossConsistencyIT` ejecuta y pasa al 100 % en verde.
+  *Ajuste:* la prueba es `api/IndicatorCrossConsistencyIT` (usa `ApiClient`). Compara el JSON del tablero, las celdas del Excel y el texto del PDF en los 7 indicadores del resumen, la generación por fuente, los grupos de la composición y la nota de turnos.
 
 - [ ] **T514. Documentación y revisión final del PR.** *(Merlín)*
   Actualizar `README.md` del proyecto y `specs/006-indicadores-reportes/plan.md` si surgieron ajustes menores durante la revisión. Registrar el informe de trazabilidad en la bitácora de uso de IA (`docs/ai-usage/`). Verificar que la suite completa de pruebas unitarias y de integración de todo el repositorio compile y pase en verde.
