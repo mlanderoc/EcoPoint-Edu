@@ -56,13 +56,15 @@ npm run check:mobile # con npm run dev corriendo: Chrome real a 360 px (CA-307)
 
 ```
 src/
-├── components/   layout (menú lateral, barra inferior), ui (botones, campos, avisos), waste (grupos de residuos)
+├── components/   layout (menú lateral, barra inferior), ui (botones, campos, avisos, Atrás, filtro de activos), waste (grupos de residuos)
+├── hooks/        useUnsavedChanges: pregunta "¿Descartar los cambios?" antes de salir de un formulario
 ├── features/
 │   ├── auth/     sesión, permisos RN-081 y guardas de ruta
 │   ├── admin/    administración (spec 004, fase 3)
 │   ├── study/    estudios y su ciclo de vida (fase 4)
 │   ├── field/    registro en campo (fase 5)
-│   └── quality/  cuarteo, densidad, doble registro y alertas (spec 005)
+│   ├── quality/  cuarteo, densidad, doble registro y alertas (spec 005)
+│   └── profile/  Mi Perfil: datos, registros propios y cambio de contraseña (ajustes D13)
 ├── mocks/        API simulada con MSW (mismo contrato que la spec 003)
 ├── services/     cliente HTTP: cookies, token CSRF y errores en español
 └── types/        tipos iguales a los DTO de la API
@@ -71,3 +73,9 @@ src/
 - **Sesión:** cookie `HttpOnly` del servidor; el frontend nunca guarda tokens. El cliente pide `GET /api/v1/auth/csrf` y envía `X-XSRF-TOKEN` en cada `POST`, `PUT`, `PATCH` y `DELETE`.
 - **Errores:** la API responde siempre `{ status, errorCode, message, fieldErrors }`; los formularios muestran `fieldErrors` debajo del campo y el resto en un aviso.
 - **Campo:** botones y campos de al menos 48 px, teclado numérico con coma o punto decimal, y un solo envío ante doble toque.
+- **Ajustes D13:**
+  - las fechas del estudio se recalculan con días hábiles y festivos de Colombia (`features/study/utils/holidays.ts`);
+  - Instituciones, Fuentes y Subcategorías se activan, desactivan y filtran (Activos / Inactivos / Todos, en la URL con `?estado=`);
+  - Usuarios es una tabla con filtros, buscador y paginación del servidor;
+  - las pantallas internas tienen Atrás y los formularios Guardar y Descartar;
+  - ninguna pantalla muestra códigos de reglas, y la prueba `no-rule-codes.test.tsx` lo vigila.

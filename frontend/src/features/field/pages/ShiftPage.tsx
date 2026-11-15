@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle2, CircleDashed, Lock, MinusCircle, Plus, Users } from 'lucide-react'
-import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Modal } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Modal } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
 import { ApiError } from '@/services/apiClient'
@@ -109,6 +109,7 @@ export function ShiftPage() {
 
   return (
     <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+      <BackButton to="/campo" label="Atrás a Registro en Campo" />
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Turno {shift.code}</h1>

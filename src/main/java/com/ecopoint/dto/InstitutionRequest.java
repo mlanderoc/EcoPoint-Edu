@@ -10,11 +10,12 @@ import com.ecopoint.model.Institution;
  * @param mapCenter center of the map, or null
  * @param mapZoom   initial zoom of the map, or null for the default
  * @param settings  characterization settings, or null for the defaults
+ * @param active    false to create it inactive (RN-006); ignored when editing
  * @author craulgomez
  * @version 1.0
  */
 public record InstitutionRequest(String name, String address, GeoPointDto mapCenter, Integer mapZoom,
-                                 SettingsDto settings) {
+                                 SettingsDto settings, Boolean active) {
 
     /**
      * Builds the institution of the domain.
@@ -31,6 +32,9 @@ public record InstitutionRequest(String name, String address, GeoPointDto mapCen
         }
         if (settings != null) {
             institution.setSettings(settings.toModel());
+        }
+        if (Boolean.FALSE.equals(active)) {
+            institution.deactivate();
         }
         return institution;
     }

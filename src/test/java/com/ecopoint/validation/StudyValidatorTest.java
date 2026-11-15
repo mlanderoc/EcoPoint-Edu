@@ -4,10 +4,12 @@ import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.QualityControlException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Institution;
 import com.ecopoint.model.StudyStatus;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -79,6 +81,26 @@ class StudyValidatorTest {
 
         assertThrows(BusinessRuleException.class,
                 () -> StudyValidator.validateNoOverlap(newStudy, List.of(existing)));
+    }
+
+    @Test
+    void ca015_cancelledStudyFreesItsDates() {
+        CharacterizationStudy cancelled = study(1L, 1L, 3, 4, 5, 6, 9, 10, 11, 12);
+        cancelled.changeStatus(StudyStatus.EN_EJECUCION);
+        cancelled.cancel(7L, "Fechas equivocadas", LocalDateTime.of(2026, 3, 5, 10, 0));
+        CharacterizationStudy replacement = study(null, 1L, 3, 4, 5, 6, 9, 10, 11, 12);
+
+        assertDoesNotThrow(() -> StudyValidator.validateNoOverlap(replacement, List.of(cancelled)));
+    }
+
+    @Test
+    void ca005_inactiveInstitutionDoesNotAcceptNewStudies() {
+        Institution institution = new Institution(1L, "I.E. Prudencia Daza", "Valledupar");
+        institution.deactivate();
+
+        assertThrows(BusinessRuleException.class, () -> StudyValidator.validateInstitutionAcceptsStudies(institution));
+        institution.activate();
+        assertDoesNotThrow(() -> StudyValidator.validateInstitutionAcceptsStudies(institution));
     }
 
     @Test

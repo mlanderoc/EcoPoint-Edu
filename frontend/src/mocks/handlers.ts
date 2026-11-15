@@ -49,6 +49,7 @@ const NEXT_STATUS: Record<StudyStatus, StudyStatus | null> = {
   EN_EJECUCION: 'EN_DEPURACION',
   EN_DEPURACION: 'CERRADO',
   CERRADO: null,
+  CANCELADO: null,
 }
 
 let activeUser: User | null = mockUsers[0]
@@ -158,6 +159,22 @@ function page<T>(items: T[], url: URL) {
   return { items: items.slice(from, from + size), page: pageNumber, size, totalItems: items.length }
 }
 
+/** Totals of the records of a user in the mock data (R-133). */
+function activityOf(userId: number) {
+  const typedBy = <T extends { verification: { enteredBy: number | null } }>(records: T[]) =>
+    records.filter((record) => record.verification.enteredBy === userId).length
+  const verifiedBy = <T extends { verification: { verifiedBy?: number | null } }>(records: T[]) =>
+    records.filter((record) => record.verification.verifiedBy === userId).length
+  const bags = typedBy(bagsState)
+  const quarterings = typedBy(quarteringsState)
+  const densities = typedBy(densitiesState)
+  return {
+    populations: 0, bags, quarterings, densities, typedRecords: bags + quarterings + densities,
+    verifications: verifiedBy(bagsState) + verifiedBy(quarteringsState) + verifiedBy(densitiesState),
+    correctionsReceived: 0,
+  }
+}
+
 function findShift(params: Record<string, unknown>): MockShift | undefined {
   return shiftsState.find((shift) => shift.id === Number(params.shiftId))
 }
@@ -195,7 +212,7 @@ export const handlers = [
     const denied = requirePermission('MANAGE_ADMINISTRATION', '/api/v1/institutions')
     if (denied) return denied
     const body = (await request.json()) as Omit<Institution, 'id'>
-    const created: Institution = { mapZoom: 17, ...body, id: newId() }
+    const created: Institution = { mapZoom: 17, active: true, ...body, id: newId() }
     institutionsState.push(created)
     return HttpResponse.json(created, { status: 201 })
   }),
@@ -208,21 +225,32 @@ export const handlers = [
     return HttpResponse.json(institutionsState[index])
   }),
 
+  http.post('/api/v1/institutions/:id/:action', ({ params }) => {
+    if (params.action !== 'activate' && params.action !== 'deactivate') return undefined
+    const path = `/api/v1/institutions/${params.id}/${params.action}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const institution = institutionsState.find((item) => item.id === Number(params.id))
+    if (!institution) return notFound(path, 'Institución')
+    institution.active = params.action === 'activate'
+    return HttpResponse.json(institution)
+  }),
+
   http.get('/api/v1/institutions/:id/sources', ({ request }) => {
-    const onlyActive = new URL(request.url).searchParams.get('active') === 'true'
-    return HttpResponse.json(sourcesState.filter((source) => !onlyActive || source.active))
+    const active = new URL(request.url).searchParams.get('active')
+    return HttpResponse.json(sourcesState.filter((source) => active === null || String(source.active) === active))
   }),
 
   http.post('/api/v1/institutions/:id/sources', async ({ params, request }) => {
     const path = `/api/v1/institutions/${params.id}/sources`
     const denied = requirePermission('MANAGE_ADMINISTRATION', path)
     if (denied) return denied
-    const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'>
+    const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'> & { active?: boolean }
     if (sourcesState.some((source) => source.code === body.code)) {
       return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${body.code} en esta institución.`, path)
     }
     const created: GenerationSource = {
-      ...body, id: newId(), institutionId: Number(params.id) || 1, active: true, hasGeometry: false,
+      ...body, id: newId(), institutionId: Number(params.id) || 1, active: body.active !== false, hasGeometry: false,
     }
     sourcesState.push(created)
     return HttpResponse.json(created, { status: 201 })
@@ -249,7 +277,56 @@ export const handlers = [
     if (denied) return denied
     const url = new URL(request.url)
     const role = url.searchParams.get('role') as UserRole | null
-    return HttpResponse.json(page(usersState.filter((user) => !role || user.role === role), url))
+    const active = url.searchParams.get('active')
+    const text = (url.searchParams.get('q') ?? '').trim().toLowerCase()
+    const matching = usersState
+      .filter((user) => !role || user.role === role)
+      .filter((user) => active === null || String(user.active) === active)
+      .filter((user) => !text || `${user.firstName} ${user.lastName} ${user.email}`.toLowerCase().includes(text))
+      .map((user) => ({ ...user, activity: activityOf(user.id) }))
+    return HttpResponse.json(page(matching, url))
+  }),
+
+  http.post('/api/v1/users/:id/:action', ({ params }) => {
+    const path = `/api/v1/users/${params.id}/${params.action}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const user = usersState.find((item) => item.id === Number(params.id))
+    if (!user) return notFound(path, 'Usuario')
+    if (params.action === 'deactivate' && user.role === 'DOCENTE') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Un docente no se puede desactivar: solo se desactivan estudiantes.', path)
+    }
+    user.active = params.action === 'activate'
+    return HttpResponse.json(user)
+  }),
+
+  http.get('/api/v1/auth/me/profile', () => {
+    const missing = requireSession('/api/v1/auth/me/profile')
+    if (missing) return missing
+    if (!activeUser) return notFound('/api/v1/auth/me/profile', 'Usuario')
+    return HttpResponse.json({
+      user: { ...activeUser, institutionName: mockInstitution.name },
+      crews: crewsState
+        .filter((crew) => crew.responsibleId === activeUser?.id || crew.memberIds.includes(activeUser?.id ?? -1))
+        .map((crew) => crew.name),
+      activity: activityOf(activeUser.id),
+    })
+  }),
+
+  http.post('/api/v1/auth/me/password', async ({ request }) => {
+    const path = '/api/v1/auth/me/password'
+    const missing = requireSession(path)
+    if (missing) return missing
+    const body = (await request.json()) as { currentPassword?: string; newPassword?: string }
+    if (body.currentPassword !== DEMO_PASSWORD) {
+      return apiError(400, 'ERR_INVALID_DATA', 'La contraseña actual no es correcta.', path,
+        [{ field: 'currentPassword', message: 'La contraseña actual no es correcta.' }])
+    }
+    if (!body.newPassword || body.newPassword.length < 8) {
+      return apiError(400, 'ERR_INVALID_DATA', 'La contraseña debe tener al menos 8 caracteres.', path,
+        [{ field: 'newPassword', message: 'La contraseña debe tener al menos 8 caracteres.' }])
+    }
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.post('/api/v1/users', async ({ request }) => {
@@ -286,12 +363,22 @@ export const handlers = [
   }),
 
   http.post('/api/v1/waste-categories', async ({ request }) => {
-    const body = (await request.json()) as Omit<WasteCategory, 'id' | 'active'>
+    const body = (await request.json()) as Omit<WasteCategory, 'id' | 'active'> & { active?: boolean }
     const created: WasteCategory = {
-      ...body, id: newId(), active: true, hazardous: body.group === 'SIN_COLOR',
+      ...body, id: newId(), active: body.active !== false, hazardous: body.group === 'SIN_COLOR',
     }
     categoriesState.push(created)
     return HttpResponse.json(created, { status: 201 })
+  }),
+
+  http.post('/api/v1/waste-categories/:id/:action', ({ params }) => {
+    const path = `/api/v1/waste-categories/${params.id}/${params.action}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const category = categoriesState.find((item) => item.id === Number(params.id))
+    if (!category) return notFound(path, 'Subcategoría de residuo')
+    category.active = params.action === 'activate'
+    return HttpResponse.json(category)
   }),
 
   // --- STUDIES (section 5.2) ---
@@ -323,6 +410,53 @@ export const handlers = [
     }
     studiesState.push(created)
     return HttpResponse.json(created, { status: 201 })
+  }),
+
+  http.put('/api/v1/studies/:id/days', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/days`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    const body = (await request.json()) as { days: { dayNumber: number; date: string | null }[] }
+    study.days = study.days.map((day) => ({
+      ...day, date: body.days.find((item) => item.dayNumber === day.dayNumber)?.date ?? null,
+    }))
+    study.startDate = study.days[0].date
+    study.endDate = study.days[7].date
+    return HttpResponse.json(study)
+  }),
+
+  http.post('/api/v1/studies/:id/cancel', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/cancel`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    const body = (await request.json()) as { reason?: string }
+    if (!body.reason?.trim()) {
+      return apiError(400, 'ERR_INVALID_DATA', 'Debe indicar el motivo para cancelar el estudio.', path)
+    }
+    if (study.status !== 'EN_EJECUCION' && study.status !== 'EN_DEPURACION') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Solo se puede cancelar un estudio en ejecución o en depuración.', path)
+    }
+    study.status = 'CANCELADO'
+    study.cancellationReason = body.reason.trim()
+    study.cancelledAt = new Date().toISOString()
+    return HttpResponse.json(study)
+  }),
+
+  http.delete('/api/v1/studies/:id', ({ params }) => {
+    const path = `/api/v1/studies/${params.id}`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    if (study.status !== 'PLANIFICADO') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'Solo se puede eliminar un estudio planificado.', path)
+    }
+    studiesState = studiesState.filter((item) => item.id !== study.id)
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.put('/api/v1/studies/:id/sources', async ({ params, request }) => {

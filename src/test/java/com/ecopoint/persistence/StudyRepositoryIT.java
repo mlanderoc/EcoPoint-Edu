@@ -99,6 +99,32 @@ class StudyRepositoryIT extends PostgresIntegrationTest {
     }
 
     @Test
+    void rn018_cancellationIsStoredAndRestored() {
+        User teacher = users.save(new User(null, "Oriana", "Jurado", "oriana@unicesar.edu.co", UserRole.DOCENTE, institutionId));
+        CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
+        study.scheduleDates(march(2, 3, 4, 5, 6, 9, 10, 11));
+        repository.save(study);
+        study.changeStatus(StudyStatus.EN_EJECUCION);
+        study.cancel(teacher.getId(), "Fechas equivocadas", LocalDateTime.of(2026, 3, 3, 9, 0));
+        repository.save(study);
+
+        CharacterizationStudy found = repository.findById(study.getId()).orElseThrow();
+        assertEquals(StudyStatus.CANCELADO, found.getStatus());
+        assertEquals(study.getCancellation(), found.getCancellation());
+    }
+
+    @Test
+    void rn019_plannedStudyIsDeletedWithItsDaysAndSources() {
+        CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
+        study.scheduleDates(march(2, 3, 4, 5, 6, 9, 10, 11));
+        repository.save(study);
+
+        repository.delete(study.getId());
+
+        assertTrue(repository.findById(study.getId()).isEmpty());
+    }
+
+    @Test
     void ca110_updateStatusListAndParticipatingSources() {
         CharacterizationStudy first = repository.save(new CharacterizationStudy(null, institutionId));
         CharacterizationStudy second = repository.save(new CharacterizationStudy(null, institutionId));

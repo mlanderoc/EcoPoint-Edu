@@ -47,6 +47,18 @@ class InstitutionRepositoryIT extends PostgresIntegrationTest {
     }
 
     @Test
+    void rn006_inactiveInstitutionIsStoredAndRestored() {
+        Institution institution = pilot();
+        institution.deactivate();
+        repository.save(institution);
+
+        assertFalse(repository.findById(institution.getId()).orElseThrow().isActive());
+        institution.activate();
+        repository.save(institution);
+        assertTrue(repository.findById(institution.getId()).orElseThrow().isActive());
+    }
+
+    @Test
     void ca110_updateKeepsTheSameRowAndChangesTheSettings() {
         Institution saved = repository.save(pilot());
         saved.setAddress("Calle de prueba, Valledupar");

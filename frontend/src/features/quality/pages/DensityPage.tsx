@@ -7,7 +7,8 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, Button, Card, CardContent, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { formatNumber, parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
 import { DensityMeasurement } from '@/types'
@@ -25,6 +26,8 @@ export function DensityPage() {
   const [weight, setWeight] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const shiftPath = `/campo/turno/${shiftId}`
+  const { confirmLeave, discardDialog } = useUnsavedChanges(!saved && !isSaving && volume + weight !== '')
 
   useEffect(() => {
     qualityService.getDensity(shiftId)
@@ -59,6 +62,7 @@ export function DensityPage() {
 
   return (
     <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
+      <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
       <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Densidad del turno</h1>
       {error && <AlertBanner variant="danger" message={error} />}
       {saved ? (
@@ -91,11 +95,13 @@ export function DensityPage() {
             disabled={isSaving || density === null}>
             Guardar densidad
           </Button>
+          <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
+            onClick={() => confirmLeave(() => navigate(shiftPath))}>
+            Descartar
+          </Button>
         </form>
       )}
-      <Button variant="outline" className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${shiftId}`)}>
-        Volver al turno
-      </Button>
+      {discardDialog}
     </div>
   )
 }

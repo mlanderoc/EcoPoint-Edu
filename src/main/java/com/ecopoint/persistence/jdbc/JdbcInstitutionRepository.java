@@ -23,7 +23,7 @@ import java.util.Optional;
 @Repository
 public class JdbcInstitutionRepository implements InstitutionRepository {
 
-    private static final String COLUMNS = "id, nombre, direccion, centro_latitud, centro_longitud, zoom_mapa, "
+    private static final String COLUMNS = "id, nombre, direccion, activa, centro_latitud, centro_longitud, zoom_mapa, "
             + "peso_min_submuestra, peso_max_submuestra, tolerancia_calidad, peso_max_bolsa, "
             + "densidad_min_bolsa, densidad_max_bolsa";
 
@@ -34,6 +34,9 @@ public class JdbcInstitutionRepository implements InstitutionRepository {
             institution.setMapCenter(new GeoPoint(latitude, rs.getBigDecimal("centro_longitud")));
         }
         institution.setMapZoom(rs.getInt("zoom_mapa"));
+        if (!rs.getBoolean("activa")) {
+            institution.deactivate();
+        }
         institution.setSettings(new CharacterizationSettings(
                 rs.getBigDecimal("peso_min_submuestra"), rs.getBigDecimal("peso_max_submuestra"),
                 rs.getBigDecimal("tolerancia_calidad"), rs.getBigDecimal("peso_max_bolsa"),
@@ -57,15 +60,15 @@ public class JdbcInstitutionRepository implements InstitutionRepository {
         MapSqlParameterSource params = parameters(institution);
         if (institution.getId() == null) {
             Long id = DataAccessTranslator.execute("guardar la institución " + institution.getName(),
-                    () -> jdbc.queryForObject("INSERT INTO INSTITUCION (nombre, direccion, centro_latitud, "
+                    () -> jdbc.queryForObject("INSERT INTO INSTITUCION (nombre, direccion, activa, centro_latitud, "
                             + "centro_longitud, zoom_mapa, peso_min_submuestra, peso_max_submuestra, "
                             + "tolerancia_calidad, peso_max_bolsa, densidad_min_bolsa, densidad_max_bolsa) "
-                            + "VALUES (:nombre, :direccion, :lat, :lon, :zoom, :minSample, :maxSample, :tolerance, "
+                            + "VALUES (:nombre, :direccion, :activa, :lat, :lon, :zoom, :minSample, :maxSample, :tolerance, "
                             + ":maxBag, :minDensity, :maxDensity) RETURNING id", params, Long.class));
             institution.setId(id);
         } else {
             DataAccessTranslator.execute("actualizar la institución " + institution.getName(),
-                    () -> jdbc.update("UPDATE INSTITUCION SET nombre = :nombre, direccion = :direccion, "
+                    () -> jdbc.update("UPDATE INSTITUCION SET nombre = :nombre, direccion = :direccion, activa = :activa, "
                             + "centro_latitud = :lat, centro_longitud = :lon, zoom_mapa = :zoom, "
                             + "peso_min_submuestra = :minSample, peso_max_submuestra = :maxSample, "
                             + "tolerancia_calidad = :tolerance, peso_max_bolsa = :maxBag, "
@@ -102,6 +105,7 @@ public class JdbcInstitutionRepository implements InstitutionRepository {
         return new MapSqlParameterSource()
                 .addValue("nombre", institution.getName())
                 .addValue("direccion", institution.getAddress())
+                .addValue("activa", institution.isActive())
                 .addValue("lat", center == null ? null : center.latitude())
                 .addValue("lon", center == null ? null : center.longitude())
                 .addValue("zoom", institution.getMapZoom())

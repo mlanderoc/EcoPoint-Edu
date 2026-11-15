@@ -12,9 +12,12 @@ import com.ecopoint.persistence.InstitutionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -88,5 +91,18 @@ class InstitutionServiceTest {
     @Test
     void ca207_missingInstitutionIsNotFound() {
         assertThrows(ResourceNotFoundException.class, () -> service.get(99L));
+    }
+
+    @Test
+    void rn006_institutionIsDeactivatedActivatedAndFilteredByState() {
+        Institution pilot = institutions.findById(1L).orElseThrow();
+        when(institutions.findAll()).thenReturn(List.of(pilot));
+
+        assertFalse(service.deactivate(teacher, 1L).isActive());
+        assertEquals(1, service.list(false).size());
+        assertEquals(0, service.list(true).size());
+        assertEquals(1, service.list(null).size());
+        assertTrue(service.activate(teacher, 1L).isActive());
+        assertThrows(AccessDeniedException.class, () -> service.deactivate(student, 1L));
     }
 }

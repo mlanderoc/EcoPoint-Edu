@@ -3,6 +3,7 @@ package com.ecopoint.validation;
 import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.model.User;
+import com.ecopoint.model.UserRole;
 
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -108,6 +109,23 @@ public final class UserValidator {
         if (!LETTERS_AND_SPACES_PATTERN.matcher(trimmed).matches()) {
             throw new InvalidDataException(field,
                     "El " + field + " solo puede contener letras y espacios.");
+        }
+    }
+
+    /**
+     * Validates that a user may be deactivated: only university students are
+     * deactivated; a teacher never is, not even by himself, so the institution
+     * always keeps someone who administers it (RN-087).
+     *
+     * @param user user to deactivate
+     * @throws BusinessRuleException if the user is a teacher
+     */
+    public static void validateDeactivation(User user) {
+        if (user == null) {
+            throw new InvalidDataException("usuario", "El usuario no puede ser nulo.");
+        }
+        if (user.getRole() == UserRole.DOCENTE) {
+            throw new BusinessRuleException("Un docente no se puede desactivar: solo se desactivan estudiantes.");
         }
     }
 
