@@ -163,3 +163,4 @@
 - [ ] **T514. Documentación y revisión final del PR.** *(Merlín)*
   Actualizar `README.md` del proyecto y `specs/006-indicadores-reportes/plan.md` si surgieron ajustes menores durante la revisión. Registrar el informe de trazabilidad en la bitácora de uso de IA (`docs/ai-usage/`). Verificar que la suite completa de pruebas unitarias y de integración de todo el repositorio compile y pase en verde.
   *Verificación:* `./mvnw verify` y `npm test` exitosos en verde; Pull Request listo para revisión.
+  *Avance:* README y `frontend/README.md` actualizados; `./mvnw verify` con 526 pruebas y `npm test` con 119 en verde. No se crea la bitácora `docs/ai-usage/`: el proyecto no la lleva y los commits no llevan firmas de IA (AGENTS.md). Falta la revisión de Antigravity y el PR.

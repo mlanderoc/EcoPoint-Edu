@@ -14,10 +14,13 @@ Proyecto de aula de **Programación de Computadores III**, Universidad Popular d
 | --- | --- | --- |
 | [001](specs/001-dominio-caracterizacion/spec.md) | Dominio de caracterización: modelo, validadores y excepciones (Java puro) | Terminada |
 | [002](specs/002-persistencia-postgresql/spec.md) | Persistencia en PostgreSQL: esquema, datos de demostración y repositorios | Terminada |
-| [003](specs/003-api-rest-seguridad/spec.md) | API REST y seguridad (Spring Boot) | Terminada, en revisión |
-| [004](specs/004-registro-en-campo/spec.md) a [007](specs/007-plano-interactivo-fuentes/spec.md) | Pantallas web (React), indicadores, reportes y plano interactivo | Pendiente |
+| [003](specs/003-api-rest-seguridad/spec.md) | API REST y seguridad (Spring Boot) | Terminada |
+| [004](specs/004-registro-en-campo/spec.md) | Pantallas web (React): administración, configuración del estudio y registro en campo | Terminada |
+| [005](specs/005-cuarteo-control-calidad/spec.md) | Cuarteo, densidad, verificación, depuración y alertas | Terminada |
+| [006](specs/006-indicadores-reportes/spec.md) | Indicadores de línea base, tablero y reportes en Excel y PDF | Terminada, en revisión |
+| [007](specs/007-plano-interactivo-fuentes/spec.md) | Plano interactivo de fuentes | Pendiente |
 
-El backend ya expone la API REST completa del registro en campo, el cuarteo y la verificación. Las pantallas web (React) llegan con las specs 004 a 007.
+El sistema ya cubre el estudio completo: configurar, registrar en campo, cuartear, verificar, depurar, ver los indicadores y descargar los reportes.
 
 ## 2. Cómo empezar
 
@@ -75,6 +78,7 @@ La API queda en `http://localhost:8080/api/v1`:
 - **Documentación interactiva** (solo con el perfil `dev`): http://localhost:8080/swagger-ui.html
 - **Ejemplos listos para ejecutar**: [`docs/api/`](docs/api/README.md) (cliente HTTP de IntelliJ o REST Client de VS Code).
 - **Sesión**: cookie `HttpOnly` de 8 horas. Cada `POST`, `PUT`, `PATCH` y `DELETE` lleva la cabecera `X-XSRF-TOKEN` con el valor de la cookie `XSRF-TOKEN` que entrega `GET /api/v1/auth/csrf`.
+- **Indicadores y reportes** (spec 006): `GET /studies/{id}/indicators` (tablero), `GET /studies/{id}/reports/excel` (libro de 8 hojas) y `GET /studies/{id}/reports/pdf` (informe de línea base, con la marca de agua "PRELIMINAR" mientras el estudio no esté cerrado). Los tres usan los mismos números redondeados (R-533).
 - **Frontend en desarrollo**: Vite reenvía `/api` a `http://localhost:8080`, así navegador y API comparten origen. Si el frontend corre en otro origen, defínelo en `ECOPOINT_FRONTEND_ORIGIN` (por defecto `http://localhost:5173`).
 
 Variables opcionales de la API: `ECOPOINT_FRONTEND_ORIGIN`, `ECOPOINT_UPLOAD_DIR` (carpeta de las fotos, por defecto `./uploads`), `ECOPOINT_COOKIE_SECURE` (`true` con HTTPS) y `PORT` (por defecto 8080). Ver [`.env.example`](.env.example).

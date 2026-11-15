@@ -14,7 +14,7 @@ Aplicación web en **React + Vite + TypeScript** para el registro en campo de la
 | Verificación del doble registro por turno | `/calidad/verificacion` | Quien no digitó el registro |
 | Registro: corrección con motivo e historial | `/calidad/registro/:tipo/:id` | Quien no digitó el registro |
 | Alertas de calidad y su atención | `/alertas` | Docente |
-| Tablero de indicadores de línea base | `/indicadores` | Todos |
+| Tablero de indicadores de línea base, con los botones Exportar Excel y Descargar PDF | `/indicadores` | Todos |
 | Estudios: lista, nuevo y ciclo de vida | `/estudios`, `/estudios/nuevo`, `/estudios/:id` | Docente |
 | Administración: instituciones, fuentes, usuarios, cuadrillas y subcategorías | `/admin/*` | Docente |
 
