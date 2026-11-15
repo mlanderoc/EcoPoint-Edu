@@ -1,5 +1,6 @@
 package com.ecopoint.service;
 
+import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.GenerationSource;
@@ -165,6 +166,14 @@ class IndicatorServiceTest {
         assertEquals("30.00", shown(morning.averageGeneration(), 2));
         assertEquals("200.00", shown(morning.averagePopulation(), 2));
         assertEquals("0.150", shown(morning.averagePpc(), 3));
+    }
+
+    @Test
+    void a20_cancelledStudyHasNoIndicatorsNorReports() {
+        study(StudyStatus.CANCELADO);
+
+        assertThrows(BusinessRuleException.class, () -> service.calculate(teacher, 7L));
+        assertThrows(BusinessRuleException.class, () -> service.report(teacher, 7L));
     }
 
     @Test

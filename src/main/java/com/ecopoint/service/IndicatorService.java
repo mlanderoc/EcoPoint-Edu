@@ -1,5 +1,6 @@
 package com.ecopoint.service;
 
+import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Correction;
@@ -8,6 +9,7 @@ import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Institution;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.SamplingShift;
+import com.ecopoint.model.StudyStatus;
 import com.ecopoint.model.User;
 import com.ecopoint.model.VerifiableRecord;
 import com.ecopoint.persistence.CorrectionRepository;
@@ -106,8 +108,17 @@ public class IndicatorService {
                 IndicatorCalculator.calculate(study, studyShifts, sourcesOf(study)), history, crewNames);
     }
 
+    /**
+     * Finds the study of the indicators. A cancelled study has no baseline: it
+     * is not shown in Indicators nor in the reports (RN-018, D13 task A20).
+     */
     private CharacterizationStudy findStudy(Long studyId) {
-        return studies.findById(studyId).orElseThrow(() -> new ResourceNotFoundException("Estudio", studyId));
+        CharacterizationStudy study = studies.findById(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", studyId));
+        if (study.getStatus() == StudyStatus.CANCELADO) {
+            throw new BusinessRuleException("El estudio está cancelado: no tiene indicadores ni reportes.");
+        }
+        return study;
     }
 
     private Map<Long, GenerationSource> sourcesOf(CharacterizationStudy study) {
