@@ -14,6 +14,7 @@ import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/feature
 import { AlertsPage, DensityPage, QuarteringPage, VerificationPage } from '@/features/quality'
 import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
 import { ProfilePage } from '@/features/profile'
+import { IndicatorsDashboard } from '@/features/indicators'
 import { mockUsers } from '@/mocks/data/seedData'
 import { resetMockState } from '@/mocks/handlers'
 
@@ -39,6 +40,7 @@ const SCREENS: Array<[string, string, string, ReactElement]> = [
   ['Alertas', '/alertas', '/alertas', <AlertsPage />],
   ['Detalle del estudio', '/estudios/:id', '/estudios/2', <StudyDetailPage />],
   ['Mi Perfil', '/perfil', '/perfil', <ProfilePage />],
+  ['Indicadores', '/indicadores', '/indicadores', <IndicatorsDashboard />],
 ]
 
 describe('Sin códigos de reglas en pantalla (R-306, CA-317)', () => {

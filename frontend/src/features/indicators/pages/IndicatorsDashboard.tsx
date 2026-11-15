@@ -27,7 +27,8 @@ export function IndicatorsDashboard() {
   useEffect(() => {
     studyService.list()
       .then((all) => {
-        const withData = all.filter((study) => study.status !== 'PLANIFICADO')
+        // A planned study has no data yet, and a cancelled one has no baseline (D13, A20).
+        const withData = all.filter((study) => study.status !== 'PLANIFICADO' && study.status !== 'CANCELADO')
         setStudies(withData)
         setStudyId(withData[0]?.id ?? null)
       })
