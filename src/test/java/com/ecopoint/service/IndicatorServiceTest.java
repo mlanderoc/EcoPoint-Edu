@@ -16,6 +16,7 @@ import com.ecopoint.model.VerificationInfo;
 import com.ecopoint.model.WasteBag;
 import com.ecopoint.model.WasteGroup;
 import com.ecopoint.persistence.CorrectionRepository;
+import com.ecopoint.persistence.CrewRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.InstitutionRepository;
 import com.ecopoint.persistence.ShiftRepository;
@@ -56,7 +57,7 @@ class IndicatorServiceTest {
     private final ShiftRepository shifts = mock(ShiftRepository.class);
     private final GenerationSourceRepository sources = mock(GenerationSourceRepository.class);
     private final IndicatorService service = new IndicatorService(studies, shifts, sources,
-            mock(InstitutionRepository.class), mock(CorrectionRepository.class));
+            mock(InstitutionRepository.class), mock(CorrectionRepository.class), mock(CrewRepository.class));
     private final User teacher = new User(1L, "Ana", "Ríos", "a@unicesar.edu.co", UserRole.DOCENTE, 1L);
     private final List<SamplingShift> studyShifts = new ArrayList<>();
     private long nextId = 1;

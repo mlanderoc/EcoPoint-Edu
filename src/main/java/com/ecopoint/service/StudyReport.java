@@ -15,9 +15,10 @@ import java.util.List;
  * @param shifts          shifts with everything recorded in them
  * @param indicators      indicators with full precision
  * @param corrections     correction history of the study records
+ * @param crews           names of the crews that worked the shifts (R-530)
  * @author EstefaniaMarquez
- * @version 1.0
+ * @version 1.1
  */
 public record StudyReport(CharacterizationStudy study, String institutionName, List<SamplingShift> shifts,
-                          StudyIndicators indicators, List<Correction> corrections) {
+                          StudyIndicators indicators, List<Correction> corrections, List<String> crews) {
 }

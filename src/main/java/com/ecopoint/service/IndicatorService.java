@@ -3,6 +3,7 @@ package com.ecopoint.service;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Correction;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Institution;
 import com.ecopoint.model.Permission;
@@ -10,6 +11,7 @@ import com.ecopoint.model.SamplingShift;
 import com.ecopoint.model.User;
 import com.ecopoint.model.VerifiableRecord;
 import com.ecopoint.persistence.CorrectionRepository;
+import com.ecopoint.persistence.CrewRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.InstitutionRepository;
 import com.ecopoint.persistence.ShiftRepository;
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -40,6 +44,7 @@ public class IndicatorService {
     private final GenerationSourceRepository sources;
     private final InstitutionRepository institutions;
     private final CorrectionRepository corrections;
+    private final CrewRepository crews;
 
     /**
      * Creates the service.
@@ -49,14 +54,17 @@ public class IndicatorService {
      * @param sources      generation source repository
      * @param institutions institution repository
      * @param corrections  correction history repository
+     * @param crews        crew repository
      */
     public IndicatorService(StudyRepository studies, ShiftRepository shifts, GenerationSourceRepository sources,
-                            InstitutionRepository institutions, CorrectionRepository corrections) {
+                            InstitutionRepository institutions, CorrectionRepository corrections,
+                            CrewRepository crews) {
         this.studies = studies;
         this.shifts = shifts;
         this.sources = sources;
         this.institutions = institutions;
         this.corrections = corrections;
+        this.crews = crews;
     }
 
     /**
@@ -79,7 +87,7 @@ public class IndicatorService {
      *
      * @param actor   user asking
      * @param studyId study id
-     * @return the study, its shifts, its indicators and its correction history
+     * @return the study, its shifts, its indicators, its correction history and its crews
      * @throws com.ecopoint.exceptions.AccessDeniedException if the role cannot view indicators
      * @throws ResourceNotFoundException                     if the study does not exist
      */
@@ -92,8 +100,10 @@ public class IndicatorService {
                 .flatMap(record -> corrections.findByRecord(record.getRecordType(), record.getId()).stream())
                 .sorted(Comparator.comparing(Correction::at))
                 .toList();
+        List<String> crewNames = studyShifts.stream().map(SamplingShift::getCrewId).filter(Objects::nonNull)
+                .distinct().map(crews::findById).flatMap(Optional::stream).map(Crew::getName).sorted().toList();
         return new StudyReport(study, institutionName, studyShifts,
-                IndicatorCalculator.calculate(study, studyShifts, sourcesOf(study)), history);
+                IndicatorCalculator.calculate(study, studyShifts, sourcesOf(study)), history, crewNames);
     }
 
     private CharacterizationStudy findStudy(Long studyId) {
