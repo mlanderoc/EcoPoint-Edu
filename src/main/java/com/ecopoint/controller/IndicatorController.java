@@ -4,6 +4,7 @@ import com.ecopoint.dto.StudyIndicatorsDTO;
 import com.ecopoint.security.EcoPointUserDetails;
 import com.ecopoint.service.IndicatorService;
 import com.ecopoint.service.report.ExcelReportService;
+import com.ecopoint.service.report.PdfReportService;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -28,6 +29,7 @@ public class IndicatorController {
 
     private final IndicatorService indicators;
     private final ExcelReportService excelReports;
+    private final PdfReportService pdfReports;
     private final CurrentUser currentUser;
 
     /**
@@ -35,11 +37,14 @@ public class IndicatorController {
      *
      * @param indicators   indicator service
      * @param excelReports Excel report service
+     * @param pdfReports   PDF report service
      * @param currentUser  user of the session
      */
-    public IndicatorController(IndicatorService indicators, ExcelReportService excelReports, CurrentUser currentUser) {
+    public IndicatorController(IndicatorService indicators, ExcelReportService excelReports,
+                               PdfReportService pdfReports, CurrentUser currentUser) {
         this.indicators = indicators;
         this.excelReports = excelReports;
+        this.pdfReports = pdfReports;
         this.currentUser = currentUser;
     }
 
@@ -68,6 +73,21 @@ public class IndicatorController {
                                                 @PathVariable Long id) {
         return attachment(excelReports.generate(currentUser.of(principal), id), XLSX,
                 "ecopoint-reporte-estudio-" + id + ".xlsx");
+    }
+
+    /**
+     * Downloads the baseline report of a study in PDF, with the watermark when
+     * the study is not closed (R-530, R-532, CA-506, CA-507).
+     *
+     * @param principal user of the session
+     * @param id        study id
+     * @return the .pdf file as an attachment
+     */
+    @GetMapping("/api/v1/studies/{id}/reports/pdf")
+    public ResponseEntity<byte[]> downloadPdf(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                              @PathVariable Long id) {
+        return attachment(pdfReports.generate(currentUser.of(principal), id), MediaType.APPLICATION_PDF,
+                "ecopoint-informe-linea-base-" + id + ".pdf");
     }
 
     private static ResponseEntity<byte[]> attachment(byte[] file, MediaType type, String fileName) {
