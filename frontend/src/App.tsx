@@ -13,6 +13,7 @@ import { InstitutionsPage, SourcesPage, UsersPage, CrewsPage, CategoriesPage } f
 import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
 import { IndicatorsDashboard } from '@/features/indicators'
 import { AlertsPage, DensityPage, QuarteringPage, RecordPage, VerificationPage } from '@/features/quality'
+import { ProfilePage } from '@/features/profile'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -129,10 +130,7 @@ export function AppRoutes() {
           path="/perfil"
           element={
             <RoutedAppLayout>
-              <PlaceholderPage
-                title="Mi Perfil"
-                description="Información personal y cuadrilla asignada en el estudio de caracterización."
-              />
+              <ProfilePage />
             </RoutedAppLayout>
           }
         />

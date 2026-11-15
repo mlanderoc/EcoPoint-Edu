@@ -2,6 +2,7 @@ package com.ecopoint.persistence.jdbc;
 
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.SamplingDay;
+import com.ecopoint.model.StudyCancellation;
 import com.ecopoint.model.StudyReopening;
 import com.ecopoint.model.StudyStatus;
 import com.ecopoint.persistence.StudyRepository;
@@ -31,6 +32,9 @@ import java.util.Set;
 @Repository
 public class JdbcStudyRepository implements StudyRepository {
 
+    private static final String COLUMNS =
+            "id, id_institucion, estado, cancelado_por, cancelado_en, motivo_cancelacion";
+
     private final NamedParameterJdbcTemplate jdbc;
 
     /**
@@ -56,8 +60,10 @@ public class JdbcStudyRepository implements StudyRepository {
                             dayParameters(study.getId(), day));
                 }
             } else {
-                jdbc.update("UPDATE ESTUDIO SET estado = CAST(:estado AS estado_estudio) WHERE id = :id",
-                        new MapSqlParameterSource("id", study.getId()).addValue("estado", study.getStatus().name()));
+                jdbc.update("UPDATE ESTUDIO SET estado = CAST(:estado AS estado_estudio), cancelado_por = :canceladoPor, "
+                                + "cancelado_en = :canceladoEn, motivo_cancelacion = :motivo WHERE id = :id",
+                        cancellationParameters(study).addValue("id", study.getId())
+                                .addValue("estado", study.getStatus().name()));
                 // First clear the dates, so moving a date to another day never hits the UNIQUE (id_estudio, fecha).
                 jdbc.update("UPDATE DIA_MUESTREO SET fecha = NULL WHERE id_estudio = :estudio",
                         new MapSqlParameterSource("estudio", study.getId()));
@@ -74,14 +80,14 @@ public class JdbcStudyRepository implements StudyRepository {
     @Override
     public Optional<CharacterizationStudy> findById(Long id) {
         return DataAccessTranslator.execute("buscar el estudio " + id,
-                () -> jdbc.queryForList("SELECT id, id_institucion, estado FROM ESTUDIO WHERE id = :id",
+                () -> jdbc.queryForList("SELECT " + COLUMNS + " FROM ESTUDIO WHERE id = :id",
                         new MapSqlParameterSource("id", id)).stream().findFirst().map(this::toStudy));
     }
 
     @Override
     public List<CharacterizationStudy> findByInstitution(Long institutionId) {
         return DataAccessTranslator.execute("listar los estudios de la institución " + institutionId,
-                () -> jdbc.queryForList("SELECT id, id_institucion, estado FROM ESTUDIO "
+                () -> jdbc.queryForList("SELECT " + COLUMNS + " FROM ESTUDIO "
                                 + "WHERE id_institucion = :institucion ORDER BY id DESC",
                         new MapSqlParameterSource("institucion", institutionId)).stream().map(this::toStudy).toList());
     }
@@ -91,6 +97,12 @@ public class JdbcStudyRepository implements StudyRepository {
         DataAccessTranslator.execute("cambiar el estado del estudio " + studyId,
                 () -> jdbc.update("UPDATE ESTUDIO SET estado = CAST(:estado AS estado_estudio) WHERE id = :id",
                         new MapSqlParameterSource("id", studyId).addValue("estado", status.name())));
+    }
+
+    @Override
+    public void delete(Long studyId) {
+        DataAccessTranslator.execute("eliminar el estudio " + studyId,
+                () -> jdbc.update("DELETE FROM ESTUDIO WHERE id = :id", new MapSqlParameterSource("id", studyId)));
     }
 
     @Override
@@ -159,7 +171,23 @@ public class JdbcStudyRepository implements StudyRepository {
                 byStudy, (rs, n) -> new StudyReopening(rs.getLong("id_usuario"), rs.getString("motivo"),
                         rs.getTimestamp("reabierto_en").toLocalDateTime()));
         return CharacterizationStudy.restore(id, ((Number) row.get("id_institucion")).longValue(),
-                StudyStatus.valueOf(row.get("estado").toString()), dates, reopenings);
+                StudyStatus.valueOf(row.get("estado").toString()), dates, reopenings, cancellationOf(row));
+    }
+
+    private static StudyCancellation cancellationOf(Map<String, Object> row) {
+        if (row.get("cancelado_por") == null) {
+            return null;
+        }
+        return new StudyCancellation(((Number) row.get("cancelado_por")).longValue(),
+                row.get("motivo_cancelacion").toString(), ((Timestamp) row.get("cancelado_en")).toLocalDateTime());
+    }
+
+    private static MapSqlParameterSource cancellationParameters(CharacterizationStudy study) {
+        StudyCancellation cancellation = study.getCancellation();
+        return new MapSqlParameterSource()
+                .addValue("canceladoPor", cancellation == null ? null : cancellation.userId())
+                .addValue("canceladoEn", cancellation == null ? null : Timestamp.valueOf(cancellation.at()))
+                .addValue("motivo", cancellation == null ? null : cancellation.reason());
     }
 
     private static MapSqlParameterSource dayParameters(Long studyId, SamplingDay day) {

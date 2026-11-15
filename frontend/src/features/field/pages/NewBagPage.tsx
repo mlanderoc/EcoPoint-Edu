@@ -9,7 +9,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Lock } from 'lucide-react'
-import { AlertBanner, Button, Card, CardContent, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
+import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { adminService } from '@/features/admin/services/adminService'
 import { ApiError } from '@/services/apiClient'
@@ -35,6 +36,9 @@ export function NewBagPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState<WasteBag | null>(null)
   const submitting = useRef(false)
+  const shiftPath = `/campo/turno/${shiftId}`
+  const isDirty = !saved && !isSaving && (sourceId !== null || gross + tare + volume !== '')
+  const { confirmLeave, discardDialog } = useUnsavedChanges(isDirty)
 
   useEffect(() => {
     fieldService.getShift(shiftId)
@@ -95,7 +99,8 @@ export function NewBagPage() {
 
   if (!shift.population) {
     return (
-      <div className="max-w-xl w-full mx-auto">
+      <div className="max-w-xl w-full mx-auto flex flex-col gap-4">
+        <BackButton to={shiftPath} label="Atrás al turno" />
         <Card>
           <CardContent className="py-8 flex flex-col items-center gap-4 text-center" data-testid="bags-locked">
             <Lock className="w-10 h-10 text-amber-600" />
@@ -125,7 +130,7 @@ export function NewBagPage() {
           </CardContent>
         </Card>
         <Button className="min-h-[56px] text-lg" onClick={nextBag}>Siguiente bolsa</Button>
-        <Button variant="outline" className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${shiftId}`)}>
+        <Button variant="outline" className="min-h-[48px]" onClick={() => navigate(shiftPath)}>
           Ver turno
         </Button>
       </div>
@@ -134,6 +139,7 @@ export function NewBagPage() {
 
   return (
     <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
+      <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
       <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Registrar bolsa · {shift.code}</h1>
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
@@ -195,7 +201,12 @@ export function NewBagPage() {
           disabled={!complete || isSaving}>
           Guardar bolsa
         </Button>
+        <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
+          onClick={() => confirmLeave(() => navigate(shiftPath))}>
+          Descartar
+        </Button>
       </form>
+      {discardDialog}
     </div>
   )
 }

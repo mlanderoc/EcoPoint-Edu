@@ -74,7 +74,7 @@ export function CrewsPage() {
     }
 
     if (!responsibleId || Number(responsibleId) <= 0) {
-      setError('Alerta Preventiva RN-085: Toda cuadrilla debe tener obligatoriamente un docente responsable.')
+      setError('Toda cuadrilla debe tener un docente responsable.')
       return
     }
 
@@ -105,7 +105,7 @@ export function CrewsPage() {
             Cuadrillas de Muestreo
           </h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
-            Equipos de trabajo de campo conformados por un docente responsable y estudiantes universitarios (R-323, RN-085).
+            Equipos de trabajo de campo conformados por un docente responsable y estudiantes universitarios.
           </p>
         </div>
         <Button
@@ -178,7 +178,7 @@ export function CrewsPage() {
                     /* RN-085 Preventive Warning Banner */
                     <AlertBanner
                       variant="warning"
-                      title="Alerta Preventiva RN-085"
+                      title="Cuadrilla sin docente responsable"
                       message="Esta cuadrilla no cuenta con un docente responsable asignado. Toda cuadrilla requiere un docente para operar en turnos."
                     />
                   )}
@@ -216,7 +216,7 @@ export function CrewsPage() {
         open={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         title="Crear Cuadrilla de Muestreo"
-        description="Asigne un nombre, docente responsable (obligatorio según RN-085) y estudiantes participantes."
+        description="Asigne un nombre, el docente responsable (obligatorio) y los estudiantes participantes."
       >
         <form onSubmit={handleCreate} className="flex flex-col gap-4 mt-2">
           <Input
@@ -232,7 +232,7 @@ export function CrewsPage() {
           <div>
             <Select
               id="crew-responsible"
-              label="Docente Responsable (RN-085)"
+              label="Docente responsable"
               value={responsibleId}
               onChange={(e) => setResponsibleId(e.target.value)}
               disabled={isSaving}
@@ -247,7 +247,7 @@ export function CrewsPage() {
             {(!responsibleId || Number(responsibleId) <= 0) && (
               <p role="alert" className="text-xs font-semibold text-amber-700 mt-1 flex items-center gap-1">
                 <AlertTriangle className="w-3.5 h-3.5" />
-                Alerta RN-085: Es obligatorio asignar un docente responsable.
+                Es obligatorio asignar un docente responsable.
               </p>
             )}
           </div>

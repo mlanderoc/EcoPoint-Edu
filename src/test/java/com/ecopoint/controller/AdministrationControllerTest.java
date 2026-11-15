@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -93,7 +94,7 @@ class AdministrationControllerTest {
 
     @Test
     void ca205_invalidSourceCodeIsReportedOnTheCodeField() throws Exception {
-        when(sources.create(eq(teacher), eq(1L), any(), any(), any()))
+        when(sources.create(eq(teacher), eq(1L), any(), any(), any(), anyBoolean()))
                 .thenThrow(new InvalidDataException("codigo", "El código debe tener de 2 a 6 caracteres."));
 
         mvc.perform(post("/api/v1/institutions/1/sources").contentType(MediaType.APPLICATION_JSON)
@@ -136,7 +137,7 @@ class AdministrationControllerTest {
                 .mapToObj(i -> new User((long) i, "Nombre", "Apellido", "u" + i + "@unicesar.edu.co",
                         UserRole.ESTUDIANTE_UNIVERSITARIO, 1L))
                 .toList();
-        when(users.list(teacher, UserRole.ESTUDIANTE_UNIVERSITARIO, null)).thenReturn(many);
+        when(users.list(teacher, UserRole.ESTUDIANTE_UNIVERSITARIO, null, null)).thenReturn(many);
 
         mvc.perform(get("/api/v1/users").param("role", "ESTUDIANTE_UNIVERSITARIO").param("page", "1")
                         .param("size", "2"))
@@ -196,7 +197,7 @@ class AdministrationControllerTest {
 
     @Test
     void r324_subcategoriesShowTheirGroupAndWhetherTheyAreHazardous() throws Exception {
-        when(categories.list(WasteGroup.SIN_COLOR)).thenReturn(
+        when(categories.list(WasteGroup.SIN_COLOR, null)).thenReturn(
                 List.of(new WasteCategory(3L, "Pilas", WasteGroup.SIN_COLOR, "Pilas y baterías")));
 
         mvc.perform(get("/api/v1/waste-categories").param("group", "SIN_COLOR"))

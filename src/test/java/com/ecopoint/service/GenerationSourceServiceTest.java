@@ -132,4 +132,13 @@ class GenerationSourceServiceTest {
     void rn001_sourceOfAnotherInstitutionIsNotFound() {
         assertThrows(ResourceNotFoundException.class, () -> service.get(2L, 5L));
     }
+
+    @Test
+    void ca004_sourceIsCreatedInactiveWhenTheFormSaysSo() {
+        GenerationSource created = service.create(teacher, INSTITUTION, "LAB", "Laboratorio", SourceType.LABORATORIO,
+                false);
+
+        assertFalse(created.isActive());
+        assertEquals(1, service.list(INSTITUTION, null).size());
+    }
 }

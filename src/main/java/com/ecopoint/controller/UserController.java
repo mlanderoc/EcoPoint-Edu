@@ -1,5 +1,7 @@
 package com.ecopoint.controller;
 
+import com.ecopoint.persistence.UserActivity;
+import com.ecopoint.dto.UserRowResponse;
 import com.ecopoint.dto.PageResponse;
 import com.ecopoint.dto.UserRequest;
 import com.ecopoint.dto.UserResponse;
@@ -60,18 +62,22 @@ public class UserController implements FieldNameMapping {
      * @param principal user of the session
      * @param role      role to keep, or none
      * @param active    state to keep, or none
+     * @param q         text to look for in the name or the email, or none
      * @param page      page, starting at 0
      * @param size      page size
-     * @return one page of users
+     * @return one page of users with their totals of records
      */
     @GetMapping
-    public PageResponse<UserResponse> list(@AuthenticationPrincipal EcoPointUserDetails principal,
+    public PageResponse<UserRowResponse> list(@AuthenticationPrincipal EcoPointUserDetails principal,
                                            @RequestParam(required = false) UserRole role,
                                            @RequestParam(required = false) Boolean active,
+                                           @RequestParam(required = false) String q,
                                            @RequestParam(defaultValue = "0") int page,
                                            @RequestParam(defaultValue = "50") int size) {
-        return PageResponse.of(users.list(currentUser.of(principal), role, active), page, size,
-                user -> UserResponse.from(user, null));
+        User actor = currentUser.of(principal);
+        Map<Long, UserActivity> activity = users.activities(actor);
+        return PageResponse.of(users.list(actor, role, active, q), page, size,
+                user -> UserRowResponse.from(user, activity.get(user.getId())));
     }
 
     /**
@@ -126,5 +132,17 @@ public class UserController implements FieldNameMapping {
     @PostMapping("/{id}/deactivate")
     public UserResponse deactivate(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id) {
         return UserResponse.from(users.deactivate(currentUser.of(principal), id), null);
+    }
+
+    /**
+     * Activates a user again (RN-087).
+     *
+     * @param principal user of the session
+     * @param id        user id
+     * @return the user, now active
+     */
+    @PostMapping("/{id}/activate")
+    public UserResponse activate(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id) {
+        return UserResponse.from(users.activate(currentUser.of(principal), id), null);
     }
 }

@@ -40,16 +40,17 @@ public class GenerationSourceService {
     }
 
     /**
-     * Lists the sources of an institution.
+     * Lists the sources of an institution, optionally only the active or the
+     * inactive ones (R-321, R-325).
      *
      * @param institutionId institution id
-     * @param onlyActive    true to leave out inactive sources
-     * @return sources ordered by code
+     * @param active        true for the active ones, false for the inactive ones, null for all
+     * @return the sources
      */
-    public List<GenerationSource> list(Long institutionId, boolean onlyActive) {
+    public List<GenerationSource> list(Long institutionId, Boolean active) {
         requireInstitution(institutionId);
         return sources.findByInstitution(institutionId).stream()
-                .filter(source -> !onlyActive || source.isActive())
+                .filter(source -> active == null || source.isActive() == active)
                 .toList();
     }
 
@@ -68,19 +69,38 @@ public class GenerationSourceService {
     }
 
     /**
-     * Creates a source (RN-001 to RN-003).
+     * Creates an active source.
      *
-     * @param actor         user that acts
-     * @param institutionId institution of the source
-     * @param code          code, unique in the institution
-     * @param name          name
-     * @param type          type
+     * @param actor         teacher that acts
+     * @param institutionId institution id
+     * @param code          source code
+     * @param name          source name
+     * @param type          source type
      * @return the saved source
      */
     public GenerationSource create(User actor, Long institutionId, String code, String name, SourceType type) {
+        return create(actor, institutionId, code, name, type, true);
+    }
+
+    /**
+     * Creates a source, active or inactive as chosen in the form (RN-005, R-321).
+     *
+     * @param actor         teacher that acts
+     * @param institutionId institution id
+     * @param code          source code
+     * @param name          source name
+     * @param type          source type
+     * @param active        false to create it inactive
+     * @return the saved source
+     */
+    public GenerationSource create(User actor, Long institutionId, String code, String name, SourceType type,
+                                   boolean active) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
         requireInstitution(institutionId);
         GenerationSource source = new GenerationSource(null, institutionId, code, name, type);
+        if (!active) {
+            source.deactivate();
+        }
         GenerationSourceValidator.validate(source);
         GenerationSourceValidator.validateUniqueCode(source, sources.findCodesByInstitution(institutionId));
         return sources.save(source);

@@ -23,7 +23,7 @@ export type ShiftType = 'MANANA' | 'TARDE'
 
 export type ShiftStatus = 'ABIERTO' | 'CERRADO'
 
-export type StudyStatus = 'PLANIFICADO' | 'EN_EJECUCION' | 'EN_DEPURACION' | 'CERRADO'
+export type StudyStatus = 'PLANIFICADO' | 'EN_EJECUCION' | 'EN_DEPURACION' | 'CERRADO' | 'CANCELADO'
 
 export type VerificationStatus = 'PENDIENTE' | 'VERIFICADO' | 'CORREGIDO'
 
@@ -47,6 +47,29 @@ export interface User {
   permissions?: string[]
 }
 
+/** Totals of the records of a user (spec 003, R-133). */
+export interface UserActivity {
+  populations: number
+  bags: number
+  quarterings: number
+  densities: number
+  typedRecords: number
+  verifications: number
+  correctionsReceived: number
+}
+
+/** One row of the users table, with the totals of the user (R-322). */
+export interface UserRow extends Pick<User, 'id' | 'firstName' | 'lastName' | 'email' | 'role' | 'active'> {
+  activity: UserActivity
+}
+
+/** Data of the "Mi Perfil" screen (R-350, R-351). */
+export interface UserProfile {
+  user: User
+  crews: string[]
+  activity: UserActivity
+}
+
 export interface GeoPoint {
   latitude: number
   longitude: number
@@ -68,6 +91,8 @@ export interface Institution {
   mapCenter?: GeoPoint | null
   mapZoom?: number
   settings?: CharacterizationSettings
+  /** False when it admits no new studies (RN-006); missing means active. */
+  active?: boolean
 }
 
 export interface GenerationSource {
@@ -113,6 +138,9 @@ export interface CharacterizationStudy {
   days: SamplingDay[]
   participatingSourceIds: number[]
   pendingRecords: number
+  /** Reason of the cancellation (RN-018), or null. */
+  cancellationReason?: string | null
+  cancelledAt?: string | null
 }
 
 export interface Verification {

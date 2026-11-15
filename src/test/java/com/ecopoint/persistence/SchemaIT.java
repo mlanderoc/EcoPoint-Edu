@@ -110,6 +110,55 @@ class SchemaIT extends PostgresIntegrationTest {
         assertEquals(1, count("SELECT COUNT(*) FROM CORRECCION"));
     }
 
+    @Test
+    void r016_cancelledStudyKeepsWhoWhenAndWhy() {
+        Long study = jdbc.queryForObject("SELECT id FROM ESTUDIO WHERE estado = 'CERRADO'", Long.class);
+
+        assertThrows(DataAccessException.class,
+                () -> jdbc.update("UPDATE ESTUDIO SET estado = 'CANCELADO' WHERE id = ?", study));
+        jdbc.update("UPDATE ESTUDIO SET estado = 'CANCELADO', cancelado_por = 1, cancelado_en = now(), "
+                + "motivo_cancelacion = 'Fechas equivocadas' WHERE id = ?", study);
+
+        assertEquals(1, count("SELECT COUNT(*) FROM ESTUDIO WHERE estado = 'CANCELADO'"));
+        assertTrue(count("SELECT COUNT(*) FROM BOLSA") > 0);
+    }
+
+    @Test
+    void rn019_plannedStudyIsDeletedWithItsDaysAndSources() {
+        Long study = jdbc.queryForObject("INSERT INTO ESTUDIO (id_institucion) VALUES (1) RETURNING id", Long.class);
+        jdbc.update("INSERT INTO DIA_MUESTREO (id_estudio, numero_dia, fecha) "
+                + "SELECT ?, n, DATE '2030-03-01' + n FROM generate_series(1, 8) n", study);
+        jdbc.update("INSERT INTO FUENTE_ESTUDIO (id_estudio, id_fuente) SELECT ?, id FROM FUENTE_GENERACION", study);
+
+        jdbc.update("DELETE FROM ESTUDIO WHERE id = ?", study);
+
+        assertEquals(0, count("SELECT COUNT(*) FROM DIA_MUESTREO WHERE id_estudio = " + study));
+        assertEquals(0, count("SELECT COUNT(*) FROM FUENTE_ESTUDIO WHERE id_estudio = " + study));
+    }
+
+    @Test
+    void rn019_studyWithShiftsCannotBeDeleted() {
+        assertThrows(DataAccessException.class,
+                () -> jdbc.update("DELETE FROM ESTUDIO WHERE estado = 'CERRADO'"));
+    }
+
+    @Test
+    void r016_updateScriptAddsTheChangesToAnOldDatabaseWithoutLosingData() {
+        jdbc.execute("ALTER TABLE ESTUDIO DROP CONSTRAINT ck_estudio_cancelacion");
+        jdbc.execute("ALTER TABLE ESTUDIO DROP COLUMN cancelado_por, DROP COLUMN cancelado_en, "
+                + "DROP COLUMN motivo_cancelacion");
+        jdbc.execute("ALTER TABLE INSTITUCION DROP COLUMN activa");
+        String before = jdbc.queryForObject(CONTENT_HASH, String.class);
+
+        runScript("003_ajustes_d13.sql");
+        runScript("003_ajustes_d13.sql");
+
+        assertEquals(before, jdbc.queryForObject(CONTENT_HASH, String.class));
+        assertEquals(1, count("SELECT COUNT(*) FROM INSTITUCION WHERE activa"));
+        assertEquals(1, count("SELECT COUNT(*) FROM information_schema.columns "
+                + "WHERE table_name = 'estudio' AND column_name = 'motivo_cancelacion'"));
+    }
+
     private int count(String sql) {
         Integer value = jdbc.queryForObject(sql, Integer.class);
         return value == null ? 0 : value;

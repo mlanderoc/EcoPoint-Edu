@@ -36,14 +36,17 @@ public class WasteCategoryService {
     }
 
     /**
-     * Lists the subcategories, optionally of one group.
+     * Lists the subcategories, optionally of one group and only the active or
+     * the inactive ones (R-324, R-325).
      *
-     * @param group group to keep, or null for all
-     * @return subcategories
+     * @param group  group to filter by, or null for all groups
+     * @param active true for the active ones, false for the inactive ones, null for all
+     * @return the subcategories
      */
-    public List<WasteCategory> list(WasteGroup group) {
+    public List<WasteCategory> list(WasteGroup group, Boolean active) {
         return categories.findAll().stream()
                 .filter(category -> group == null || category.getGroup() == group)
+                .filter(category -> active == null || category.isActive() == active)
                 .toList();
     }
 
@@ -85,5 +88,38 @@ public class WasteCategoryService {
         WasteCategoryValidator.validateUniqueName(updated, otherNames);
         WasteCategoryValidator.validateGroupChange(updated, current.getGroup(), categories.hasResults(id));
         return categories.save(updated);
+    }
+
+    /**
+     * Activates a subcategory again (RN-043).
+     *
+     * @param actor teacher that acts
+     * @param id    subcategory id
+     * @return the subcategory, now active
+     */
+    public WasteCategory activate(User actor, Long id) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        WasteCategory category = find(id);
+        category.activate();
+        return categories.save(category);
+    }
+
+    /**
+     * Deactivates a subcategory: it is not offered in new quarterings, and the
+     * results already registered are kept (RN-043).
+     *
+     * @param actor teacher that acts
+     * @param id    subcategory id
+     * @return the subcategory, now inactive
+     */
+    public WasteCategory deactivate(User actor, Long id) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        WasteCategory category = find(id);
+        category.deactivate();
+        return categories.save(category);
+    }
+
+    private WasteCategory find(Long id) {
+        return categories.findById(id).orElseThrow(() -> new ResourceNotFoundException("Subcategoría de residuo", id));
     }
 }

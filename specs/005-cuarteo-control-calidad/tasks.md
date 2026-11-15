@@ -40,5 +40,5 @@ Reglas: en orden, un commit por responsable, `./mvnw verify`, `npm test`, `npm r
 
 ## Fase 4 — Cierre
 
-- [ ] **T408. Revisión final y PR.** Trazabilidad CA-400 a CA-412, `check:mobile` de las pantallas nuevas, README del frontend, revisión de Antigravity. *(Merlín)*
+- [x] **T408. Revisión final y PR.** Trazabilidad CA-400 a CA-412, `check:mobile` de las pantallas nuevas, README del frontend, revisión de Antigravity. *(Merlín)*
   *Verificación:* veredicto "APROBADO PARA PR".

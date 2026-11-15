@@ -10,6 +10,8 @@ import com.ecopoint.model.UserRole;
 import com.ecopoint.model.WasteCategory;
 import com.ecopoint.model.WasteGroup;
 import com.ecopoint.persistence.CrewRepository;
+import com.ecopoint.persistence.UserActivity;
+import com.ecopoint.persistence.UserActivityRepository;
 import com.ecopoint.persistence.UserRepository;
 import com.ecopoint.persistence.WasteCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -41,6 +43,7 @@ import static org.mockito.Mockito.when;
 class PeopleAndCatalogServiceTest {
 
     private UserRepository users;
+    private UserActivityRepository activity;
     private CrewRepository crews;
     private WasteCategoryRepository categories;
     private UserService userService;
@@ -53,9 +56,10 @@ class PeopleAndCatalogServiceTest {
     @BeforeEach
     void setUp() {
         users = mock(UserRepository.class);
+        activity = mock(UserActivityRepository.class);
         crews = mock(CrewRepository.class);
         categories = mock(WasteCategoryRepository.class);
-        userService = new UserService(users, new BCryptPasswordEncoder(4));
+        userService = new UserService(users, new BCryptPasswordEncoder(4), activity);
         crewService = new CrewService(crews, users);
         categoryService = new WasteCategoryService(categories);
 
@@ -99,15 +103,15 @@ class PeopleAndCatalogServiceTest {
 
     @Test
     void ca203_studentCannotManageUsers() {
-        assertThrows(AccessDeniedException.class, () -> userService.list(student, null, null));
+        assertThrows(AccessDeniedException.class, () -> userService.list(student, null, null, null));
         assertThrows(AccessDeniedException.class, () -> userService.create(student,
                 new User(null, "Mario", "Gómez", "mario@unicesar.edu.co", UserRole.DOCENTE, 1L), "Segura2026"));
     }
 
     @Test
     void r322_usersAreFilteredByRoleAndState() {
-        assertEquals(List.of(student), userService.list(teacher, UserRole.ESTUDIANTE_UNIVERSITARIO, null));
-        assertEquals(2, userService.list(teacher, null, true).size());
+        assertEquals(List.of(student), userService.list(teacher, UserRole.ESTUDIANTE_UNIVERSITARIO, null, null));
+        assertEquals(2, userService.list(teacher, null, true, null).size());
     }
 
     @Test
@@ -175,7 +179,48 @@ class PeopleAndCatalogServiceTest {
         when(categories.findAll()).thenReturn(List.of(new WasteCategory(1L, "Papel", WasteGroup.BLANCO, ""),
                 new WasteCategory(2L, "Pilas", WasteGroup.SIN_COLOR, "")));
 
-        assertEquals(1, categoryService.list(WasteGroup.SIN_COLOR).size());
-        assertEquals(2, categoryService.list(null).size());
+        assertEquals(1, categoryService.list(WasteGroup.SIN_COLOR, null).size());
+        assertEquals(2, categoryService.list(null, null).size());
+    }
+
+    @Test
+    void ca313_usersAreSearchedByNameOrEmail() {
+        assertEquals(List.of(student), userService.list(teacher, null, null, "  pérez "));
+        assertEquals(List.of(teacher), userService.list(teacher, null, null, "DANIELA@"));
+        assertEquals(List.of(), userService.list(teacher, null, false, "laura"));
+    }
+
+    @Test
+    void ca082_teacherIsNeverDeactivatedAndStudentIsActivatedAgain() {
+        assertThrows(BusinessRuleException.class, () -> userService.deactivate(teacher, 10L));
+        verify(users, never()).deactivate(10L);
+
+        userService.deactivate(teacher, 11L);
+        verify(users).deactivate(11L);
+        User activated = userService.activate(teacher, 11L);
+        assertTrue(activated.isActive());
+        assertThrows(AccessDeniedException.class, () -> userService.activate(student, 11L));
+    }
+
+    @Test
+    void r322_usersTableGetsTheTotalsOfEveryUser() {
+        when(activity.findAll()).thenReturn(java.util.Map.of(11L, new UserActivity(11L, 1, 3, 0, 0, 2, 1)));
+
+        assertEquals(3, userService.activities(teacher).get(11L).bags());
+        assertThrows(AccessDeniedException.class, () -> userService.activities(student));
+    }
+
+    @Test
+    void ca057_subcategoryIsDeactivatedAndActivatedAgain() {
+        WasteCategory icopor = new WasteCategory(5L, "Icopor", WasteGroup.NEGRO, null);
+        when(categories.findById(5L)).thenReturn(Optional.of(icopor));
+        when(categories.save(any())).thenAnswer(call -> call.getArgument(0));
+        when(categories.findAll()).thenReturn(List.of(icopor));
+
+        assertFalse(categoryService.deactivate(teacher, 5L).isActive());
+        assertEquals(1, categoryService.list(null, false).size());
+        assertEquals(0, categoryService.list(null, true).size());
+        assertTrue(categoryService.activate(teacher, 5L).isActive());
+        assertThrows(AccessDeniedException.class, () -> categoryService.deactivate(student, 5L));
     }
 }
