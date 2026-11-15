@@ -124,7 +124,7 @@
 
 ## Fase 5 — Informe Formal PDF con Marca de Agua (Merlín)
 
-- [ ] **T510. Maquetación del informe formal en PDF con OpenPDF (R-530, R-532, P5, CA-506, CA-507).** *(Merlín)*
+- [x] **T510. Maquetación del informe formal en PDF con OpenPDF (R-530, R-532, P5, CA-506, CA-507).** *(Merlín)*
   En `com.ecopoint.service.report`, crear `PdfReportService` y su implementación `PdfReportServiceImpl` utilizando OpenPDF 2.0.3:
   - Diseñar la portada ejecutiva: Logos institucionales (UPC, I.E. Prudencia Daza, EcoPoint Edu), título formal, período del estudio, cuadrilla participante y estado del informe.
   - Redactar y maquetar la sección de metodología resumida (8 días, descarte del día 1, NMX-AA-015, NMX-AA-019, control de calidad del 2 %).
@@ -132,13 +132,15 @@
   - Implementar el evento `WatermarkPageEvent` (`PdfPageEventHelper`): si el estudio no está en estado `CERRADO`, estampar de forma diagonal a 45° en todas las páginas el texto *"PRELIMINAR – datos sin depurar"* en gris claro con transparencia (R-532, CA-507). Si está `CERRADO`, suprimir la marca de agua.
   - Incorporar numeración de página *"Página X de Y"* y marca temporal de generación en el pie de página.
   *Verificación:* Prueba unitaria que genera el documento PDF en memoria y verifica que el flujo binario contenga las secciones estipuladas.
+  *Ajustes:* `PdfReportService` es una clase concreta, como `ExcelReportService`. La portada lleva los logos de la UPC y de EcoPoint Edu: el de la I.E. Prudencia Daza no se consiguió, así que su nombre va escrito en la portada. El equipo responsable son las cuadrillas de los turnos, que `IndicatorService.report` agrega a `StudyReport`. El informe se genera en dos pasadas para escribir "Página X de Y" como texto. El foliado y la marca de agua van en `ReportPageEvents`.
 
-- [ ] **T511. Endpoint `GET /api/v1/studies/{id}/reports/pdf` y prueba de integración (CA-506, CA-507).** *(Merlín)*
+- [x] **T511. Endpoint `GET /api/v1/studies/{id}/reports/pdf` y prueba de integración (CA-506, CA-507).** *(Merlín)*
   En `IndicatorController`, exponer la ruta `/studies/{id}/reports/pdf` con cabeceras `Content-Type: application/pdf` y `Content-Disposition: attachment; filename="ecopoint-informe-linea-base-{id}.pdf"`.
   En `src/test/java/com/ecopoint/service/report/PdfReportServiceIT.java`, implementar:
   - `ca506_closedStudyPdfContainsAllSectionsAndMatchingData()`: comprueba que un estudio cerrado genere un PDF con todas las secciones de R-530 y sin marca de agua preliminar.
   - `ca507_preliminaryPdfIncludesWatermarkOnAllPages()`: comprueba que un estudio en estado no cerrado incorpore la marca de agua preliminar en todas sus páginas.
   *Verificación:* `./mvnw test -Dtest=PdfReportServiceIT` pasa en verde.
+  *Ajuste:* `PdfReportServiceIT` vive en el paquete `api` (como las demás IT que usan `ApiClient`) y agrega `ca207_unknownStudyIsNotFound`.
 
 ---
 
