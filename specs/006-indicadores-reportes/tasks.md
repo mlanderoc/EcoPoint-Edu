@@ -146,9 +146,10 @@
 
 ## Fase 6 — Verificación de Usabilidad, Consistencia Cruzada y Cierre
 
-- [ ] **T512. Botones de descarga y experiencia interactiva en Frontend.** *(Carlos)*
+- [x] **T512. Botones de descarga y experiencia interactiva en Frontend.** *(Carlos)*
   En `IndicatorsHeader.tsx`, agregar los botones "Exportar Excel" y "Descargar PDF" con iconos de Lucide React (`FileSpreadsheet`, `FileText`), gestionando estados de descarga (`isDownloading`), feedback visual al usuario y disparo de la descarga binaria en el navegador mediante `window.URL.createObjectURL`.
   *Verificación:* Pruebas de interacción con `@testing-library/react` verificando la activación de la descarga tras el clic.
+  *Ajuste:* los botones están en el componente `ReportDownloads`, dentro de `IndicatorsHeader`. `apiClient.getBlob` descarga el archivo con la sesión y el mismo manejo de errores de la API. MSW simula `GET /studies/{id}/reports/{excel|pdf}`.
 
 - [ ] **T513. Prueba de consistencia cruzada integral (R-533).** *(Merlín)*
   Crear la prueba de integración `src/test/java/com/ecopoint/integration/IndicatorCrossConsistencyIT.java` que consulte el estudio semilla cerrado:

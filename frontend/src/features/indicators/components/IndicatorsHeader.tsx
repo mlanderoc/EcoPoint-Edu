@@ -10,6 +10,7 @@ import { studyTitle } from '@/features/study/utils/studyStatus'
 import { CharacterizationStudy } from '@/types'
 import { StudyIndicators } from '../types/indicatorTypes'
 import { formatNumber } from '../utils/format'
+import { ReportDownloads } from './ReportDownloads'
 
 export interface IndicatorsHeaderProps {
   studies: CharacterizationStudy[]
@@ -22,7 +23,8 @@ export function IndicatorsHeader({ studies, studyId, onStudyChange, indicators }
   const verified = indicators ? `${formatNumber(indicators.quality.verifiedPercentage)} % de los registros verificados` : ''
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
         <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Indicadores de línea base</h1>
         {indicators && (
           <span data-testid="indicators-label" title={verified}
@@ -32,6 +34,8 @@ export function IndicatorsHeader({ studies, studyId, onStudyChange, indicators }
             {indicators.label}
           </span>
         )}
+        </div>
+        {indicators && studyId !== null && <ReportDownloads studyId={studyId} />}
       </div>
       {indicators && !indicators.official && (
         <p className="text-sm text-amber-900">Datos sin depurar del todo: {verified}.</p>
