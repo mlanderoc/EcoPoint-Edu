@@ -118,5 +118,5 @@ Reglas: en orden, un commit por responsable según `src/TEAM.md`, y en verde `./
 - [x] **A19. Revisión y PR.** Suite completa en verde y revisión de Antigravity. PR a `develop` con la descripción de las 9 observaciones. *(Merlín)*
   *Resultado:* Antigravity APROBÓ el 14 nov 2026 sin hallazgos bloqueantes (540 pruebas del backend y 147 del frontend en verde).
 
-- [ ] **A20. Indicadores sin cancelados.** En la rama `feature/006-indicadores-reportes`: `IndicatorService` rechaza un estudio CANCELADO y el selector de Indicadores no lo ofrece (decisión T15). *(Estefanía y Carlos)*
+- [x] **A20. Indicadores sin cancelados.** En la rama `feature/006-indicadores-reportes`: `IndicatorService` rechaza un estudio CANCELADO y el selector de Indicadores no lo ofrece (decisión T15). *(Estefanía y Carlos)*
   *Verificación:* prueba unitaria de `IndicatorService` y Vitest del tablero.

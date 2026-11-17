@@ -13,6 +13,7 @@ import java.math.RoundingMode;
 final class Decimals {
 
     private static final int SCALE = 2;
+    private static final int PPC_SCALE = 3;
 
     private Decimals() {
     }
@@ -25,5 +26,15 @@ final class Decimals {
      */
     static BigDecimal show(BigDecimal value) {
         return value == null ? null : value.setScale(SCALE, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Rounds a per capita generation to show it (spec 006, R-511).
+     *
+     * @param value value with full precision
+     * @return the value with 3 decimals, or null
+     */
+    static BigDecimal ppc(BigDecimal value) {
+        return value == null ? null : value.setScale(PPC_SCALE, RoundingMode.HALF_UP);
     }
 }

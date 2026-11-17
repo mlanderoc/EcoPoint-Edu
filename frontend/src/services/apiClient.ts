@@ -105,13 +105,15 @@ export async function ensureCsrfToken(): Promise<string | undefined> {
 export interface RequestOptions extends Omit<RequestInit, 'body'> {
   params?: Record<string, string | number | boolean | undefined | null>
   body?: unknown
+  /** 'blob' reads a file (Excel, PDF) instead of JSON. */
+  responseType?: 'json' | 'blob'
 }
 
 /**
  * Performs an HTTP request with HttpOnly session credentials and Spec 003 error handling.
  */
 async function request<T>(url: string, options: RequestOptions = {}): Promise<T> {
-  const { params, headers, body, ...restOptions } = options
+  const { params, headers, body, responseType = 'json', ...restOptions } = options
 
   let fullUrl = url
   if (params) {
@@ -131,7 +133,7 @@ async function request<T>(url: string, options: RequestOptions = {}): Promise<T>
   const method = (restOptions.method ?? 'GET').toUpperCase()
   const csrfToken = STATE_CHANGING_METHODS.has(method) ? await ensureCsrfToken() : undefined
   const defaultHeaders: HeadersInit = {
-    Accept: 'application/json',
+    Accept: responseType === 'blob' ? '*/*' : 'application/json',
     ...(isJsonBody ? { 'Content-Type': 'application/json' } : {}),
     ...(csrfToken ? { [CSRF_HEADER]: csrfToken } : {}),
   }
@@ -174,12 +176,16 @@ async function request<T>(url: string, options: RequestOptions = {}): Promise<T>
     return undefined as unknown as T
   }
 
-  return (await response.json()) as T
+  return (responseType === 'blob' ? await response.blob() : await response.json()) as T
 }
 
 export const apiClient = {
   get: <T>(url: string, options?: Omit<RequestOptions, 'body'>) =>
     request<T>(url, { ...options, method: 'GET' }),
+
+  /** Downloads a file with the session and the same error handling as the JSON routes. */
+  getBlob: (url: string, options?: Omit<RequestOptions, 'body' | 'responseType'>) =>
+    request<Blob>(url, { ...options, method: 'GET', responseType: 'blob' }),
 
   post: <T>(url: string, body?: unknown, options?: Omit<RequestOptions, 'body'>) =>
     request<T>(url, { ...options, method: 'POST', body }),

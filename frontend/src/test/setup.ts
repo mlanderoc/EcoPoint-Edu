@@ -8,6 +8,13 @@ import { resetMockState } from '@/mocks/handlers'
 // so asynchronous queries wait up to 5 seconds instead of 1.
 configure({ asyncUtilTimeout: 5000 })
 
+// jsdom has no ResizeObserver; the Recharts responsive container needs one.
+globalThis.ResizeObserver ??= class {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
 beforeAll(() => server.listen())
 
 afterEach(() => {

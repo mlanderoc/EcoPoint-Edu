@@ -41,6 +41,7 @@ import {
   WasteCategory,
 } from '@/types'
 import { ALL_PERMISSIONS, hasPermission } from '@/features/auth/utils/permissions'
+import { mockIndicators } from './data/indicatorsData'
 
 /** Demo password of every seed user (sql/002_seed.sql). */
 const DEMO_PASSWORD = 'EcoPoint2026'
@@ -383,6 +384,28 @@ export const handlers = [
 
   // --- STUDIES (section 5.2) ---
   http.get('/api/v1/studies', () => HttpResponse.json(studiesState)),
+
+  http.get('/api/v1/studies/:id/indicators', ({ params }) => {
+    const path = `/api/v1/studies/${params.id}/indicators`
+    const denied = requirePermission('VIEW_INDICATORS', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    return study ? HttpResponse.json(mockIndicators(study, study.status === 'CERRADO' ? 100 : 62.5)) : notFound(path, 'Estudio')
+  }),
+
+  http.get('/api/v1/studies/:id/reports/:format', ({ params }) => {
+    const path = `/api/v1/studies/${params.id}/reports/${params.format}`
+    const denied = requirePermission('VIEW_INDICATORS', path)
+    if (denied) return denied
+    if (!studiesState.some((item) => item.id === Number(params.id))) return notFound(path, 'Estudio')
+    const pdf = params.format === 'pdf'
+    return new HttpResponse(pdf ? '%PDF-1.4 informe simulado' : 'libro simulado', {
+      headers: {
+        'Content-Type': pdf ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="${pdf ? 'ecopoint-informe-linea-base' : 'ecopoint-reporte-estudio'}-${params.id}.${pdf ? 'pdf' : 'xlsx'}"`,
+      },
+    })
+  }),
 
   http.get('/api/v1/studies/:id', ({ params }) => {
     const study = studiesState.find((item) => item.id === Number(params.id))
