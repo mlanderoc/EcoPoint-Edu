@@ -160,7 +160,7 @@
   *Verificación:* `./mvnw test -Dtest=IndicatorCrossConsistencyIT` ejecuta y pasa al 100 % en verde.
   *Ajuste:* la prueba es `api/IndicatorCrossConsistencyIT` (usa `ApiClient`). Compara el JSON del tablero, las celdas del Excel y el texto del PDF en los 7 indicadores del resumen, la generación por fuente, los grupos de la composición y la nota de turnos.
 
-- [ ] **T514. Documentación y revisión final del PR.** *(Merlín)*
+- [x] **T514. Documentación y revisión final del PR.** *(Merlín)*
   Actualizar `README.md` del proyecto y `specs/006-indicadores-reportes/plan.md` si surgieron ajustes menores durante la revisión. Registrar el informe de trazabilidad en la bitácora de uso de IA (`docs/ai-usage/`). Verificar que la suite completa de pruebas unitarias y de integración de todo el repositorio compile y pase en verde.
   *Verificación:* `./mvnw verify` y `npm test` exitosos en verde; Pull Request listo para revisión.
-  *Avance:* README y `frontend/README.md` actualizados; `./mvnw verify` con 526 pruebas y `npm test` con 119 en verde. No se crea la bitácora `docs/ai-usage/`: el proyecto no la lleva y los commits no llevan firmas de IA (AGENTS.md). Falta la revisión de Antigravity y el PR.
+  *Avance:* README y `frontend/README.md` actualizados; `./mvnw verify` con 526 pruebas y `npm test` con 119 en verde. No se crea la bitácora `docs/ai-usage/`: el proyecto no la lleva y los commits no llevan firmas de IA (AGENTS.md). Antigravity APROBÓ el 16 nov 2026 sin hallazgos bloqueantes, con los ajustes D13 y la A20 incluidos.
