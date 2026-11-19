@@ -83,7 +83,7 @@ INSERT INTO CUADRILLA_INTEGRANTE (id_cuadrilla, id_usuario) VALUES (1, 2), (1, 3
 -- -----------------------------------------------------------------------------
 -- 3. Estudios: 1 = CERRADO completo (R-043); 2 = EN_EJECUCION a medio llenar (R-044)
 -- -----------------------------------------------------------------------------
-INSERT INTO ESTUDIO (id_institucion, estado) VALUES (1, 'CERRADO'), (1, 'EN_EJECUCION');
+INSERT INTO ESTUDIO (id_institucion, estado, id_cuadrilla) VALUES (1, 'CERRADO', 1), (1, 'EN_EJECUCION', 1);
 
 -- Estudio 1: 8 días hábiles de marzo de 2026 (el día 1 se descarta en los cálculos).
 INSERT INTO DIA_MUESTREO (id_estudio, numero_dia, fecha) VALUES
