@@ -44,4 +44,4 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 - [x] **B10. Pantallas.** Nuevo estudio y detalle con la cuadrilla; Registro en campo con la lista de estudios; Abrir turno con la cuadrilla solo visible. *(Carlos)*
   *Verificación:* CA-321, CA-322.
 
-- [ ] **B11. Revisión de Antigravity** y PR a `develop`.
+- [x] **B11. Revisión de Antigravity** y PR a `develop`. *Ajuste:* Antigravity la **aprobó** el 19 nov 2026 sin bloqueantes (572 pruebas del backend y 163 del frontend en verde; `tsc -b`, lint y build en verde). El PR lo abre el equipo.
