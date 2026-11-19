@@ -1,12 +1,12 @@
 /**
  * Filter of the administration lists: active, inactive or all. By default only
  * the active items are shown; the choice lives in the URL (?estado=) so it
- * survives going back (spec 004, R-325; plan D13, decision T9).
+ * survives going back (spec 004, R-325; plan D13, decision T9). It has no eye
+ * toggle: the three options already do that job (D14).
  *
  * @author craulgomez
  */
 
-import { Eye, EyeOff } from 'lucide-react'
 import { useSearchParams } from 'react-router-dom'
 import { cn } from '@/utils/cn'
 
@@ -45,18 +45,8 @@ export interface ActiveFilterProps {
 }
 
 export function ActiveFilter({ value, onChange, inactiveCount }: ActiveFilterProps) {
-  const showingInactive = value !== 'activos'
   return (
     <div className="flex flex-wrap items-center gap-2" role="group" aria-label="Mostrar por estado">
-      <button
-        type="button"
-        onClick={() => onChange(showingInactive ? 'activos' : 'todos')}
-        aria-label={showingInactive ? 'Ocultar inactivos' : 'Mostrar inactivos'}
-        title={showingInactive ? 'Ocultar inactivos' : 'Mostrar inactivos'}
-        className="min-h-[48px] min-w-[48px] inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
-      >
-        {showingInactive ? <Eye className="w-4 h-4" aria-hidden="true" /> : <EyeOff className="w-4 h-4" aria-hidden="true" />}
-      </button>
       <div className="inline-flex rounded-lg border border-slate-200 bg-white p-0.5">
         {OPTIONS.map((option) => (
           <button

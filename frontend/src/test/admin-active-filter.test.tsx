@@ -54,8 +54,18 @@ describe('Activar, desactivar y filtrar (R-325, CA-312)', () => {
     await user.click(await screen.findByRole('button', { name: /Desactivar I\.E\. Prudencia Daza/ }))
 
     expect(await screen.findByText('No hay instituciones con este filtro.')).toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Mostrar inactivos' }))
+    await user.click(screen.getByRole('button', { name: /^Inactivos/ }))
     expect(await screen.findByText('Inactiva')).toBeInTheDocument()
+  })
+
+  it('ca320_filterHasOnlyTheThreeOptionsWithoutEyeIcon', async () => {
+    resetMockState('DOCENTE')
+    renderPage(<InstitutionsPage />)
+
+    const group = await screen.findByRole('group', { name: 'Mostrar por estado' })
+    const labels = within(group).getAllByRole('button').map((button) => button.textContent?.replace(/\s*\(\d+\)$/, ''))
+    expect(labels).toEqual(['Activos', 'Inactivos', 'Todos'])
+    expect(screen.queryByRole('button', { name: /^(Mostrar|Ocultar) inactivos$/ })).toBeNull()
   })
 
   it('r324_subcategoryIsDeactivatedAndActivatedAgain', async () => {

@@ -13,7 +13,7 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 - [x] **B02. Menú del docente.** Configuración del estudio antes que Registro en campo, en el menú lateral y en la barra del celular. *(Carlos)*
   *Verificación:* CA-318.
 
-- [ ] **B03. Filtro sin ojo.** Se quita el botón de ojo de `ActiveFilter`. *(Carlos)*
+- [x] **B03. Filtro sin ojo.** Se quita el botón de ojo de `ActiveFilter`. *(Carlos)*
   *Verificación:* CA-320, CA-312.
 
 - [ ] **B04. Institución del estudio.**
