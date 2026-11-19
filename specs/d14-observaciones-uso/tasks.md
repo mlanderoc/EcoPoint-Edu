@@ -10,7 +10,7 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 
 - [x] **B01. Specs.** R-311, R-321, R-325, R-330, R-337 y CA-318 a CA-320 en la spec 004; D14 en `specs/README.md`; este plan y sus tareas. *(Merlín)*
 
-- [ ] **B02. Menú del docente.** Configuración del estudio antes que Registro en campo, en el menú lateral y en la barra del celular. *(Carlos)*
+- [x] **B02. Menú del docente.** Configuración del estudio antes que Registro en campo, en el menú lateral y en la barra del celular. *(Carlos)*
   *Verificación:* CA-318.
 
 - [ ] **B03. Filtro sin ojo.** Se quita el botón de ojo de `ActiveFilter`. *(Carlos)*

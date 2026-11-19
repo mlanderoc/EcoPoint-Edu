@@ -47,6 +47,20 @@ describe('Layout and Menu per Role (T307, CA-300, CA-307)', () => {
     expect(screen.getByText('Fuentes de Residuos')).toBeInTheDocument()
   })
 
+  it('ca318_teacherMenuStartsWithStudyConfiguration: Study Config comes before Field Registration', () => {
+    const { unmount } = render(<Sidebar role={teacherUser.role} />)
+    const sidebarLinks = screen.getAllByRole('link').map((link) => link.textContent?.trim())
+    expect(sidebarLinks.indexOf('Configuración Estudio')).toBeGreaterThanOrEqual(0)
+    expect(sidebarLinks.indexOf('Configuración Estudio')).toBeLessThan(sidebarLinks.indexOf('Registro en Campo'))
+    expect(sidebarLinks.indexOf('Registro en Campo')).toBeLessThan(sidebarLinks.indexOf('Verificación'))
+    unmount()
+
+    render(<BottomNav role={teacherUser.role} />)
+    const mobileLinks = screen.getAllByRole('link').map((link) => link.textContent?.trim())
+    expect(mobileLinks.indexOf('Estudios')).toBeGreaterThanOrEqual(0)
+    expect(mobileLinks.indexOf('Estudios')).toBeLessThan(mobileLinks.indexOf('Campo'))
+  })
+
   it('ca307_mobile360ViewportNoHorizontalScroll: AppLayout container prevents horizontal overflow and ensures >= 48px touch targets', () => {
     const { container } = render(
       <div style={{ width: '360px' }}>
