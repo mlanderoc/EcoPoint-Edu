@@ -411,6 +411,25 @@ export const handlers = [
     })
   }),
 
+  http.get('/api/v1/studies/field', () => {
+    const teacher = activeUser?.role === 'DOCENTE'
+    return HttpResponse.json(studiesState.filter((study) => study.status === 'EN_EJECUCION'
+      && (teacher || crewsState.some((crew) => crew.id === study.crewId && crew.memberIds.includes(activeUser?.id ?? -1)))))
+  }),
+
+  http.put('/api/v1/studies/:id/crew', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/crew`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    if (study.status !== 'PLANIFICADO') {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'La cuadrilla solo se cambia mientras el estudio está planificado.', path)
+    }
+    study.crewId = ((await request.json()) as { crewId: number }).crewId
+    return HttpResponse.json(study)
+  }),
+
   http.get('/api/v1/studies/:id', ({ params }) => {
     const study = studiesState.find((item) => item.id === Number(params.id))
     return study ? HttpResponse.json(study) : notFound(`/api/v1/studies/${params.id}`, 'Estudio')
@@ -419,7 +438,9 @@ export const handlers = [
   http.post('/api/v1/studies', async ({ request }) => {
     const denied = requirePermission('MANAGE_STUDIES', '/api/v1/studies')
     if (denied) return denied
-    const body = (await request.json()) as { institutionId?: number; days: { dayNumber: number; date: string | null }[] }
+    const body = (await request.json()) as {
+      institutionId?: number; crewId?: number; days: { dayNumber: number; date: string | null }[]
+    }
     const days = Array.from({ length: 8 }, (_, index) => ({
       dayNumber: index + 1,
       date: body.days.find((day) => day.dayNumber === index + 1)?.date ?? null,
@@ -428,6 +449,7 @@ export const handlers = [
     const created: CharacterizationStudy = {
       id: newId(),
       institutionId: body.institutionId ?? 1,
+      crewId: body.crewId ?? null,
       status: 'PLANIFICADO',
       startDate: days[0].date,
       endDate: days[7].date,
@@ -535,7 +557,7 @@ export const handlers = [
     const path = `/api/v1/studies/${params.id}/shifts`
     const denied = requirePermission('MANAGE_SHIFTS', path)
     if (denied) return denied
-    const body = (await request.json()) as { dayNumber: number; type: ShiftType; crewId?: number | null }
+    const body = (await request.json()) as { dayNumber: number; type: ShiftType }
     const studyId = Number(params.id)
     if (shiftsState.some((shift) => shift.studyId === studyId && shift.dayNumber === body.dayNumber
       && shift.type === body.type)) {
@@ -544,7 +566,7 @@ export const handlers = [
     }
     const shift: MockShift = {
       id: newId(), studyId, dayNumber: body.dayNumber, type: body.type, status: 'ABIERTO',
-      crewId: body.crewId ?? null, population: null, sourcesWithoutGeneration: [],
+      crewId: studiesState.find((study) => study.id === studyId)?.crewId ?? null, population: null, sourcesWithoutGeneration: [],
     }
     shiftsState.push(shift)
     return HttpResponse.json(toShiftResponse(shift), { status: 201 })
@@ -959,6 +981,11 @@ export function resetMockState(userRole?: UserRole | null) {
   alertsState = []
   correctionsState = []
   nextId = 1000
+}
+
+/** Adds another study, to try the choice of the study in the field (D14). */
+export function addMockStudy(study: CharacterizationStudy) {
+  studiesState.push(study)
 }
 
 /** Adds another institution with its sources, to try studies of several institutions (D14). */

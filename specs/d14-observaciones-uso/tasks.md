@@ -41,7 +41,7 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 - [x] **B09. API.** `crewId` en la creación, `PUT /studies/{id}/crew`, `GET /studies/field`; `OpenShiftRequest` sin cuadrilla. *(Carlos)*
   *Verificación:* CA-213.
 
-- [ ] **B10. Pantallas.** Nuevo estudio y detalle con la cuadrilla; Registro en campo con la lista de estudios; Abrir turno con la cuadrilla solo visible. *(Carlos)*
+- [x] **B10. Pantallas.** Nuevo estudio y detalle con la cuadrilla; Registro en campo con la lista de estudios; Abrir turno con la cuadrilla solo visible. *(Carlos)*
   *Verificación:* CA-321, CA-322.
 
 - [ ] **B11. Revisión de Antigravity** y PR a `develop`.

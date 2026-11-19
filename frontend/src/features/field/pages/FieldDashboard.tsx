@@ -1,17 +1,20 @@
 /**
- * Field home: the study in execution, the suggested day and shift, and the
- * button to open or continue it (Spec 004, T317; R-340, R-341, CA-300).
+ * Field home: the study in execution chosen from a list, the suggested day
+ * and shift, and the button to open or continue it. A teacher sees every study
+ * in execution; a student, those of his crews. The crew of the shift is the
+ * one of the study (Spec 004, T317; R-340, R-341, CA-300, CA-321; D14).
  *
  * @author craulgomez
  */
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PlayCircle, ArrowRight, Clock } from 'lucide-react'
 import { AlertBanner, Button, Card, CardContent, Modal, Select } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
 import { adminService } from '@/features/admin/services/adminService'
+import { useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { studyService } from '@/features/study/services/studyService'
 import { formatDate } from '@/features/study/utils/samplingDays'
 import { studyTitle } from '@/features/study/utils/studyStatus'
@@ -34,36 +37,53 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   const accessDenied = location.state?.accessDenied as boolean | undefined
   const canOpen = hasPermission(user?.role, 'MANAGE_SHIFTS')
 
-  const [study, setStudy] = useState<CharacterizationStudy | null | undefined>(undefined)
+  const [params, setParams] = useSearchParams()
+  const { institutions } = useInstitutions(false)
+  const [studies, setStudies] = useState<CharacterizationStudy[] | undefined>(undefined)
+  const chosenId = Number(params.get('estudio'))
+  const study: CharacterizationStudy | null | undefined = studies === undefined
+    ? undefined
+    : studies.find((item) => item.id === chosenId) ?? studies[0] ?? null
   const [slots, setSlots] = useState<ShiftSlot[]>([])
   const [dayNumber, setDayNumber] = useState(1)
   const [type, setType] = useState<ShiftType>('MANANA')
   const [crews, setCrews] = useState<Crew[]>([])
-  const [crewId, setCrewId] = useState<string>('')
   const [isOpening, setIsOpening] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  const load = useCallback(async () => {
+  useEffect(() => {
+    studyService.fieldStudies()
+      .then(setStudies)
+      .catch(() => {
+        setError('No se pudieron cargar los estudios en ejecución.')
+        setStudies([])
+      })
+  }, [])
+
+  const loadShifts = useCallback(async (running: CharacterizationStudy) => {
     try {
-      const running = (await studyService.list()).find((item) => item.status === 'EN_EJECUCION') ?? null
-      setStudy(running)
-      if (running) {
-        const loaded = await studyService.shifts(running.id)
-        setSlots(loaded)
-        const suggestion = suggestSlot(running, loaded, now ?? new Date())
-        setDayNumber(suggestion.dayNumber)
-        setType(suggestion.type)
-      }
+      const loaded = await studyService.shifts(running.id)
+      setSlots(loaded)
+      const suggestion = suggestSlot(running, loaded, now ?? new Date())
+      setDayNumber(suggestion.dayNumber)
+      setType(suggestion.type)
     } catch {
-      setError('No se pudo cargar el estudio en ejecución.')
-      setStudy(null)
+      setError('No se pudieron cargar los turnos del estudio.')
     }
   }, [now])
 
   useEffect(() => {
-    load()
-  }, [load])
+    if (study) loadShifts(study)
+  }, [study, loadShifts])
+
+  const chooseStudy = (id: number) => {
+    const updated = new URLSearchParams(params)
+    updated.set('estudio', String(id))
+    setParams(updated, { replace: true })
+  }
+  const institutionName = (id: number) => institutions.find((item) => item.id === id)?.name
+  const crewName = crews.find((crew) => crew.id === study?.crewId)?.name
 
   useEffect(() => {
     if (canOpen) {
@@ -82,7 +102,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
     setError(null)
     try {
       setIsOpening(true)
-      const shift = await fieldService.openShift(study.id, dayNumber, type, crewId ? Number(crewId) : null)
+      const shift = await fieldService.openShift(study.id, dayNumber, type)
       navigate(`/campo/turno/${shift.id}`)
     } catch (err) {
       setIsConfirming(false)
@@ -104,8 +124,25 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
 
       <div>
         <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Registro en campo</h1>
-        {study && <p className="text-sm text-[var(--color-text-muted)]">{studyTitle(study)}</p>}
+        {study && studies && studies.length === 1 && (
+          <p className="text-sm text-[var(--color-text-muted)]">
+            {studyTitle(study)}{institutionName(study.institutionId) ? ` · ${institutionName(study.institutionId)}` : ''}
+          </p>
+        )}
       </div>
+
+      {study && studies && studies.length > 1 && (
+        <Select
+          id="field-study"
+          label="Estudio en ejecución"
+          value={String(study.id)}
+          onChange={(event) => chooseStudy(Number(event.target.value))}
+          options={studies.map((item) => ({
+            value: String(item.id),
+            label: `${studyTitle(item)}${institutionName(item.institutionId) ? ` · ${institutionName(item.institutionId)}` : ''}`,
+          }))}
+        />
+      )}
 
       {error && <AlertBanner variant="danger" title="No se pudo continuar" message={error} />}
 
@@ -117,7 +154,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
           title="No hay un estudio en ejecución"
           message={canOpen
             ? 'Inicie la ejecución de un estudio desde Configuración del estudio para registrar datos en campo.'
-            : 'Cuando el docente inicie la ejecución del estudio, aquí podrá registrar los datos del turno.'}
+            : 'Cuando el docente inicie la ejecución de un estudio de su cuadrilla, aquí podrá registrar los datos del turno.'}
         />
       )}
 
@@ -170,15 +207,11 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
       <Modal open={isConfirming} onClose={() => setIsConfirming(false)} title="Abrir turno"
         description={`Día ${dayNumber} · ${SHIFT_LABELS[type]} · ${formatDate(day?.date)}`}>
         <div className="flex flex-col gap-4 mt-2">
-          <Select
-            id="field-crew"
-            label="Cuadrilla"
-            value={crewId}
-            onChange={(event) => setCrewId(event.target.value)}
-            options={[{ value: '', label: 'Sin cuadrilla asignada' },
-              ...crews.map((crew) => ({ value: String(crew.id), label: crew.name }))]}
-            disabled={isOpening}
-          />
+          <p className="text-sm">
+            <span className="font-bold">Cuadrilla: </span>
+            {crewName ?? 'Sin cuadrilla asignada'}
+            <span className="block text-xs text-[var(--color-text-muted)]">Es la cuadrilla del estudio.</span>
+          </p>
           <div className="flex justify-end gap-3">
             <Button variant="outline" className="min-h-[48px]" onClick={() => setIsConfirming(false)} disabled={isOpening}>
               Cancelar
