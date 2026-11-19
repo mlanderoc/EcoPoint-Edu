@@ -11,12 +11,11 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { Lock } from 'lucide-react'
 import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
-import { useAuth } from '@/features/auth/hooks/useAuth'
-import { adminService } from '@/features/admin/services/adminService'
 import { ApiError } from '@/services/apiClient'
 import { CharacterizationSettings, SamplingShift, WasteBag } from '@/types'
 import { cn } from '@/utils/cn'
 import { fieldService } from '../services/fieldService'
+import { settingsOfStudy } from '@/features/study/services/studySettings'
 import { DEFAULT_LIMITS, density, formatNumber, isAtypical, netWeight, parseDecimal } from '../utils/fieldMath'
 
 type Limits = Pick<CharacterizationSettings, 'maxBagNetWeight' | 'minBagDensity' | 'maxBagDensity'>
@@ -25,7 +24,6 @@ export function NewBagPage() {
   const { id } = useParams()
   const shiftId = Number(id)
   const navigate = useNavigate()
-  const { user } = useAuth()
   const [shift, setShift] = useState<SamplingShift | null>(null)
   const [limits, setLimits] = useState<Limits>(DEFAULT_LIMITS)
   const [sourceId, setSourceId] = useState<number | null>(null)
@@ -42,15 +40,14 @@ export function NewBagPage() {
 
   useEffect(() => {
     fieldService.getShift(shiftId)
-      .then(setShift)
-      .catch((err) => setError(err instanceof ApiError ? err.message : 'No se pudo cargar el turno.'))
-    adminService.getInstitutions()
-      .then((institutions) => {
-        const settings = institutions.find((item) => item.id === user?.institutionId)?.settings
-        if (settings) setLimits(settings)
+      .then((loaded) => {
+        setShift(loaded)
+        settingsOfStudy(loaded.studyId)
+          .then((settings) => { if (settings) setLimits(settings) })
+          .catch(() => undefined)
       })
-      .catch(() => undefined)
-  }, [shiftId, user?.institutionId])
+      .catch((err) => setError(err instanceof ApiError ? err.message : 'No se pudo cargar el turno.'))
+  }, [shiftId])
 
   const grossValue = parseDecimal(gross)
   const tareValue = parseDecimal(tare)

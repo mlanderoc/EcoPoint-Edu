@@ -16,7 +16,7 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 - [x] **B03. Filtro sin ojo.** Se quita el botón de ojo de `ActiveFilter`. *(Carlos)*
   *Verificación:* CA-320, CA-312.
 
-- [ ] **B04. Institución del estudio.**
+- [x] **B04. Institución del estudio.**
   - `InstitutionSelect` reutilizable.
   - Nuevo estudio: lista de instituciones activas; al cambiarla se recargan las fuentes.
   - Lista de estudios: filtro por institución en `?institucion=` y nombre de la institución en cada estudio.

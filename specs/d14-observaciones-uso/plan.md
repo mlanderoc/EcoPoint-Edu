@@ -33,7 +33,7 @@ La prueba de uso del 18 de noviembre dejó tres observaciones. Solo cambian pant
 
 - `frontend/src/components/layout/Sidebar.tsx` y `BottomNav.tsx`: orden del menú.
 - `frontend/src/components/ui/ActiveFilter.tsx`: sin el botón de ojo.
-- `frontend/src/components/ui/InstitutionSelect.tsx` (nuevo): lista de instituciones reutilizable.
+- `frontend/src/features/admin/components/InstitutionSelect.tsx` (nuevo): lista de instituciones reutilizable; `frontend/src/features/study/services/studySettings.ts` (nuevo): límites de la institución del estudio.
 - `frontend/src/features/study/pages/NewStudyPage.tsx` y `StudiesPage.tsx`: institución al crear y filtro.
 - `frontend/src/features/admin/pages/SourcesPage.tsx`: institución elegible.
 - `frontend/src/features/field/pages/NewBagPage.tsx` y `frontend/src/features/quality/pages/QuarteringPage.tsx`: límites de la institución del estudio.

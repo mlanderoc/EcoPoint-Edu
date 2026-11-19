@@ -27,8 +27,7 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { GenerationSource, SourceType } from '@/types'
 import { cn } from '@/utils/cn'
 import { adminService } from '../services/adminService'
-
-const INSTITUTION_ID = 1
+import { InstitutionSelect, useInstitutionParam, useInstitutions } from '../components/InstitutionSelect'
 
 const SOURCE_TYPES: { value: SourceType; label: string }[] = [
   { value: 'AULAS', label: 'Aulas' },
@@ -55,14 +54,18 @@ export function SourcesPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [filter, setFilter] = useActiveFilter()
+  const [institutionId, setInstitutionId] = useInstitutionParam()
+  const { institutions } = useInstitutions(false)
   const { confirmLeave, discardDialog } = useUnsavedChanges(isModalOpen && !isSaving && (code + name) !== '')
 
   useEffect(() => {
-    adminService.getSources(INSTITUTION_ID)
+    if (institutionId === null) return
+    setIsLoading(true)
+    adminService.getSources(institutionId)
       .then(setSources)
       .catch(() => setError('Error al cargar las fuentes de generación.'))
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [institutionId])
 
   const visible = sources.filter((source) => matchesActiveFilter(source.active, filter))
   const inactiveCount = sources.filter((source) => !source.active).length
@@ -89,11 +92,15 @@ export function SourcesPage() {
       setError('El nombre de la fuente es obligatorio.')
       return
     }
+    if (institutionId === null) {
+      setError('Elija la institución de la fuente.')
+      return
+    }
     try {
       setIsSaving(true)
       setError(null)
-      const created = await adminService.createSource(INSTITUTION_ID, {
-        institutionId: INSTITUTION_ID,
+      const created = await adminService.createSource(institutionId, {
+        institutionId,
         code: code.trim().toUpperCase(),
         name: name.trim(),
         type,
@@ -110,10 +117,11 @@ export function SourcesPage() {
   }
 
   const handleToggle = async (source: GenerationSource) => {
+    if (institutionId === null) return
     try {
       setTogglingId(source.id)
       setError(null)
-      const updated = await adminService.setSourceActive(INSTITUTION_ID, source.id, !source.active)
+      const updated = await adminService.setSourceActive(institutionId, source.id, !source.active)
       setSources((prev) => prev.map((item) => (item.id === updated.id ? updated : item)))
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : 'No se pudo cambiar el estado de la fuente.')
@@ -138,6 +146,10 @@ export function SourcesPage() {
       </div>
 
       {error && <AlertBanner variant="danger" title="Atención" message={error} onDismiss={() => setError(null)} />}
+
+      <div className="sm:max-w-md">
+        <InstitutionSelect institutions={institutions} value={institutionId} onChange={setInstitutionId} />
+      </div>
 
       <Card>
         <CardHeader className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">

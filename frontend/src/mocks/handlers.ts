@@ -237,9 +237,10 @@ export const handlers = [
     return HttpResponse.json(institution)
   }),
 
-  http.get('/api/v1/institutions/:id/sources', ({ request }) => {
+  http.get('/api/v1/institutions/:id/sources', ({ params, request }) => {
     const active = new URL(request.url).searchParams.get('active')
-    return HttpResponse.json(sourcesState.filter((source) => active === null || String(source.active) === active))
+    return HttpResponse.json(sourcesState.filter((source) => source.institutionId === Number(params.id)
+      && (active === null || String(source.active) === active)))
   }),
 
   http.post('/api/v1/institutions/:id/sources', async ({ params, request }) => {
@@ -247,7 +248,7 @@ export const handlers = [
     const denied = requirePermission('MANAGE_ADMINISTRATION', path)
     if (denied) return denied
     const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'> & { active?: boolean }
-    if (sourcesState.some((source) => source.code === body.code)) {
+    if (sourcesState.some((source) => source.code === body.code && source.institutionId === Number(params.id))) {
       return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${body.code} en esta institución.`, path)
     }
     const created: GenerationSource = {
@@ -383,7 +384,10 @@ export const handlers = [
   }),
 
   // --- STUDIES (section 5.2) ---
-  http.get('/api/v1/studies', () => HttpResponse.json(studiesState)),
+  http.get('/api/v1/studies', ({ request }) => {
+    const institutionId = Number(new URL(request.url).searchParams.get('institutionId')) || 1
+    return HttpResponse.json(studiesState.filter((study) => study.institutionId === institutionId))
+  }),
 
   http.get('/api/v1/studies/:id/indicators', ({ params }) => {
     const path = `/api/v1/studies/${params.id}/indicators`
@@ -955,6 +959,12 @@ export function resetMockState(userRole?: UserRole | null) {
   alertsState = []
   correctionsState = []
   nextId = 1000
+}
+
+/** Adds another institution with its sources, to try studies of several institutions (D14). */
+export function addMockInstitution(institution: Institution, sources: GenerationSource[]) {
+  institutionsState.push(institution)
+  sourcesState.push(...sources)
 }
 
 /** Changes the user of the mock session. */

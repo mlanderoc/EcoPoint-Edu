@@ -1,5 +1,6 @@
 /**
- * Studies of the institution (Spec 004, R-332).
+ * Studies of an institution, chosen with a filter kept in the URL
+ * (Spec 004, R-332, R-337; D14).
  *
  * @author craulgomez
  */
@@ -10,6 +11,7 @@ import { ClipboardList, Plus } from 'lucide-react'
 import { AlertBanner, Button, Card, CardContent } from '@/components/ui'
 import { CharacterizationStudy } from '@/types'
 import { studyService } from '../services/studyService'
+import { InstitutionSelect, useInstitutionParam, useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { formatDate } from '../utils/samplingDays'
 import { STATUS_LABELS, studyTitle } from '../utils/studyStatus'
 
@@ -18,13 +20,19 @@ export function StudiesPage() {
   const [studies, setStudies] = useState<CharacterizationStudy[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [institutionId, setInstitutionId] = useInstitutionParam()
+  const { institutions } = useInstitutions(false)
+  const institutionName = (id: number) => institutions.find((item) => item.id === id)?.name
 
   useEffect(() => {
-    studyService.list()
+    if (institutionId === null) return
+    setIsLoading(true)
+    setError(null)
+    studyService.list(institutionId)
       .then(setStudies)
       .catch(() => setError('No se pudieron cargar los estudios.'))
       .finally(() => setIsLoading(false))
-  }, [])
+  }, [institutionId])
 
   return (
     <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
@@ -38,10 +46,19 @@ export function StudiesPage() {
         </Button>
       </div>
 
+      <div className="sm:max-w-md">
+        <InstitutionSelect
+          institutions={institutions}
+          value={institutionId}
+          onChange={setInstitutionId}
+          label="Ver los estudios de"
+        />
+      </div>
+
       {error && <AlertBanner variant="danger" message={error} />}
       {isLoading && <p className="text-sm text-[var(--color-text-muted)]">Cargando estudios...</p>}
       {!isLoading && studies.length === 0 && !error && (
-        <p className="text-sm text-[var(--color-text-muted)]">Todavía no hay estudios. Cree el primero.</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Esta institución todavía no tiene estudios.</p>
       )}
 
       <div className="flex flex-col gap-3">
@@ -56,6 +73,9 @@ export function StudiesPage() {
                     <p className="text-xs text-[var(--color-text-muted)]">
                       {formatDate(study.startDate)} — {formatDate(study.endDate)}
                     </p>
+                    {institutionName(study.institutionId) && (
+                      <p className="text-xs text-[var(--color-text-muted)]">{institutionName(study.institutionId)}</p>
+                    )}
                   </div>
                 </div>
                 <span className={study.status === 'CANCELADO'
