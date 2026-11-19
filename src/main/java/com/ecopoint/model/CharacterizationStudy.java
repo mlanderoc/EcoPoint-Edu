@@ -25,6 +25,7 @@ public class CharacterizationStudy {
 
     private Long id;
     private Long institutionId;
+    private Long crewId;
     private StudyStatus status;
     private final List<SamplingDay> days;
     private final List<StudyReopening> reopenings;
@@ -249,6 +250,25 @@ public class CharacterizationStudy {
     }
 
     /**
+     * Assigns the crew that works the shifts of the study. It can only change
+     * while the study is planned (RN-088).
+     *
+     * @param crewId crew id
+     * @throws InvalidDataException  if the crew is missing
+     * @throws BusinessRuleException if the study is no longer planned
+     */
+    public void assignCrew(Long crewId) {
+        if (crewId == null) {
+            throw new InvalidDataException("cuadrilla", "Debe elegir la cuadrilla del estudio.");
+        }
+        if (status != StudyStatus.PLANIFICADO) {
+            throw new BusinessRuleException("La cuadrilla solo se cambia mientras el estudio está planificado. "
+                    + "Este estudio está " + status.getDisplayName().toLowerCase() + ".");
+        }
+        this.crewId = crewId;
+    }
+
+    /**
      * Checks that the study may be deleted: only while it is planned, because
      * it has no field data yet (RN-019).
      *
@@ -276,6 +296,25 @@ public class CharacterizationStudy {
 
     public void setInstitutionId(Long institutionId) {
         this.institutionId = institutionId;
+    }
+
+    /**
+     * Returns the crew of the study (RN-088).
+     *
+     * @return crew id, or null in an old study without shifts
+     */
+    public Long getCrewId() {
+        return crewId;
+    }
+
+    /**
+     * Sets the stored crew without the lifecycle check. Only the persistence
+     * layer must use it, when it rebuilds a study.
+     *
+     * @param crewId stored crew id, or null
+     */
+    public void setCrewId(Long crewId) {
+        this.crewId = crewId;
     }
 
     public StudyStatus getStatus() {
