@@ -76,7 +76,7 @@ class WasteBagServiceTest {
         StudyRepository studies = mock(StudyRepository.class);
         GenerationSourceRepository sources = mock(GenerationSourceRepository.class);
         InstitutionRepository institutions = mock(InstitutionRepository.class);
-        service = new WasteBagService(bags, shifts, studies, sources, institutions, alerts,
+        service = new WasteBagService(bags, shifts, studies, sources, institutions, alerts, mock(FieldAccess.class),
                 Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
 
         List<LocalDate> dates = new ArrayList<>();

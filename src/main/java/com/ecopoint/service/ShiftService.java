@@ -11,7 +11,6 @@ import com.ecopoint.model.ShiftType;
 import com.ecopoint.model.User;
 import com.ecopoint.model.VerificationInfo;
 import com.ecopoint.model.WasteBag;
-import com.ecopoint.persistence.CrewRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.ShiftRepository;
 import com.ecopoint.persistence.StudyRepository;
@@ -42,7 +41,7 @@ public class ShiftService {
     private final ShiftRepository shifts;
     private final StudyRepository studies;
     private final GenerationSourceRepository sources;
-    private final CrewRepository crews;
+    private final FieldAccess fieldAccess;
     private final Clock clock;
 
     /**
@@ -51,15 +50,15 @@ public class ShiftService {
      * @param shifts  shift repository
      * @param studies study repository
      * @param sources source repository
-     * @param crews   crew repository
+     * @param fieldAccess who may register in the study (RN-089)
      * @param clock   clock that dates the records
      */
     public ShiftService(ShiftRepository shifts, StudyRepository studies, GenerationSourceRepository sources,
-                        CrewRepository crews, Clock clock) {
+                        FieldAccess fieldAccess, Clock clock) {
         this.shifts = shifts;
         this.studies = studies;
         this.sources = sources;
-        this.crews = crews;
+        this.fieldAccess = fieldAccess;
         this.clock = clock;
     }
 
@@ -112,25 +111,22 @@ public class ShiftService {
     }
 
     /**
-     * Opens a shift of a study in execution (RN-020, R-341).
+     * Opens a shift of a study in execution. The crew of the study works it
+     * (RN-020, RN-088, R-341).
      *
      * @param actor     teacher that opens it
      * @param studyId   study id
      * @param dayNumber sampling day, 1 to 8
      * @param type      morning or afternoon
-     * @param crewId    crew that works the shift, or null
      * @return the opened shift
      */
     @Transactional
-    public SamplingShift open(User actor, Long studyId, int dayNumber, ShiftType type, Long crewId) {
+    public SamplingShift open(User actor, Long studyId, int dayNumber, ShiftType type) {
         AccessPolicy.require(actor, Permission.MANAGE_SHIFTS);
         CharacterizationStudy study = study(studyId);
         ShiftValidator.validateNewShift(study, dayNumber, type, shifts.findByStudy(studyId));
-        if (crewId != null && crews.findById(crewId).isEmpty()) {
-            throw new ResourceNotFoundException("Cuadrilla", crewId);
-        }
         SamplingShift shift = new SamplingShift(null, studyId, dayNumber, type);
-        shift.assignCrew(crewId);
+        shift.assignCrew(study.getCrewId());
         return shifts.save(shift);
     }
 
@@ -182,7 +178,9 @@ public class ShiftService {
     public SamplingShift registerPopulation(User actor, Long shiftId, int students, int teachers, int staff) {
         AccessPolicy.require(actor, Permission.REGISTER_POPULATION);
         SamplingShift shift = get(shiftId);
-        ShiftValidator.validateOpenForRegistration(shift, study(shift.getStudyId()));
+        CharacterizationStudy study = study(shift.getStudyId());
+        fieldAccess.require(actor, study);
+        ShiftValidator.validateOpenForRegistration(shift, study);
         ShiftPopulation population = new ShiftPopulation(null, students, teachers, staff,
                 new VerificationInfo(actor.getId(), LocalDateTime.now(clock)));
         ShiftValidator.validatePopulation(population);
@@ -205,6 +203,7 @@ public class ShiftService {
         AccessPolicy.require(actor, Permission.REGISTER_BAGS);
         SamplingShift shift = get(shiftId);
         CharacterizationStudy study = study(shift.getStudyId());
+        fieldAccess.require(actor, study);
         ShiftValidator.validateOpenForRegistration(shift, study);
         if (!studies.findParticipatingSources(study.getId()).contains(sourceId)) {
             throw new BusinessRuleException("La fuente " + sourceId + " no participa en este estudio.");
