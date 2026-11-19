@@ -76,7 +76,7 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 ### 5.4 Configuración del estudio (solo docente)
 
 - **R-330** (Debe). Crear un estudio: institución (se **elige de una lista con las instituciones activas**; por defecto, la del docente; al cambiarla se cargan las fuentes de esa institución, D14), fecha del día 1 y fechas de los días 2 a 8. El sistema propone los siguientes 7 días hábiles y el docente puede cambiarlos. **Día hábil** = de lunes a viernes y que no sea festivo en Colombia (incluidos los festivos que se trasladan al lunes y los de Semana Santa). Al cambiar **cualquier** día, todos los días posteriores se recalculan como los días hábiles siguientes, aunque se hubieran cambiado a mano (D13).
-- **R-331** (Debe). Elegir qué fuentes participan (por defecto, todas las activas) y asignar cuadrillas a cada turno.
+- **R-331** (Debe). Elegir qué fuentes participan (por defecto, todas las activas) y **la cuadrilla del estudio**, obligatoria. En el detalle de un estudio PLANIFICADO se puede cambiar la cuadrilla (RN-088, D14).
 - **R-332** (Debe). Ver el estado del estudio y los botones para avanzarlo (RN-014), con una confirmación antes de cada cambio. Si un cambio no es posible, se explica por qué (ej. "Quedan 4 registros pendientes de verificación").
 - **R-333** (Debe). El día 1 se muestra con la etiqueta "Día de descarte: no entra en los cálculos".
 - **R-334** (Debe). En el detalle de un estudio PLANIFICADO se pueden **editar las fechas** con la misma regla de R-330 (D13).
@@ -86,8 +86,8 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 
 ### 5.5 Registro en campo
 
-- **R-340** (Debe). **Pantalla de inicio de campo**: muestra el estudio en ejecución, el día y el turno actual (según la fecha y la hora), y un botón grande "Abrir turno" o "Continuar turno".
-- **R-341** (Debe). **Abrir turno** (docente): confirma día, turno y cuadrilla.
+- **R-340** (Debe). **Pantalla de inicio de campo**: arriba, una lista para **elegir el estudio en ejecución** (el docente ve todos; el estudiante, solo los de su cuadrilla, RN-089). Si hay uno solo, se elige solo, y la elección queda en la dirección (`?estudio=`) (D14). Muestra el estudio elegido, el día y el turno actual (según la fecha y la hora), y un botón grande "Abrir turno" o "Continuar turno".
+- **R-341** (Debe). **Abrir turno** (docente): confirma día y turno. La cuadrilla es la del estudio y solo se muestra (RN-088, D14).
 - **R-342** (Debe). **Población**: tres campos (estudiantes, docentes, personal) y el total calculado. Hasta registrarla, la opción de bolsas aparece bloqueada con el mensaje "Registre primero la población del turno".
 - **R-343** (Debe). **Registrar bolsa**: elegir la fuente (lista con código y nombre, botones grandes), digitar peso bruto, tara y volumen. Antes de guardar, se muestran el peso neto y la densidad calculados. Al guardar, se muestra **el rótulo en letra grande** (ej. `AU-D3-M`) para escribirlo en la bolsa.
 - **R-344** (Debe). Si el valor es atípico (RN-037), se muestra un aviso amarillo "Valor fuera de lo esperado; revise antes de continuar", y se puede guardar igual.
@@ -125,6 +125,8 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **CA-317.** Dada cualquier pantalla, cuando se revisa su texto, entonces no contiene códigos como "R-320" o "RN-085" (R-306).
 - **CA-318.** Dado un DOCENTE, cuando inicia sesión, entonces el menú muestra primero Configuración del estudio y después Registro en campo; en el celular, Estudios va antes que Campo (R-311).
 - **CA-319.** Dadas dos instituciones activas, cuando el docente crea un estudio y elige la segunda, entonces se listan las fuentes de la segunda, el estudio queda en ella y aparece en la lista al filtrar por esa institución, no al filtrar por la primera (R-330, R-337).
+- **CA-321.** Dados dos estudios en ejecución, uno de la cuadrilla del estudiante y otro no, cuando el estudiante entra a Registro en campo, entonces solo ve el de su cuadrilla; el docente ve los dos y puede elegir cualquiera (R-340).
+- **CA-322.** Dado un estudio nuevo, cuando se intenta crear sin cuadrilla, entonces no se guarda y se pide elegirla; al abrir un turno, se muestra la cuadrilla del estudio sin poder cambiarla (R-331, R-341).
 - **CA-320.** Dado el filtro de Instituciones, Fuentes o Subcategorías, cuando se mira, entonces solo tiene los botones Activos, Inactivos y Todos, sin ícono de ojo (R-325).
 
 ## 7. Fuera de alcance

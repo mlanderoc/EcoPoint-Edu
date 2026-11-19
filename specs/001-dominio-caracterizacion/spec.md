@@ -8,7 +8,7 @@
 | Requerimientos | RF-01 a RF-12 (reglas del dominio) |
 | Depende de | Decisiones D1, D6, D8, D9 |
 | Fecha | 2026-11-11 |
-| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). **D14** (18 nov 2026): segunda ronda de observaciones. **Aprobados** (18 nov 2026). |
 
 ## 1. Objetivo
 
@@ -170,6 +170,9 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 ### 3.10 Evidencias
 
+- **RN-088** (Debe). Todo estudio tiene **una cuadrilla**, que se elige al crearlo. Solo se cambia mientras el estudio está PLANIFICADO. Los turnos del estudio los trabaja esa cuadrilla (D14).
+- **RN-089** (Debe). Un ESTUDIANTE_UNIVERSITARIO solo registra población, bolsas, marcas de "sin generación", cuarteos y densidades en los estudios cuya cuadrilla integra. Un DOCENTE registra en cualquier estudio (D14).
+
 - **RN-090** (Debería). Se pueden adjuntar evidencias (foto de la balanza, de la bolsa o de la planilla en papel) a una bolsa, un cuarteo o un turno. Formatos JPG o PNG, máximo 5 MB cada una.
 
 ## 4. Historias de usuario
@@ -242,6 +245,8 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 
 **Errores**
 
+- **CA-083.** Dado un estudio PLANIFICADO con la Cuadrilla 1, cuando el docente la cambia por la Cuadrilla 2, entonces se acepta; dado un estudio EN_EJECUCION, se rechaza (RN-088).
+- **CA-084.** Dado un estudiante que no integra la cuadrilla de un estudio en ejecución, cuando intenta registrar una bolsa en uno de sus turnos, entonces se rechaza por permisos; un integrante de esa cuadrilla sí la registra (RN-089).
 - **CA-090.** Todo rechazo de las reglas anteriores lanza una excepción de la jerarquía `EcoPointException` con un mensaje en español que explica qué falló: dato con formato o rango inválido → `InvalidDataException`; regla de negocio violada → `BusinessRuleException`; registro inexistente → `ResourceNotFoundException`.
 
 ## 6. Fuera de alcance

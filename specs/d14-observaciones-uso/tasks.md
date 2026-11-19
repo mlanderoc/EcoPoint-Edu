@@ -26,4 +26,22 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
   *(Carlos)*
   *Verificación:* CA-319.
 
-- [ ] **B05. Revisión de Antigravity** y PR a `develop`.
+- [ ] **B05. Base de datos.** `sql/004_ajustes_d14.sql` (idempotente; llena la cuadrilla de los estudios existentes con la de sus turnos), `001_schema.sql` y `002_seed.sql`. *(Merlín)*
+  *Verificación:* `SchemaIT`; la base de desarrollo se actualiza sin perder datos.
+
+- [ ] **B06. Dominio y validación.** `CharacterizationStudy` con `crewId` y `assignCrew` (solo PLANIFICADO); `AccessPolicy.requireCrewMember`. *(Estefanía y Carlos)*
+  *Verificación:* CA-083, CA-084 (dominio).
+
+- [ ] **B07. Repositorio.** `JdbcStudyRepository` guarda y lee la cuadrilla; `findByStatus`. *(Merlín)*
+  *Verificación:* IT del repositorio contra `ecopoint_test`.
+
+- [ ] **B08. Servicios.** `StudyService`: crear con cuadrilla, `changeCrew`, `fieldStudies`. `ShiftService.open` toma la cuadrilla del estudio. Permiso por cuadrilla en población, sin generación, bolsas, cuarteo y densidad. *(Estefanía; cuarteo y densidad, Carlos)*
+  *Verificación:* CA-083, CA-084.
+
+- [ ] **B09. API.** `crewId` en la creación, `PUT /studies/{id}/crew`, `GET /studies/field`; `OpenShiftRequest` sin cuadrilla. *(Carlos)*
+  *Verificación:* CA-213.
+
+- [ ] **B10. Pantallas.** Nuevo estudio y detalle con la cuadrilla; Registro en campo con la lista de estudios; Abrir turno con la cuadrilla solo visible. *(Carlos)*
+  *Verificación:* CA-321, CA-322.
+
+- [ ] **B11. Revisión de Antigravity** y PR a `develop`.

@@ -8,7 +8,7 @@
 | Requerimientos | Todos (almacenamiento de RF-01 a RF-14) |
 | Depende de | Spec 001 aprobada |
 | Fecha | 2026-11-11 |
-| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). **D14** (18 nov 2026): segunda ronda de observaciones. **Aprobados** (18 nov 2026). |
 
 ## 1. Objetivo
 
@@ -57,6 +57,7 @@ Las reglas de la spec 001 que se pueden expresar en la base de datos **se repite
   - estado `CANCELADO` en el tipo de estado del estudio, con quién, cuándo y por qué se canceló (RN-018);
   - al eliminar un estudio PLANIFICADO se borran en cascada sus días, fuentes participantes y cuadrillas asignadas; la base rechaza el borrado si el estudio tiene turnos (RN-019);
   - un script de actualización agrega estos cambios a las bases ya creadas, sin borrar ni mover datos.
+- **R-017** (Debe). Ajuste D14: columna `id_cuadrilla` en `ESTUDIO` (RN-088), con política RESTRICT (una cuadrilla con estudios no se borra). Un script de actualización la agrega y les pone a los estudios existentes la cuadrilla de sus turnos.
 
 ### 5.3 Transacciones
 
