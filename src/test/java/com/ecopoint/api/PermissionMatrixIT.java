@@ -173,6 +173,6 @@ class PermissionMatrixIT extends PostgresIntegrationTest {
                     .append("{\"dayNumber\":").append(day).append(",\"date\":\"").append(year)
                     .append("-02-").append(String.format("%02d", day + 1)).append("\"}");
         }
-        return "{\"days\":[" + days + "]}";
+        return "{\"crewId\":1,\"days\":[" + days + "]}";
     }
 }

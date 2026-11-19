@@ -57,7 +57,7 @@ class AdjustmentsD13IT extends PostgresIntegrationTest {
 
         String days = jdbc.queryForList("SELECT '{\"dayNumber\":' || numero_dia || ',\"date\":\"' || fecha || '\"}' "
                 + "FROM DIA_MUESTREO WHERE id_estudio = ? ORDER BY numero_dia", String.class, executing).toString();
-        teacher.json(post("/api/v1/studies"), "{\"institutionId\":" + institution + ",\"days\":" + days + "}")
+        teacher.json(post("/api/v1/studies"), "{\"institutionId\":" + institution + ",\"crewId\":1,\"days\":" + days + "}")
                 .andExpect(status().isCreated());
     }
 

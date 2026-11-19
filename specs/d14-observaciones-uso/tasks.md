@@ -38,7 +38,7 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 - [x] **B08. Servicios.** `StudyService`: crear con cuadrilla, `changeCrew`, `fieldStudies`. `ShiftService.open` toma la cuadrilla del estudio. Permiso por cuadrilla en población, sin generación, bolsas, cuarteo y densidad. *(Estefanía; cuarteo y densidad, Carlos)*
   *Verificación:* CA-083, CA-084.
 
-- [ ] **B09. API.** `crewId` en la creación, `PUT /studies/{id}/crew`, `GET /studies/field`; `OpenShiftRequest` sin cuadrilla. *(Carlos)*
+- [x] **B09. API.** `crewId` en la creación, `PUT /studies/{id}/crew`, `GET /studies/field`; `OpenShiftRequest` sin cuadrilla. *(Carlos)*
   *Verificación:* CA-213.
 
 - [ ] **B10. Pantallas.** Nuevo estudio y detalle con la cuadrilla; Registro en campo con la lista de estudios; Abrir turno con la cuadrilla solo visible. *(Carlos)*
