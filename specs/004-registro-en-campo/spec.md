@@ -8,7 +8,7 @@
 | Requerimientos | RF-01, RF-02, RF-03, RF-04, RF-05, RF-11 |
 | Depende de | Spec 003 aprobada; decisión D4 |
 | Fecha | 2026-11-11 |
-| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). **D14** (18 nov 2026): segunda ronda de observaciones. **Aprobados** (18 nov 2026). |
 
 ## 1. Objetivo
 
@@ -61,27 +61,28 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 ### 5.2 Inicio de sesión y menú
 
 - **R-310** (Debe). Pantalla de inicio de sesión con correo y contraseña.
-- **R-311** (Debe). Menú lateral (o inferior en el celular) con solo las opciones del rol (RN-081). Muestra el nombre del usuario, su rol y un botón para cerrar sesión.
+- **R-311** (Debe). Menú lateral (o inferior en el celular) con solo las opciones del rol (RN-081). Muestra el nombre del usuario, su rol y un botón para cerrar sesión. Para el docente, el orden es: **Configuración del estudio, Registro en campo, Verificación, Indicadores, Alertas y Mi Perfil**, y luego Administración (D14).
 - **R-312** (Debe). Al vencer la sesión, se vuelve al inicio de sesión con el aviso "Su sesión expiró".
 
 ### 5.3 Administración (solo docente)
 
 - **R-320** (Debe). **Instituciones**: listar, crear, editar (nombre, dirección), **activar y desactivar** (RN-006).
-- **R-321** (Debe). **Fuentes de generación**: listar, crear, editar, **activar y desactivar**, con código, nombre, tipo y estado. La casilla "activa" del formulario se respeta al crear. El polígono se dibuja en la spec 007.
+- **R-321** (Debe). **Fuentes de generación**: listar, crear, editar, **activar y desactivar**, con código, nombre, tipo y estado. La casilla "activa" del formulario se respeta al crear. El polígono se dibuja en la spec 007. El docente **elige la institución** cuyas fuentes administra; por defecto, la suya (D14).
 - **R-322** (Debe). **Usuarios**: listar, crear y editar, con nombre, apellido, correo y rol (DOCENTE o ESTUDIANTE_UNIVERSITARIO). Se muestran en una **tabla** (no en tarjetas) con nombre, correo, rol, estado y total de registros; con filtros por **rol** y por **estado**, buscador por nombre o correo, y **paginación**. Cada fila de estudiante tiene **Activar** o **Desactivar**; las filas de docentes no tienen esa opción (RN-087).
 - **R-323** (Debe). **Cuadrillas**: crear, nombrar, asignar docente responsable e integrantes. Avisa si la cuadrilla no tiene un docente responsable (RN-085).
 - **R-324** (Debe). **Subcategorías de residuos**: listar por grupo; crear, editar, **activar y desactivar** (RN-043). La casilla "activa" del formulario se respeta al crear.
-- **R-325** (Debe). En Instituciones, Fuentes y Subcategorías, la lista muestra por defecto **solo los activos**, con un filtro **Activos / Inactivos / Todos** y un ícono de ojo para mostrar u ocultar los inactivos. Los inactivos se ven atenuados y con la etiqueta "Inactivo" (D13).
+- **R-325** (Debe). En Instituciones, Fuentes y Subcategorías, la lista muestra por defecto **solo los activos**, con un filtro **Activos / Inactivos / Todos**, sin ícono de ojo. Los inactivos se ven atenuados y con la etiqueta "Inactivo" (D13, D14).
 
 ### 5.4 Configuración del estudio (solo docente)
 
-- **R-330** (Debe). Crear un estudio: institución, fecha del día 1 y fechas de los días 2 a 8. El sistema propone los siguientes 7 días hábiles y el docente puede cambiarlos. **Día hábil** = de lunes a viernes y que no sea festivo en Colombia (incluidos los festivos que se trasladan al lunes y los de Semana Santa). Al cambiar **cualquier** día, todos los días posteriores se recalculan como los días hábiles siguientes, aunque se hubieran cambiado a mano (D13).
+- **R-330** (Debe). Crear un estudio: institución (se **elige de una lista con las instituciones activas**; por defecto, la del docente; al cambiarla se cargan las fuentes de esa institución, D14), fecha del día 1 y fechas de los días 2 a 8. El sistema propone los siguientes 7 días hábiles y el docente puede cambiarlos. **Día hábil** = de lunes a viernes y que no sea festivo en Colombia (incluidos los festivos que se trasladan al lunes y los de Semana Santa). Al cambiar **cualquier** día, todos los días posteriores se recalculan como los días hábiles siguientes, aunque se hubieran cambiado a mano (D13).
 - **R-331** (Debe). Elegir qué fuentes participan (por defecto, todas las activas) y asignar cuadrillas a cada turno.
 - **R-332** (Debe). Ver el estado del estudio y los botones para avanzarlo (RN-014), con una confirmación antes de cada cambio. Si un cambio no es posible, se explica por qué (ej. "Quedan 4 registros pendientes de verificación").
 - **R-333** (Debe). El día 1 se muestra con la etiqueta "Día de descarte: no entra en los cálculos".
 - **R-334** (Debe). En el detalle de un estudio PLANIFICADO se pueden **editar las fechas** con la misma regla de R-330 (D13).
 - **R-335** (Debe). En el detalle de un estudio PLANIFICADO hay un botón **Eliminar estudio**, con confirmación (RN-019) (D13).
 - **R-336** (Debe). En el detalle de un estudio EN_EJECUCION o EN_DEPURACION hay un botón **Cancelar estudio**, que pide el motivo y advierte que es definitivo (RN-018). La lista de estudios muestra los cancelados con su etiqueta; no aparecen en Registro en campo ni en Indicadores (D13).
+- **R-337** (Debe). La lista de estudios tiene un **filtro por institución** con todas las instituciones registradas; por defecto, la del usuario. La elección queda en la dirección (`?institucion=`) para que sobreviva al volver atrás. Cada estudio muestra el nombre de su institución (D14).
 
 ### 5.5 Registro en campo
 
@@ -122,6 +123,9 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **CA-315.** Dado un estudio EN_EJECUCION, cuando el docente pulsa Cancelar estudio sin escribir motivo, entonces no se puede confirmar; con motivo, el estudio queda Cancelado y desaparece de Registro en campo (R-336).
 - **CA-316.** Dado un formulario con datos escritos sin guardar, cuando se pulsa Atrás o Descartar, entonces se pregunta "¿Descartar los cambios?" y, si se responde que no, los datos siguen ahí (R-307, R-308).
 - **CA-317.** Dada cualquier pantalla, cuando se revisa su texto, entonces no contiene códigos como "R-320" o "RN-085" (R-306).
+- **CA-318.** Dado un DOCENTE, cuando inicia sesión, entonces el menú muestra primero Configuración del estudio y después Registro en campo; en el celular, Estudios va antes que Campo (R-311).
+- **CA-319.** Dadas dos instituciones activas, cuando el docente crea un estudio y elige la segunda, entonces se listan las fuentes de la segunda, el estudio queda en ella y aparece en la lista al filtrar por esa institución, no al filtrar por la primera (R-330, R-337).
+- **CA-320.** Dado el filtro de Instituciones, Fuentes o Subcategorías, cuando se mira, entonces solo tiene los botones Activos, Inactivos y Todos, sin ícono de ojo (R-325).
 
 ## 7. Fuera de alcance
 
