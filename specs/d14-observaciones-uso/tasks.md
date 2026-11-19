@@ -29,7 +29,7 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
 - [x] **B05. Base de datos.** `sql/004_ajustes_d14.sql` (idempotente; llena la cuadrilla de los estudios existentes con la de sus turnos), `001_schema.sql` y `002_seed.sql`. *(Merlín)*
   *Verificación:* `SchemaIT`; la base de desarrollo se actualiza sin perder datos.
 
-- [ ] **B06. Dominio y validación.** `CharacterizationStudy` con `crewId` y `assignCrew` (solo PLANIFICADO); `AccessPolicy.requireCrewMember`. *(Estefanía y Carlos)*
+- [x] **B06. Dominio y validación.** `CharacterizationStudy` con `crewId` y `assignCrew` (solo PLANIFICADO); `AccessPolicy.requireCrewMember`. *(Estefanía y Carlos)*
   *Verificación:* CA-083, CA-084 (dominio).
 
 - [ ] **B07. Repositorio.** `JdbcStudyRepository` guarda y lee la cuadrilla; `findByStatus`. *(Merlín)*

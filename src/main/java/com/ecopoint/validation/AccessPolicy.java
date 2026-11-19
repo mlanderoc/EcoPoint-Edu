@@ -1,6 +1,7 @@
 package com.ecopoint.validation;
 
 import com.ecopoint.exceptions.AccessDeniedException;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.User;
 
@@ -35,6 +36,23 @@ public final class AccessPolicy {
         if (user.getRole() == null || !user.getRole().hasPermission(permission)) {
             String roleName = user.getRole() == null ? "sin asignar" : user.getRole().getDisplayName();
             throw new AccessDeniedException(roleName, permission.getActionDescription());
+        }
+    }
+
+    /**
+     * Requires that the user may register field data in a study: a teacher in
+     * any study, a student only in the studies of a crew he belongs to (RN-089).
+     *
+     * @param user user that wants to register
+     * @param crew crew of the study, or null if it has none
+     * @throws AccessDeniedException if a student is not a member of the crew
+     */
+    public static void requireCrewMember(User user, Crew crew) {
+        if (can(user, Permission.MANAGE_STUDIES)) {
+            return;
+        }
+        if (crew == null || !crew.isMember(user)) {
+            throw new AccessDeniedException("Solo los integrantes de la cuadrilla del estudio pueden registrar datos en él.");
         }
     }
 
