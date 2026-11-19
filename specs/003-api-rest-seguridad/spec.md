@@ -137,7 +137,7 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 - **CA-209** — Eliminado: no hay menores de edad en el sistema (D9).
 - **CA-210.** Cuando se consulta la base de datos, entonces ninguna contraseña está en texto plano.
 - **CA-211.** Para cada fila de la matriz RN-081 existe al menos una prueba automática de API que confirma el "Sí" y una que confirma el "No".
-- **CA-213.** Dado un estudiante que no integra la cuadrilla del estudio, cuando llama a `POST /api/v1/shifts/{id}/bags` en uno de sus turnos, entonces recibe 403 con `ERR_ACCESS_DENIED`; y `GET /api/v1/studies/field` no le muestra ese estudio (RN-089).
+- **CA-213.** Dado un estudiante que no integra la cuadrilla del estudio, cuando llama a `POST /api/v1/shifts/{id}/bags` en uno de sus turnos, entonces recibe 403 con `ERR_FORBIDDEN`; y `GET /api/v1/studies/field` no le muestra ese estudio (RN-089).
 - **CA-212.** Cuando se abre la documentación OpenAPI, entonces aparecen todos los recursos de la sección 5.4.
 
 ## 7. Fuera de alcance
