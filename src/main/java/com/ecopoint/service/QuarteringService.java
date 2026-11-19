@@ -54,6 +54,7 @@ public class QuarteringService {
     private final InstitutionRepository institutions;
     private final WasteCategoryRepository categories;
     private final AlertRepository alerts;
+    private final FieldAccess fieldAccess;
     private final Clock clock;
 
     /**
@@ -65,17 +66,19 @@ public class QuarteringService {
      * @param institutions institution repository
      * @param categories   subcategory repository
      * @param alerts       alert repository
+     * @param fieldAccess  who may register in the study (RN-089)
      * @param clock        clock that dates the records and alerts
      */
     public QuarteringService(QuarteringRepository quarterings, ShiftRepository shifts, StudyRepository studies,
                              InstitutionRepository institutions, WasteCategoryRepository categories,
-                             AlertRepository alerts, Clock clock) {
+                             AlertRepository alerts, FieldAccess fieldAccess, Clock clock) {
         this.quarterings = quarterings;
         this.shifts = shifts;
         this.studies = studies;
         this.institutions = institutions;
         this.categories = categories;
         this.alerts = alerts;
+        this.fieldAccess = fieldAccess;
         this.clock = clock;
     }
 
@@ -114,6 +117,7 @@ public class QuarteringService {
                 .forEach(input -> quartering.addResult(resultOf(input, catalog)));
 
         QuarteringValidator.validatePermissions(quartering, actor);
+        fieldAccess.require(actor, study);
         ShiftValidator.validateOpenForRegistration(shift, study);
         QuarteringValidator.validateNoExistingQuartering(shift);
         QuarteringValidator.validateCategories(quartering, catalog);

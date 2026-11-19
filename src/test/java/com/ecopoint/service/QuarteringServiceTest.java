@@ -82,8 +82,10 @@ class QuarteringServiceTest {
         WasteCategoryRepository categories = mock(WasteCategoryRepository.class);
         DensityRepository densities = mock(DensityRepository.class);
         Clock clock = Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
-        service = new QuarteringService(quarterings, shifts, studies, institutions, categories, alerts, clock);
-        densityService = new DensityService(densities, shifts, studies, clock);
+        FieldAccess fieldAccess = mock(FieldAccess.class);
+        service = new QuarteringService(quarterings, shifts, studies, institutions, categories, alerts, fieldAccess,
+                clock);
+        densityService = new DensityService(densities, shifts, studies, fieldAccess, clock);
 
         List<LocalDate> dates = new ArrayList<>();
         IntStream.range(0, 8).forEach(i -> dates.add(LocalDate.of(2026, 11, 16).plusDays(i)));
