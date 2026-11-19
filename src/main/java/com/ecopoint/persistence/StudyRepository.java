@@ -42,6 +42,15 @@ public interface StudyRepository {
     List<CharacterizationStudy> findByInstitution(Long institutionId);
 
     /**
+     * Lists the studies of every institution that are in a status, newest
+     * first (RN-089: studies for the field registration).
+     *
+     * @param status status wanted
+     * @return studies
+     */
+    List<CharacterizationStudy> findByStatus(StudyStatus status);
+
+    /**
      * Stores a new status after the service has validated the transition.
      *
      * @param studyId study id

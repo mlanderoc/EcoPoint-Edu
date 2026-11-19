@@ -1,6 +1,7 @@
 package com.ecopoint.persistence;
 
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.Institution;
 import com.ecopoint.model.StudyStatus;
 import com.ecopoint.model.User;
@@ -35,6 +36,9 @@ class StudyRepositoryIT extends PostgresIntegrationTest {
 
     @Autowired
     private UserRepository users;
+
+    @Autowired
+    private CrewRepository crews;
 
     private Long institutionId;
 
@@ -96,6 +100,27 @@ class StudyRepositoryIT extends PostgresIntegrationTest {
         assertEquals(StudyStatus.EN_DEPURACION, found.getStatus());
         assertEquals(1, found.getReopenings().size());
         assertEquals("Corregir el pesaje del día 4", found.getReopenings().get(0).reason());
+    }
+
+    @Test
+    void rn088_crewIsStoredChangedAndListedByStatus() {
+        User teacher = users.save(new User(null, "Oriana", "Jurado", "oriana@unicesar.edu.co", UserRole.DOCENTE, institutionId));
+        Crew first = crews.save(new Crew(null, "Cuadrilla 1", teacher));
+        Crew second = crews.save(new Crew(null, "Cuadrilla 2", teacher));
+        CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
+        study.scheduleDates(march(2, 3, 4, 5, 6, 9, 10, 11));
+        study.assignCrew(first.getId());
+        repository.save(study);
+
+        study.assignCrew(second.getId());
+        study.changeStatus(StudyStatus.EN_EJECUCION);
+        repository.save(study);
+
+        assertEquals(second.getId(), repository.findById(study.getId()).orElseThrow().getCrewId());
+        assertTrue(repository.findByStatus(StudyStatus.EN_EJECUCION).stream()
+                .anyMatch(found -> found.getId().equals(study.getId())));
+        assertTrue(repository.findByStatus(StudyStatus.PLANIFICADO).stream()
+                .noneMatch(found -> found.getId().equals(study.getId())));
     }
 
     @Test
