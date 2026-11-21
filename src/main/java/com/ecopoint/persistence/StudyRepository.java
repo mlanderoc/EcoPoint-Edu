@@ -51,6 +51,14 @@ public interface StudyRepository {
     List<CharacterizationStudy> findByStatus(StudyStatus status);
 
     /**
+     * Gives a crew to the shifts of the study that have none (RN-088).
+     *
+     * @param studyId study id
+     * @param crewId  crew id
+     */
+    void assignCrewToShiftsWithoutCrew(Long studyId, Long crewId);
+
+    /**
      * Stores a new status after the service has validated the transition.
      *
      * @param studyId study id

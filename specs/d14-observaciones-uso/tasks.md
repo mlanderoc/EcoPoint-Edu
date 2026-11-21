@@ -45,3 +45,6 @@ Reglas: un commit por responsable según `src/TEAM.md`, y en verde `npm test`, `
   *Verificación:* CA-321, CA-322.
 
 - [x] **B11. Revisión de Antigravity** y PR a `develop`. *Ajuste:* Antigravity la **aprobó** el 19 nov 2026 sin bloqueantes (572 pruebas del backend y 163 del frontend en verde; `tsc -b`, lint y build en verde). El PR lo abre el equipo.
+
+- [x] **B12. Ajustes tras repasar el código.** Un estudio en ejecución sin cuadrilla puede recibirla; la API devuelve el nombre de la cuadrilla; Nuevo estudio avisa si solo cambió institución o cuadrilla. *(Estefanía y Carlos)*
+  *Verificación:* CA-083, CA-322, CA-323. Pendiente la revisión de Antigravity.

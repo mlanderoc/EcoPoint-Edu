@@ -76,7 +76,7 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 ### 5.4 Configuración del estudio (solo docente)
 
 - **R-330** (Debe). Crear un estudio: institución (se **elige de una lista con las instituciones activas**; por defecto, la del docente; al cambiarla se cargan las fuentes de esa institución, D14), fecha del día 1 y fechas de los días 2 a 8. El sistema propone los siguientes 7 días hábiles y el docente puede cambiarlos. **Día hábil** = de lunes a viernes y que no sea festivo en Colombia (incluidos los festivos que se trasladan al lunes y los de Semana Santa). Al cambiar **cualquier** día, todos los días posteriores se recalculan como los días hábiles siguientes, aunque se hubieran cambiado a mano (D13).
-- **R-331** (Debe). Elegir qué fuentes participan (por defecto, todas las activas) y **la cuadrilla del estudio**, obligatoria. En el detalle de un estudio PLANIFICADO se puede cambiar la cuadrilla (RN-088, D14).
+- **R-331** (Debe). Elegir qué fuentes participan (por defecto, todas las activas) y **la cuadrilla del estudio**, obligatoria. En el detalle de un estudio PLANIFICADO se puede cambiar la cuadrilla, y en uno EN_EJECUCION sin cuadrilla se puede asignar. Siempre se muestra el nombre real de la cuadrilla, aunque sea de otra institución (RN-088, D14).
 - **R-332** (Debe). Ver el estado del estudio y los botones para avanzarlo (RN-014), con una confirmación antes de cada cambio. Si un cambio no es posible, se explica por qué (ej. "Quedan 4 registros pendientes de verificación").
 - **R-333** (Debe). El día 1 se muestra con la etiqueta "Día de descarte: no entra en los cálculos".
 - **R-334** (Debe). En el detalle de un estudio PLANIFICADO se pueden **editar las fechas** con la misma regla de R-330 (D13).
@@ -127,6 +127,7 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **CA-319.** Dadas dos instituciones activas, cuando el docente crea un estudio y elige la segunda, entonces se listan las fuentes de la segunda, el estudio queda en ella y aparece en la lista al filtrar por esa institución, no al filtrar por la primera (R-330, R-337).
 - **CA-321.** Dados dos estudios en ejecución, uno de la cuadrilla del estudiante y otro no, cuando el estudiante entra a Registro en campo, entonces solo ve el de su cuadrilla; el docente ve los dos y puede elegir cualquiera (R-340).
 - **CA-322.** Dado un estudio nuevo, cuando se intenta crear sin cuadrilla, entonces no se guarda y se pide elegirla; al abrir un turno, se muestra la cuadrilla del estudio sin poder cambiarla (R-331, R-341).
+- **CA-323.** Dado Nuevo estudio, cuando solo se cambió la institución o la cuadrilla y se pulsa Atrás, entonces se avisa que hay cambios sin guardar (R-308).
 - **CA-320.** Dado el filtro de Instituciones, Fuentes o Subcategorías, cuando se mira, entonces solo tiene los botones Activos, Inactivos y Todos, sin ícono de ojo (R-325).
 
 ## 7. Fuera de alcance

@@ -104,6 +104,14 @@ public class JdbcStudyRepository implements StudyRepository {
     }
 
     @Override
+    public void assignCrewToShiftsWithoutCrew(Long studyId, Long crewId) {
+        DataAccessTranslator.execute("asignar la cuadrilla a los turnos del estudio " + studyId,
+                () -> jdbc.update("UPDATE TURNO SET id_cuadrilla = :cuadrilla "
+                                + "WHERE id_estudio = :estudio AND id_cuadrilla IS NULL",
+                        new MapSqlParameterSource("cuadrilla", crewId).addValue("estudio", studyId)));
+    }
+
+    @Override
     public void updateStatus(Long studyId, StudyStatus status) {
         DataAccessTranslator.execute("cambiar el estado del estudio " + studyId,
                 () -> jdbc.update("UPDATE ESTUDIO SET estado = CAST(:estado AS estado_estudio) WHERE id = :id",
