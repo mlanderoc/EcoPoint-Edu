@@ -173,6 +173,17 @@ class CharacterizationStudyTest {
     }
 
     @Test
+    void ca083_runningStudyWithoutCrewReceivesItOnlyOnce() {
+        CharacterizationStudy study = scheduledStudy(1L, 2, 3, 4, 5, 6, 9, 10, 11);
+        study.changeStatus(StudyStatus.EN_EJECUCION);
+
+        study.assignCrew(5L);
+
+        assertEquals(5L, study.getCrewId());
+        assertThrows(BusinessRuleException.class, () -> study.assignCrew(6L));
+    }
+
+    @Test
     void ca017_onlyPlannedStudyCanBeDeleted() {
         CharacterizationStudy planned = scheduledStudy(1L, 2, 3, 4, 5, 6, 9, 10, 11);
         CharacterizationStudy executing = scheduledStudy(2L, 2, 3, 4, 5, 6, 9, 10, 11);

@@ -251,17 +251,19 @@ public class CharacterizationStudy {
 
     /**
      * Assigns the crew that works the shifts of the study. It can only change
-     * while the study is planned (RN-088).
+     * while the study is planned; a study in execution left without a crew may
+     * receive one once (RN-088).
      *
      * @param crewId crew id
      * @throws InvalidDataException  if the crew is missing
-     * @throws BusinessRuleException if the study is no longer planned
+     * @throws BusinessRuleException if the crew can no longer change
      */
     public void assignCrew(Long crewId) {
         if (crewId == null) {
             throw new InvalidDataException("cuadrilla", "Debe elegir la cuadrilla del estudio.");
         }
-        if (status != StudyStatus.PLANIFICADO) {
+        boolean missingWhileRunning = status == StudyStatus.EN_EJECUCION && this.crewId == null;
+        if (status != StudyStatus.PLANIFICADO && !missingWhileRunning) {
             throw new BusinessRuleException("La cuadrilla solo se cambia mientras el estudio está planificado. "
                     + "Este estudio está " + status.getDisplayName().toLowerCase() + ".");
         }

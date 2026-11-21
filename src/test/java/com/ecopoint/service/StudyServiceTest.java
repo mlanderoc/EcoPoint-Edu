@@ -108,8 +108,9 @@ class StudyServiceTest {
     void ca083_crewOfAPlannedStudyIsChangedButNotOfARunningOne() {
         stored(StudyStatus.PLANIFICADO);
         assertEquals(4L, service.changeCrew(teacher, 7L, 4L).getCrewId());
+        verify(studies).assignCrewToShiftsWithoutCrew(7L, 4L);
 
-        stored(StudyStatus.EN_EJECUCION);
+        when(studies.findById(7L)).thenReturn(Optional.of(running(7L, CREW)));
         assertThrows(BusinessRuleException.class, () -> service.changeCrew(teacher, 7L, 4L));
         assertThrows(AccessDeniedException.class, () -> service.changeCrew(student, 7L, 4L));
     }

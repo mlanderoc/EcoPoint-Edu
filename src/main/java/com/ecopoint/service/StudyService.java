@@ -4,6 +4,7 @@ import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.StudyStatus;
@@ -109,6 +110,17 @@ public class StudyService {
     }
 
     /**
+     * Returns the name of the crew of a study, whatever its institution.
+     *
+     * @param study the study
+     * @return crew name, or null if it has none
+     */
+    public String crewName(CharacterizationStudy study) {
+        return study.getCrewId() == null ? null
+                : crews.findById(study.getCrewId()).map(Crew::getName).orElse(null);
+    }
+
+    /**
      * Counts the records of a study still pending verification.
      *
      * @param studyId study id
@@ -167,7 +179,8 @@ public class StudyService {
     }
 
     /**
-     * Changes the crew of a planned study (RN-088).
+     * Changes the crew of a planned study, or gives one to a study in execution
+     * left without it, together with its shifts without crew (RN-088).
      *
      * @param actor  teacher that acts
      * @param id     study id
@@ -180,7 +193,9 @@ public class StudyService {
         CharacterizationStudy study = get(id);
         study.assignCrew(crewId);
         requireCrewExists(crewId);
-        return studies.save(study);
+        CharacterizationStudy saved = studies.save(study);
+        studies.assignCrewToShiftsWithoutCrew(id, crewId);
+        return saved;
     }
 
     /**
