@@ -60,6 +60,41 @@ describe('Estudio en Registro en campo (R-340, CA-321)', () => {
 })
 
 describe('Cuadrilla del estudio (R-331, CA-322)', () => {
+  it('ca083_runningStudyWithoutCrewCanReceiveOne', async () => {
+    resetMockState('DOCENTE')
+    addMockStudy({ ...mockStudy, id: 31, crewId: null, crewName: null })
+    const user = userEvent.setup()
+    renderAt('/estudios/31')
+
+    await screen.findByRole('option', { name: 'Cuadrilla Tarde B' })
+    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '2')
+
+    expect(await screen.findByText('Cuadrilla guardada.')).toBeInTheDocument()
+    expect(await screen.findByText('Cuadrilla Tarde B')).toBeInTheDocument()
+    expect(screen.queryByLabelText('Cuadrilla del estudio')).toBeNull()
+  })
+
+  it('ca322_crewOfAnotherInstitutionShowsItsRealName', async () => {
+    resetMockState('DOCENTE')
+    addMockStudy({ ...mockStudy, id: 32, crewId: 99, crewName: 'Cuadrilla Sabanas' })
+    renderAt('/estudios/32')
+
+    expect(await screen.findByText('Cuadrilla Sabanas')).toBeInTheDocument()
+    expect(screen.queryByText('Sin cuadrilla asignada')).toBeNull()
+  })
+
+  it('ca323_leavingAfterOnlyChoosingACrewWarns', async () => {
+    resetMockState('DOCENTE')
+    const user = userEvent.setup()
+    renderAt('/estudios/nuevo')
+
+    await screen.findByRole('option', { name: 'Cuadrilla Tarde B' })
+    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '1')
+    await user.click(screen.getByRole('button', { name: /Atrás a los estudios/ }))
+
+    expect(await screen.findByRole('dialog')).toBeInTheDocument()
+  })
+
   it('ca322_studyNeedsACrewThatCanBeChangedWhilePlanned', async () => {
     resetMockState('DOCENTE')
     const user = userEvent.setup()

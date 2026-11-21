@@ -168,11 +168,12 @@ export function StudyDetailPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3">
           {crewSaved && <AlertBanner variant="success" message="Cuadrilla guardada." onDismiss={() => setCrewSaved(false)} />}
-          {study.status === 'PLANIFICADO' ? (
-            <CrewSelect crews={crews} value={study.crewId} onChange={handleChangeCrew} disabled={isSaving} />
+          {study.status === 'PLANIFICADO' || (study.status === 'EN_EJECUCION' && study.crewId === null) ? (
+            <CrewSelect crews={crews} value={study.crewId} currentName={study.crewName}
+              onChange={handleChangeCrew} disabled={isSaving} />
           ) : (
             <p className="text-sm" data-testid="study-crew">
-              {crews.find((crew) => crew.id === study.crewId)?.name ?? 'Sin cuadrilla asignada'}
+              {study.crewName ?? 'Sin cuadrilla asignada'}
             </p>
           )}
         </CardContent>

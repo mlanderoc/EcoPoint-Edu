@@ -27,20 +27,24 @@ export function useCrews(): { crews: Crew[]; error: string | null } {
 export interface CrewSelectProps {
   crews: Crew[]
   value: number | null
+  /** Name of the current crew, shown even if it is not among the teacher's crews. */
+  currentName?: string | null
   onChange: (id: number) => void
   disabled?: boolean
 }
 
-export function CrewSelect({ crews, value, onChange, disabled }: CrewSelectProps) {
+export function CrewSelect({ crews, value, currentName, onChange, disabled }: CrewSelectProps) {
+  const isForeign = value !== null && !crews.some((crew) => crew.id === value)
   return (
     <Select
       id="study-crew"
       label="Cuadrilla del estudio"
       value={value ?? ''}
-      disabled={disabled || crews.length === 0}
+      disabled={disabled || (crews.length === 0 && !isForeign)}
       onChange={(event) => onChange(Number(event.target.value))}
     >
       {value === null && <option value="">Elija una cuadrilla</option>}
+      {isForeign && <option value={value}>{currentName ?? 'Cuadrilla asignada'}</option>}
       {crews.map((crew) => (
         <option key={crew.id} value={crew.id}>{crew.name}</option>
       ))}

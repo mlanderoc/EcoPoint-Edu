@@ -13,13 +13,12 @@ import { PlayCircle, ArrowRight, Clock } from 'lucide-react'
 import { AlertBanner, Button, Card, CardContent, Modal, Select } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
-import { adminService } from '@/features/admin/services/adminService'
 import { useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { studyService } from '@/features/study/services/studyService'
 import { formatDate } from '@/features/study/utils/samplingDays'
 import { studyTitle } from '@/features/study/utils/studyStatus'
 import { ApiError } from '@/services/apiClient'
-import { CharacterizationStudy, Crew, ShiftSlot, ShiftType } from '@/types'
+import { CharacterizationStudy, ShiftSlot, ShiftType } from '@/types'
 import { fieldService } from '../services/fieldService'
 import { suggestSlot } from '../utils/fieldMath'
 
@@ -47,7 +46,6 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   const [slots, setSlots] = useState<ShiftSlot[]>([])
   const [dayNumber, setDayNumber] = useState(1)
   const [type, setType] = useState<ShiftType>('MANANA')
-  const [crews, setCrews] = useState<Crew[]>([])
   const [isOpening, setIsOpening] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -83,13 +81,6 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
     setParams(updated, { replace: true })
   }
   const institutionName = (id: number) => institutions.find((item) => item.id === id)?.name
-  const crewName = crews.find((crew) => crew.id === study?.crewId)?.name
-
-  useEffect(() => {
-    if (canOpen) {
-      adminService.getCrews().then(setCrews).catch(() => setCrews([]))
-    }
-  }, [canOpen])
 
   const slot = useMemo(
     () => slots.find((item) => item.dayNumber === dayNumber && item.type === type),
@@ -209,7 +200,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
         <div className="flex flex-col gap-4 mt-2">
           <p className="text-sm">
             <span className="font-bold">Cuadrilla: </span>
-            {crewName ?? 'Sin cuadrilla asignada'}
+            {study?.crewName ?? 'Sin cuadrilla asignada'}
             <span className="block text-xs text-[var(--color-text-muted)]">Es la cuadrilla del estudio.</span>
           </p>
           <div className="flex justify-end gap-3">

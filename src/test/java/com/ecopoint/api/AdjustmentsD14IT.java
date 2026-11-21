@@ -76,6 +76,23 @@ class AdjustmentsD14IT extends PostgresIntegrationTest {
     }
 
     @Test
+    void ca083_runningStudyWithoutCrewReceivesItWithItsShifts() throws Exception {
+        ApiClient teacher = ApiClient.loggedIn(mvc, TEACHER, PASSWORD);
+        Long crew = jdbc.queryForObject("SELECT id FROM CUADRILLA LIMIT 1", Long.class);
+        String name = jdbc.queryForObject("SELECT nombre FROM CUADRILLA WHERE id = ?", String.class, crew);
+        jdbc.update("UPDATE ESTUDIO SET id_cuadrilla = NULL WHERE id = ?", running);
+        jdbc.update("UPDATE TURNO SET id_cuadrilla = NULL WHERE id_estudio = ?", running);
+
+        teacher.json(put("/api/v1/studies/" + running + "/crew"), "{\"crewId\":" + crew + "}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.crewId").value(crew))
+                .andExpect(jsonPath("$.crewName").value(name));
+
+        org.junit.jupiter.api.Assertions.assertEquals(0, jdbc.queryForObject(
+                "SELECT COUNT(*) FROM TURNO WHERE id_estudio = ? AND id_cuadrilla IS NULL", Integer.class, running));
+    }
+
+    @Test
     void ca083_crewChangesOnlyWhilePlanned() throws Exception {
         ApiClient teacher = ApiClient.loggedIn(mvc, TEACHER, PASSWORD);
         Long other = jdbc.queryForObject("INSERT INTO CUADRILLA (nombre, id_responsable) "

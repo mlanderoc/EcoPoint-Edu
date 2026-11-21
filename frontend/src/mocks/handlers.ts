@@ -423,10 +423,11 @@ export const handlers = [
     if (denied) return denied
     const study = studiesState.find((item) => item.id === Number(params.id))
     if (!study) return notFound(path, 'Estudio')
-    if (study.status !== 'PLANIFICADO') {
+    if (study.status !== 'PLANIFICADO' && !(study.status === 'EN_EJECUCION' && study.crewId === null)) {
       return apiError(422, 'ERR_BUSINESS_RULE', 'La cuadrilla solo se cambia mientras el estudio está planificado.', path)
     }
     study.crewId = ((await request.json()) as { crewId: number }).crewId
+    study.crewName = crewsState.find((crew) => crew.id === study.crewId)?.name ?? null
     return HttpResponse.json(study)
   }),
 
@@ -450,6 +451,7 @@ export const handlers = [
       id: newId(),
       institutionId: body.institutionId ?? 1,
       crewId: body.crewId ?? null,
+      crewName: crewsState.find((crew) => crew.id === body.crewId)?.name ?? null,
       status: 'PLANIFICADO',
       startDate: days[0].date,
       endDate: days[7].date,

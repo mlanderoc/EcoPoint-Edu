@@ -101,6 +101,7 @@ export const mockStudy: CharacterizationStudy = {
   id: 2,
   institutionId: 1,
   crewId: 1,
+  crewName: 'Cuadrilla Mañana A',
   status: 'EN_EJECUCION',
   startDate: '2026-03-02',
   endDate: '2026-03-11',

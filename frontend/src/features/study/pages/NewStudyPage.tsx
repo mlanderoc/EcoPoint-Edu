@@ -38,7 +38,9 @@ export function NewStudyPage() {
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && dates.some((date) => date !== ''))
+  const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && (
+    dates.some((date) => date !== '') || crewId !== null || chosenInstitution !== (user?.institutionId ?? null)
+  ))
 
   useEffect(() => {
     setSources([])

@@ -231,7 +231,7 @@ public class StudyController implements FieldNameMapping {
     }
 
     private StudyResponse toResponse(CharacterizationStudy study) {
-        return StudyResponse.from(study, studies.participatingSources(study.getId()),
+        return StudyResponse.from(study, studies.crewName(study), studies.participatingSources(study.getId()),
                 studies.pendingRecords(study.getId()));
     }
 }
