@@ -108,6 +108,10 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **R-356** (Debe). Inicio muestra el estudio en ejecución como un recorrido de 16 turnos, las fuentes del turno elegido, la composición y lo que está por atender (D15).
 - **R-357** (Debe). El turno muestra sus cuatro pasos. Al elegir una fuente en Registrar bolsa, la pantalla pasa sola al formulario de pesaje (D15).
 - **R-358** (Debe). En la lista de estudios, un estudio cerrado no muestra el botón Abrir (D15).
+- **R-359** (Debe). La lista de estudios se filtra por estado: planificados, en ejecución, en depuración, cerrados y cancelados (D15).
+- **R-360** (Debe). Activar y desactivar se hace con un interruptor animado; las tablas de fuentes y usuarios no llevan columna Estado (D15).
+- **R-361** (Debe). El detalle del estudio muestra los integrantes de su cuadrilla, y las cuadrillas se pueden editar respetando RN-090 (D15).
+- **R-362** (Debe). Registro en campo, Verificación, Indicadores, Alertas, Mi perfil y Administración siguen la distribución del diseño aprobado (D15).
 
 ## 6. Criterios de aceptación
 
@@ -138,6 +142,7 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **CA-325.** Dado un estudio en ejecución, cuando se entra a Inicio, entonces se ven sus 16 turnos y lo que está por atender (R-356).
 - **CA-326.** Dada la lista de estudios, entonces un estudio cerrado no tiene botón Abrir y uno en ejecución sí (R-358).
 - **CA-327.** Dado un estudiante en el menú Más, entonces ve Alertas y no ve Administración (R-355).
+- **CA-328.** Dada la lista de estudios, cuando se elige un estado, entonces solo se ven los estudios de ese estado (R-359).
 - **CA-320.** Dado el filtro de Instituciones, Fuentes o Subcategorías, cuando se mira, entonces solo tiene los botones Activos, Inactivos y Todos, sin ícono de ojo (R-325).
 
 ## 7. Fuera de alcance

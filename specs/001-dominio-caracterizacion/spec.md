@@ -172,6 +172,7 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 - **RN-088** (Debe). Todo estudio tiene **una cuadrilla**, que se elige al crearlo. Solo se cambia mientras el estudio está PLANIFICADO. Un estudio EN_EJECUCION que quedó sin cuadrilla puede recibirla una vez, y sus turnos sin cuadrilla pasan a ser de ella. Los turnos del estudio los trabaja esa cuadrilla (D14).
 - **RN-089** (Debe). Un ESTUDIANTE_UNIVERSITARIO solo registra población, bolsas, marcas de "sin generación", cuarteos y densidades en los estudios cuya cuadrilla integra. Un DOCENTE registra en cualquier estudio (D14).
+- **RN-090** (Debe, propuesta D15). Solo se agrega a una cuadrilla un estudiante **libre**: que no integre otra cuadrilla con un estudio PLANIFICADO, EN_EJECUCION o EN_DEPURACION. Los integrantes que ya están en la cuadrilla se conservan al editarla.
 
 - **RN-090** (Debería). Se pueden adjuntar evidencias (foto de la balanza, de la bolsa o de la planilla en papel) a una bolsa, un cuarteo o un turno. Formatos JPG o PNG, máximo 5 MB cada una.
 
@@ -247,6 +248,7 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 
 - **CA-083.** Dado un estudio PLANIFICADO con la Cuadrilla 1, cuando el docente la cambia por la Cuadrilla 2, entonces se acepta; dado un estudio EN_EJECUCION con cuadrilla, se rechaza; dado uno EN_EJECUCION sin cuadrilla, se acepta una vez (RN-088).
 - **CA-084.** Dado un estudiante que no integra la cuadrilla de un estudio en ejecución, cuando intenta registrar una bolsa en uno de sus turnos, entonces se rechaza por permisos; un integrante de esa cuadrilla sí la registra (RN-089).
+- **CA-085.** Dado un estudiante en otra cuadrilla con un estudio abierto, cuando se intenta agregar a una cuadrilla, entonces se rechaza indicando su estudio; un integrante actual se conserva al editar (RN-090).
 - **CA-090.** Todo rechazo de las reglas anteriores lanza una excepción de la jerarquía `EcoPointException` con un mensaje en español que explica qué falló: dato con formato o rango inválido → `InvalidDataException`; regla de negocio violada → `BusinessRuleException`; registro inexistente → `ResourceNotFoundException`.
 
 ## 6. Fuera de alcance
