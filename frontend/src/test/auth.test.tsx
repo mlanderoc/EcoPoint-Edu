@@ -8,6 +8,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, waitFor, act } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { http } from 'msw'
+import { MemoryRouter } from 'react-router-dom'
 import { server } from '@/mocks/server'
 import { resetMockState, setActiveUser } from '@/mocks/handlers'
 import { mockUsers } from '@/mocks/data/seedData'
@@ -164,15 +165,18 @@ describe('Authentication & Session Handling (T309, R-310, R-312)', () => {
 
   it('renders LoginPage with institutional branding and touch ergonomics', () => {
     render(
-      <AuthProvider skipInitialFetch>
-        <LoginPage />
-      </AuthProvider>
+      <MemoryRouter>
+        <AuthProvider skipInitialFetch>
+          <LoginPage />
+        </AuthProvider>
+      </MemoryRouter>
     )
 
     expect(screen.getByText('EcoPoint Edu')).toBeInTheDocument()
     expect(
-      screen.getByText('Caracterización Participativa de Residuos Sólidos')
+      screen.getByText('Caracterización participativa de residuos sólidos')
     ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Volver al inicio/ })).toHaveAttribute('href', '/')
     expect(screen.getByRole('button', { name: /Iniciar Sesión/i })).toHaveClass('min-h-[48px]')
   })
 })
