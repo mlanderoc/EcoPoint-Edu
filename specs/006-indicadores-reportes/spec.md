@@ -70,13 +70,13 @@ Notación: *d* = día (2 a 8, n = 7); *t* = turno (M o T); *f* = fuente.
 
 ## 6. Tablero de línea base
 
-- **R-520** (Debe). Selector de estudio. Etiqueta visible "Preliminar" u "Oficial" (R-502).
+- **R-520** (Debe). Selector de estudio, siempre visible y con los estudios de las instituciones que el usuario puede ver (D15). Etiqueta visible "Preliminar" u "Oficial" (R-502).
 - **R-521** (Debe). Tarjetas con los 6 indicadores principales del póster: generación diaria promedio (kg/día), PPC promedio (kg/persona/día), densidad promedio (kg/m³), fracción aprovechable (%), composición física (enlace al detalle) y CV de la PPC (%).
 - **R-522** (Debe). Gráfico de generación por día (días 1 a 8), con el día 1 atenuado y la leyenda "Día de descarte".
 - **R-523** (Debe). Gráfico de composición por los 4 grupos, con sus colores y nombres, y tabla de detalle por subcategoría.
 - **R-524** (Debe). Gráfico de generación por fuente (kg/día promedio), de mayor a menor.
-- **R-525** (Debe). Comparación mañana frente a tarde: generación, población y PPC por turno.
-- **R-526** (Debería). Indicador de calidad del dato: % verificado, número de correcciones y cuarteos no conformes.
+- **R-525** (Debe). Comparación mañana frente a tarde: generación, población y PPC por turno, indicando qué jornada genera más y cuánto (D15).
+- **R-526** (Retirado en D15). El panel de calidad del dato se reemplaza por la comparación de jornadas de R-525. El porcentaje verificado sigue en la etiqueta Preliminar u Oficial.
 - **R-527** (Debería). Las gráficas se leen bien en el celular.
 
 ## 7. Reportes

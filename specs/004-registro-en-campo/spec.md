@@ -102,6 +102,12 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **R-350** (Debe). Muestra nombre, apellido, correo, rol, institución y cuadrillas del usuario (D13).
 - **R-351** (Debe). Muestra **sus propios** totales de registros: poblaciones, bolsas, cuarteos y densidades digitados, verificaciones hechas y correcciones que recibieron sus datos. Un estudiante no ve los totales de otros; el docente los ve en la tabla de Usuarios (R-322) (D13).
 - **R-352** (Debe). Permite **cambiar la contraseña**, pidiendo la actual, la nueva y su confirmación (D13).
+- **R-353** (Debe). La ruta `/` es una página pública de bienvenida con acceso a Iniciar sesión; quien ya tiene sesión pasa a Inicio (D15).
+- **R-354** (Debe). El inicio de sesión muestra la foto de la UPC bajo un velo verde y a Eco saludando, sin frases ni cambios de expresión (D15).
+- **R-355** (Debe). El menú, el encabezado de cada módulo y la barra del celular siguen el diseño aprobado. En el celular, "Más" reúne Alertas, Mi perfil y, para el docente, Administración (D15).
+- **R-356** (Debe). Inicio muestra el estudio en ejecución como un recorrido de 16 turnos, las fuentes del turno elegido, la composición y lo que está por atender (D15).
+- **R-357** (Debe). El turno muestra sus cuatro pasos. Al elegir una fuente en Registrar bolsa, la pantalla pasa sola al formulario de pesaje (D15).
+- **R-358** (Debe). En la lista de estudios, un estudio cerrado no muestra el botón Abrir (D15).
 
 ## 6. Criterios de aceptación
 
@@ -128,6 +134,10 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **CA-321.** Dados dos estudios en ejecución, uno de la cuadrilla del estudiante y otro no, cuando el estudiante entra a Registro en campo, entonces solo ve el de su cuadrilla; el docente ve los dos y puede elegir cualquiera (R-340).
 - **CA-322.** Dado un estudio nuevo, cuando se intenta crear sin cuadrilla, entonces no se guarda y se pide elegirla; al abrir un turno, se muestra la cuadrilla del estudio sin poder cambiarla (R-331, R-341).
 - **CA-323.** Dado Nuevo estudio, cuando solo se cambió la institución o la cuadrilla y se pulsa Atrás, entonces se avisa que hay cambios sin guardar (R-308).
+- **CA-324.** Dada la ruta `/` sin sesión, entonces se ve la bienvenida y su enlace lleva al inicio de sesión (R-353).
+- **CA-325.** Dado un estudio en ejecución, cuando se entra a Inicio, entonces se ven sus 16 turnos y lo que está por atender (R-356).
+- **CA-326.** Dada la lista de estudios, entonces un estudio cerrado no tiene botón Abrir y uno en ejecución sí (R-358).
+- **CA-327.** Dado un estudiante en el menú Más, entonces ve Alertas y no ve Administración (R-355).
 - **CA-320.** Dado el filtro de Instituciones, Fuentes o Subcategorías, cuando se mira, entonces solo tiene los botones Activos, Inactivos y Todos, sin ícono de ojo (R-325).
 
 ## 7. Fuera de alcance
