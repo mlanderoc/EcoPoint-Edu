@@ -52,6 +52,33 @@ class StudyRepositoryIT extends PostgresIntegrationTest {
     }
 
     @Test
+    void ca085_onlyMembersOfOtherCrewsWithOpenStudiesAreBusy() {
+        User teacher = users.save(new User(null, "Oriana", "Jurado", "oriana@unicesar.edu.co", UserRole.DOCENTE, institutionId));
+        User busy = users.save(new User(null, "Ana", "Ruiz", "ana@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, institutionId));
+        User free = users.save(new User(null, "Luis", "Mora", "luis@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, institutionId));
+        Crew withStudy = new Crew(null, "Cuadrilla 1", teacher);
+        withStudy.addMember(busy);
+        crews.save(withStudy);
+        Crew withClosedStudy = new Crew(null, "Cuadrilla 2", teacher);
+        withClosedStudy.addMember(free);
+        crews.save(withClosedStudy);
+        CharacterizationStudy open = new CharacterizationStudy(null, institutionId);
+        open.scheduleDates(march(2, 3, 4, 5, 6, 9, 10, 11));
+        open.assignCrew(withStudy.getId());
+        repository.save(open);
+        CharacterizationStudy closed = new CharacterizationStudy(null, institutionId);
+        closed.scheduleDates(march(16, 17, 18, 19, 20, 24, 25, 26));
+        closed.assignCrew(withClosedStudy.getId());
+        closed.changeStatus(StudyStatus.EN_EJECUCION);
+        closed.changeStatus(StudyStatus.EN_DEPURACION);
+        closed.changeStatus(StudyStatus.CERRADO);
+        repository.save(closed);
+
+        assertEquals(java.util.Map.of(busy.getId(), open.getId()), repository.findMembersInOpenStudies(null));
+        assertTrue(repository.findMembersInOpenStudies(withStudy.getId()).isEmpty());
+    }
+
+    @Test
     void ca110_newStudyIsSavedWithItsEightDays() {
         CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
         study.scheduleDates(march(2, 3, 4, 5, 6, 9, 10, 11));

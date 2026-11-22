@@ -4,6 +4,7 @@ import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.StudyStatus;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -49,6 +50,15 @@ public interface StudyRepository {
      * @return studies
      */
     List<CharacterizationStudy> findByStatus(StudyStatus status);
+
+    /**
+     * Finds the users that belong to a crew with a study not yet finished:
+     * planned, running or being cleaned (RN-090).
+     *
+     * @param excludedCrewId crew left out of the search; null to look at all
+     * @return id of each busy user with the id of his study
+     */
+    Map<Long, Long> findMembersInOpenStudies(Long excludedCrewId);
 
     /**
      * Gives a crew to the shifts of the study that have none (RN-088).
