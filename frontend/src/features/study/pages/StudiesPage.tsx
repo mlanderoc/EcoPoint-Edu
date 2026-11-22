@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 import { AlertBanner, Button } from '@/components/ui'
 import { CharacterizationStudy, ShiftSlot, StudyStatus } from '@/types'
@@ -22,6 +22,15 @@ const STATUS_TONE: Record<StudyStatus, string> = {
   CERRADO: 'pill dark',
   CANCELADO: 'pill grey',
 }
+
+const STATUS_FILTERS: Array<{ value: StudyStatus | ''; label: string }> = [
+  { value: '', label: 'Todos' },
+  { value: 'PLANIFICADO', label: 'Planificados' },
+  { value: 'EN_EJECUCION', label: 'En ejecución' },
+  { value: 'EN_DEPURACION', label: 'En depuración' },
+  { value: 'CERRADO', label: 'Cerrados' },
+  { value: 'CANCELADO', label: 'Cancelados' },
+]
 
 function MiniTrail({ slots, running }: { slots: ShiftSlot[]; running: boolean }) {
   const closed = slots.filter((slot) => slot.status === 'CERRADO').length
@@ -44,6 +53,15 @@ export function StudiesPage() {
   const [error, setError] = useState<string | null>(null)
   const [institutionId, setInstitutionId] = useInstitutionParam()
   const { institutions } = useInstitutions(false)
+  const [params, setParams] = useSearchParams()
+  const statusFilter = (params.get('estadoEstudio') ?? '') as StudyStatus | ''
+  const visible = statusFilter ? studies.filter((study) => study.status === statusFilter) : studies
+  const chooseStatus = (value: StudyStatus | '') => {
+    const updated = new URLSearchParams(params)
+    if (value) updated.set('estadoEstudio', value)
+    else updated.delete('estadoEstudio')
+    setParams(updated, { replace: true })
+  }
   const institutionName = (id: number) => institutions.find((item) => item.id === id)?.name
 
   useEffect(() => {
@@ -84,14 +102,30 @@ export function StudiesPage() {
         />
       </div>
 
+      <div className="segmented self-start max-w-full overflow-x-auto" role="group" aria-label="Filtrar por estado del estudio">
+        {STATUS_FILTERS.map((option) => {
+          const count = option.value ? studies.filter((study) => study.status === option.value).length : studies.length
+          return (
+            <button key={option.value} type="button" className="whitespace-nowrap" aria-pressed={statusFilter === option.value}
+              onClick={() => chooseStatus(option.value)}>
+              {option.label} ({count})
+            </button>
+          )
+        })}
+      </div>
+
       {error && <AlertBanner variant="danger" message={error} />}
       {isLoading && <p className="text-sm text-[var(--color-text-muted)]">Cargando estudios...</p>}
       {!isLoading && studies.length === 0 && !error && (
         <p className="text-sm text-[var(--color-text-muted)]">Esta institución todavía no tiene estudios.</p>
       )}
 
+      {!isLoading && studies.length > 0 && visible.length === 0 && (
+        <p className="text-sm text-[var(--color-text-muted)]">No hay estudios con este estado.</p>
+      )}
+
       <div className="study-grid">
-        {studies.map((study) => {
+        {visible.map((study) => {
           const slots = shiftsByStudy[study.id] ?? []
           const closedShifts = slots.filter((slot) => slot.status === 'CERRADO').length
           return (

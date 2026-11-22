@@ -10,8 +10,9 @@ import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Ban, CalendarDays, Trash2 } from 'lucide-react'
 import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input, Modal } from '@/components/ui'
+import { adminService } from '@/features/admin/services/adminService'
 import { ApiError } from '@/services/apiClient'
-import { CharacterizationStudy, ShiftSlot } from '@/types'
+import { CharacterizationStudy, ShiftSlot, User } from '@/types'
 import { cn } from '@/utils/cn'
 import { StudyDatesEditor } from '../components/StudyDatesEditor'
 import { CrewSelect, useCrews } from '../components/CrewSelect'
@@ -52,6 +53,7 @@ export function StudyDetailPage() {
   const [datesSaved, setDatesSaved] = useState(false)
   const { crews } = useCrews()
   const [crewSaved, setCrewSaved] = useState(false)
+  const [users, setUsers] = useState<User[]>([])
 
   const load = useCallback(async () => {
     try {
@@ -67,6 +69,10 @@ export function StudyDetailPage() {
     load()
   }, [load])
 
+  useEffect(() => {
+    adminService.getUsers().then(setUsers).catch(() => setUsers([]))
+  }, [])
+
   if (loadError) {
     return <AlertBanner variant="danger" title="Estudio no disponible" message={loadError} />
   }
@@ -75,6 +81,8 @@ export function StudyDetailPage() {
   }
 
   const step = NEXT_STEP[study.status]
+  const studyCrew = crews.find((crew) => crew.id === study.crewId)
+  const crewMembers = users.filter((user) => studyCrew?.memberIds.includes(user.id))
   const editedDates = dates ?? datesOf(study)
   const datesChanged = editedDates.some((date, index) => date !== datesOf(study)[index])
 
@@ -175,6 +183,19 @@ export function StudyDetailPage() {
             <p className="text-sm" data-testid="study-crew">
               {study.crewName ?? 'Sin cuadrilla asignada'}
             </p>
+          )}
+          {studyCrew?.responsibleName && (
+            <p className="m-0 text-sm text-[var(--color-text-muted)]">Responsable: <b>{studyCrew.responsibleName}</b></p>
+          )}
+          {crewMembers.length > 0 && (
+            <div className="members" data-testid="study-crew-members">
+              {crewMembers.map((member) => (
+                <span key={member.id} className="member">
+                  <span className="avatar">{`${member.firstName?.[0] ?? ''}${member.lastName?.[0] ?? ''}`.toUpperCase()}</span>
+                  {member.firstName} {member.lastName}
+                </span>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

@@ -7,14 +7,11 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Tag, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import {
   ActiveFilter,
   AlertBanner,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
   Input,
   Modal,
   Select,
@@ -127,45 +124,27 @@ export function CategoriesPage() {
 
       <ActiveFilter value={filter} onChange={setFilter} inactiveCount={inactiveCount} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid-4">
         {isLoading ? (
-          <div className="col-span-full py-12 flex justify-center text-sm font-medium text-[var(--color-text-muted)]">
-            Cargando subcategorías...
-          </div>
+          <p className="text-sm text-[var(--color-text-muted)]">Cargando subcategorías...</p>
         ) : (
           WASTE_GROUPS.map(({ value: grp }) => {
             const list = visible.filter((category) => category.group === grp)
             return (
-              <Card key={grp} className="border-slate-200">
-                <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between gap-2">
+              <section key={grp} className="cat-col">
+                <div className="flex items-center justify-between gap-2">
                   <WasteGroupBadge group={grp} showDescription size="default" />
-                  <span className="text-xs font-bold text-slate-500">{list.length} subcategorías</span>
-                </CardHeader>
-                <CardContent className="pt-3">
-                  {list.length === 0 ? (
-                    <p className="text-xs text-slate-500 italic py-2">Sin subcategorías con este filtro.</p>
-                  ) : (
-                    <div className="flex flex-col divide-y divide-slate-100">
-                      {list.map((c) => (
-                        <div key={c.id} className={cn('py-2.5 flex items-center justify-between gap-2 text-sm',
-                          !c.active && 'opacity-60')} data-testid={`category-${c.id}`}>
-                          <div className="flex items-center gap-2 min-w-0">
-                            <Tag className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                            <span className="font-semibold text-slate-800 truncate">{c.name}</span>
-                            {!c.active && (
-                              <span className="text-xs font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
-                                Inactiva
-                              </span>
-                            )}
-                          </div>
-                          <StatusToggleButton active={c.active} itemName={c.name} onToggle={() => handleToggle(c)}
-                            disabled={togglingId === c.id} />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+                </div>
+                <small>{list.length} subcategorías</small>
+                {list.length === 0 && <small className="text-[var(--muted)]">Sin subcategorías con este filtro.</small>}
+                {list.map((c) => (
+                  <div key={c.id} className={cn('cat-item', !c.active && 'off')} data-testid={`category-${c.id}`}>
+                    <span className="min-w-0">{c.name}</span>
+                    <StatusToggleButton active={c.active} itemName={c.name} onToggle={() => handleToggle(c)}
+                      disabled={togglingId === c.id} />
+                  </div>
+                ))}
+              </section>
             )
           })
         )}

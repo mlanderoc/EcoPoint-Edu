@@ -39,11 +39,11 @@ describe('Activar, desactivar y filtrar (R-325, CA-312)', () => {
 
     await user.click(screen.getByRole('button', { name: /Inactivos/ }))
     const row = await screen.findByTestId('source-row-CAF')
-    expect(row).toHaveTextContent('Inactivo')
+    expect(within(row).getByRole('switch', { name: 'Activar CAF' })).not.toBeChecked()
 
-    await user.click(within(row).getByRole('button', { name: 'Activar CAF' }))
+    await user.click(within(row).getByRole('switch', { name: 'Activar CAF' }))
     await user.click(screen.getByRole('button', { name: 'Activos' }))
-    expect(await screen.findByTestId('source-row-CAF')).toHaveTextContent('Activo')
+    expect(within(await screen.findByTestId('source-row-CAF')).getByRole('switch', { name: 'Desactivar CAF' })).toBeChecked()
   })
 
   it('r320_institutionIsDeactivatedAndHiddenFromTheDefaultList', async () => {
@@ -51,11 +51,11 @@ describe('Activar, desactivar y filtrar (R-325, CA-312)', () => {
     const user = userEvent.setup()
     renderPage(<InstitutionsPage />)
 
-    await user.click(await screen.findByRole('button', { name: /Desactivar I\.E\. Prudencia Daza/ }))
+    await user.click(await screen.findByRole('switch', { name: /Desactivar I\.E\. Prudencia Daza/ }))
 
     expect(await screen.findByText('No hay instituciones con este filtro.')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: /^Inactivos/ }))
-    expect(await screen.findByText('Inactiva')).toBeInTheDocument()
+    expect(await screen.findByRole('switch', { name: /Activar I\.E\. Prudencia Daza/ })).not.toBeChecked()
   })
 
   it('ca320_filterHasOnlyTheThreeOptionsWithoutEyeIcon', async () => {
@@ -73,13 +73,13 @@ describe('Activar, desactivar y filtrar (R-325, CA-312)', () => {
     const user = userEvent.setup()
     renderPage(<CategoriesPage />)
 
-    const deactivate = await screen.findAllByRole('button', { name: /^Desactivar / })
+    const deactivate = await screen.findAllByRole('switch', { name: /^Desactivar / })
     const name = deactivate[0].getAttribute('aria-label')!.replace('Desactivar ', '')
     await user.click(deactivate[0])
-    await waitFor(() => expect(screen.queryByRole('button', { name: `Desactivar ${name}` })).toBeNull())
+    await waitFor(() => expect(screen.queryByRole('switch', { name: `Desactivar ${name}` })).toBeNull())
 
     await user.click(screen.getByRole('button', { name: 'Todos' }))
-    await user.click(await screen.findByRole('button', { name: `Activar ${name}` }))
-    expect(await screen.findByRole('button', { name: `Desactivar ${name}` })).toBeInTheDocument()
+    await user.click(await screen.findByRole('switch', { name: `Activar ${name}` }))
+    expect(await screen.findByRole('switch', { name: `Desactivar ${name}` })).toBeInTheDocument()
   })
 })

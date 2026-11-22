@@ -114,6 +114,15 @@ export const adminService = {
     return apiClient.post<Crew>('/api/v1/crews', data)
   },
 
+  updateCrew: async (id: number, data: Omit<Crew, 'id'>): Promise<Crew> => {
+    return apiClient.put<Crew>(`/api/v1/crews/${id}`, data)
+  },
+
+  /** Students with another open study, who cannot join the crew (RN-090). */
+  getBusyMembers: async (crewId?: number): Promise<Array<{ userId: number; studyId: number }>> => {
+    return apiClient.get<Array<{ userId: number; studyId: number }>>('/api/v1/crews/busy-members', { params: { crewId } })
+  },
+
   // Waste Categories
   getCategories: async (): Promise<WasteCategory[]> => {
     return apiClient.get<WasteCategory[]>('/api/v1/waste-categories')

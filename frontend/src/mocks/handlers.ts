@@ -345,6 +345,22 @@ export const handlers = [
 
   http.get('/api/v1/crews', () => HttpResponse.json(crewsState)),
 
+  http.get('/api/v1/crews/busy-members', ({ request }) => {
+    const crewId = Number(new URL(request.url).searchParams.get('crewId'))
+    const open = ['PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION']
+    const busy = studiesState.filter((study) => open.includes(study.status) && study.crewId !== crewId)
+      .flatMap((study) => (crewsState.find((crew) => crew.id === study.crewId)?.memberIds ?? [])
+        .map((userId) => ({ userId, studyId: study.id })))
+    return HttpResponse.json(busy)
+  }),
+
+  http.put('/api/v1/crews/:id', async ({ params, request }) => {
+    const body = (await request.json()) as Omit<Crew, 'id'>
+    const id = Number(params.id)
+    crewsState = crewsState.map((crew) => (crew.id === id ? { ...crew, ...body } : crew))
+    return HttpResponse.json(crewsState.find((crew) => crew.id === id))
+  }),
+
   http.post('/api/v1/crews', async ({ request }) => {
     const body = (await request.json()) as Omit<Crew, 'id'>
     const responsible = usersState.find((user) => user.id === body.responsibleId)
