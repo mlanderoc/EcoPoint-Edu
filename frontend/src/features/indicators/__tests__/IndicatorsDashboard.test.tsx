@@ -67,13 +67,14 @@ describe('Baseline dashboard (T506, T507)', () => {
     expect(screen.getByText(/Día de descarte/)).toBeInTheDocument()
   })
 
-  it('r524_r525_r526_sourcesShiftsAndQualityAreShown', async () => {
+  it('r524_r525_sourcesAndShiftComparisonAreShown', async () => {
     resetMockState('DOCENTE')
     renderAs(teacher)
 
     const ranking = await screen.findByTestId('source-ranking')
     expect(within(ranking).getAllByRole('listitem')[0]).toHaveTextContent('AU · Aulas')
     expect(screen.getByTestId('shift-comparison')).toHaveTextContent('Mañana')
-    expect(screen.getByTestId('data-quality')).toHaveTextContent('Cuarteos no conformes')
+    expect(screen.getByTestId('shift-verdict')).toHaveTextContent('¿Qué jornada genera más?')
+    expect(screen.queryByTestId('data-quality')).toBeNull()
   })
 })
