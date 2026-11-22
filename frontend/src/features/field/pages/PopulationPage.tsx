@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Input } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
 import { SamplingShift } from '@/types'
@@ -55,35 +55,46 @@ export function PopulationPage() {
   }
 
   const field = (fieldId: string, label: string, value: string, onChange: (text: string) => void) => (
-    <Input id={fieldId} label={label} type="number" inputMode="numeric" min={0} step={1} value={value}
-      onChange={(event) => onChange(event.target.value)} disabled={isSaving} className="min-h-[56px] text-xl" />
+    <div className="counter">
+      <Input id={fieldId} label={label} type="number" inputMode="numeric" min={0} step={1} value={value}
+        onChange={(event) => onChange(event.target.value)} disabled={isSaving}
+        className="min-h-[56px] text-center text-2xl font-black" />
+      <div>
+        <Button type="button" variant="outline" size="sm" className="min-h-[48px] min-w-[48px]" aria-label={`Restar ${label}`} disabled={isSaving}
+          onClick={() => onChange(String(Math.max(0, count(value) - 1)))}>−</Button>
+        <Button type="button" variant="outline" size="sm" className="min-h-[48px] min-w-[48px]" aria-label={`Sumar ${label}`} disabled={isSaving}
+          onClick={() => onChange(String(count(value) + 1))}>+</Button>
+      </div>
+    </div>
   )
 
   return (
-    <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
       <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
+      <div className="page-hero"><div><h1 className="page-hero-title">Población del turno</h1>
+        <p className="m-0 mt-1">{shift ? `Turno ${shift.code}` : 'Cuántas personas hay en este turno'}</p></div></div>
       {shift && <ShiftSteps shift={shift} current="poblacion" />}
-      <div className="page-hero"><h1 className="page-hero-title">Población del turno</h1></div>
       {error && <AlertBanner variant="danger" message={error} />}
-      <Card>
-        <CardContent className="py-5">
-          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      <section className="panel">
+        <h3>¿Cuántas personas hay en este turno?</h3>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <div className="people">
             {field('population-students', 'Estudiantes presentes', students, setStudents)}
             {field('population-teachers', 'Docentes', teachers, setTeachers)}
             {field('population-staff', 'Personal administrativo y de servicios', staff, setStaff)}
-            <p className="text-lg" data-testid="population-total">
-              Total población: <strong className="text-2xl">{total}</strong>
-            </p>
-            <Button type="submit" className="min-h-[56px] text-lg" isLoading={isSaving} disabled={isSaving}>
-              Guardar población
-            </Button>
+          </div>
+          <div className="total-band" data-testid="population-total"><span>Total población</span><b>{total} personas</b></div>
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
             <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
               onClick={() => confirmLeave(() => navigate(shiftPath))}>
               Descartar
             </Button>
-          </form>
-        </CardContent>
-      </Card>
+            <Button type="submit" className="min-h-[48px]" isLoading={isSaving} disabled={isSaving}>
+              Guardar población
+            </Button>
+          </div>
+        </form>
+      </section>
       {discardDialog}
     </div>
   )
