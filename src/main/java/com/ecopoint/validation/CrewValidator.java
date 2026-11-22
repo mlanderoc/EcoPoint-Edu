@@ -5,6 +5,9 @@ import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.model.Crew;
 import com.ecopoint.model.User;
 
+import java.util.Map;
+import java.util.Set;
+
 /**
  * Stateless validator for field crews (RN-085), applying GRASP Pure
  * Fabrication and SOLID SRP.
@@ -50,6 +53,24 @@ public final class CrewValidator {
             if (!member.isActive()) {
                 throw new BusinessRuleException("El integrante " + member.getFullName()
                         + " está inactivo y no puede estar en la cuadrilla.");
+            }
+        }
+    }
+
+    /**
+     * Checks that the members added to a crew have no other open study (RN-090).
+     *
+     * @param crew         crew with its members
+     * @param addedMembers ids of the members being added
+     * @param busyMembers  id of each busy user with the id of his study
+     * @throws BusinessRuleException if an added member already has an open study
+     */
+    public static void validateAddedMembersAreFree(Crew crew, Set<Long> addedMembers, Map<Long, Long> busyMembers) {
+        for (User member : crew.getMembers()) {
+            Long studyId = busyMembers.get(member.getId());
+            if (addedMembers.contains(member.getId()) && studyId != null) {
+                throw new BusinessRuleException(member.getFullName() + " ya está asignado al Estudio N.º " + studyId
+                        + ": debe estar libre para entrar a la cuadrilla.");
             }
         }
     }
