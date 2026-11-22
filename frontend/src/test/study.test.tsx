@@ -83,6 +83,7 @@ describe('New study form (T314, T315, R-331, R-333)', () => {
 
     await user.type(await screen.findByLabelText('Día 1 (descarte)'), '2026-03-02')
     await user.click(await screen.findByRole('checkbox', { name: /ZV Patios y Zonas Verdes/i }))
+    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '1')
     await user.click(screen.getByRole('button', { name: 'Crear estudio' }))
 
     expect(await screen.findByText(/Estudio N.º 1001/)).toBeInTheDocument()

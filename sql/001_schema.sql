@@ -157,6 +157,9 @@ CREATE TABLE ESTUDIO (
     -- Política: RESTRICT. Una institución con estudios no se borra.
     id_institucion  BIGINT         NOT NULL REFERENCES INSTITUCION (id) ON DELETE RESTRICT,
     estado          estado_estudio NOT NULL DEFAULT 'PLANIFICADO',               -- RN-014
+    -- RN-088: cuadrilla del estudio; el servicio la exige al crearlo (nula solo en estudios viejos).
+    -- Política: RESTRICT. Una cuadrilla con estudios no se borra.
+    id_cuadrilla    BIGINT         REFERENCES CUADRILLA (id) ON DELETE RESTRICT,
     -- Cancelación (RN-018): quién, cuándo y por qué. Política: RESTRICT, es historia del estudio.
     cancelado_por       BIGINT     REFERENCES USUARIO (id) ON DELETE RESTRICT,
     cancelado_en        TIMESTAMP,

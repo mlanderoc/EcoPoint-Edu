@@ -48,6 +48,7 @@ public class WasteBagService {
     private final GenerationSourceRepository sources;
     private final InstitutionRepository institutions;
     private final AlertRepository alerts;
+    private final FieldAccess fieldAccess;
     private final Clock clock;
 
     /**
@@ -59,17 +60,19 @@ public class WasteBagService {
      * @param sources      source repository
      * @param institutions institution repository
      * @param alerts       alert repository
+     * @param fieldAccess  who may register in the study (RN-089)
      * @param clock        clock that dates the records and alerts
      */
     public WasteBagService(WasteBagRepository bags, ShiftRepository shifts, StudyRepository studies,
                            GenerationSourceRepository sources, InstitutionRepository institutions,
-                           AlertRepository alerts, Clock clock) {
+                           AlertRepository alerts, FieldAccess fieldAccess, Clock clock) {
         this.bags = bags;
         this.shifts = shifts;
         this.studies = studies;
         this.sources = sources;
         this.institutions = institutions;
         this.alerts = alerts;
+        this.fieldAccess = fieldAccess;
         this.clock = clock;
     }
 
@@ -123,6 +126,7 @@ public class WasteBagService {
         AccessPolicy.require(actor, Permission.REGISTER_BAGS);
         SamplingShift shift = shift(shiftId);
         CharacterizationStudy study = study(shift);
+        fieldAccess.require(actor, study);
         ShiftValidator.validateCanRegisterBag(shift, study);
         GenerationSource source = source(sourceId);
         GenerationSourceValidator.validateAvailableForRegistration(source);
@@ -155,6 +159,7 @@ public class WasteBagService {
         Long shiftId = shiftOf(bagId);
         SamplingShift shift = shift(shiftId);
         CharacterizationStudy study = study(shift);
+        fieldAccess.require(actor, study);
         ShiftValidator.validateOpenForRegistration(shift, study);
         if (!bag.isPendingVerification()) {
             throw new BusinessRuleException("La bolsa " + bag.getLabelText()

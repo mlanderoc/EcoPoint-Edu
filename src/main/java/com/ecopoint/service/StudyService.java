@@ -4,10 +4,12 @@ import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.StudyStatus;
 import com.ecopoint.model.User;
+import com.ecopoint.persistence.CrewRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.InstitutionRepository;
 import com.ecopoint.persistence.StudyRepository;
@@ -38,6 +40,8 @@ public class StudyService {
     private final StudyRepository studies;
     private final InstitutionRepository institutions;
     private final GenerationSourceRepository sources;
+    private final CrewRepository crews;
+    private final FieldAccess fieldAccess;
     private final Clock clock;
 
     /**
@@ -46,13 +50,18 @@ public class StudyService {
      * @param studies      study repository
      * @param institutions institution repository
      * @param sources      source repository
+     * @param crews        crew repository
+     * @param fieldAccess  who may register in a study (RN-089)
      * @param clock        clock that dates the reopenings
      */
     public StudyService(StudyRepository studies, InstitutionRepository institutions,
-                        GenerationSourceRepository sources, Clock clock) {
+                        GenerationSourceRepository sources, CrewRepository crews, FieldAccess fieldAccess,
+                        Clock clock) {
         this.studies = studies;
         this.institutions = institutions;
         this.sources = sources;
+        this.crews = crews;
+        this.fieldAccess = fieldAccess;
         this.clock = clock;
     }
 
@@ -64,6 +73,19 @@ public class StudyService {
      */
     public List<CharacterizationStudy> list(Long institutionId) {
         return studies.findByInstitution(institutionId);
+    }
+
+    /**
+     * Lists the studies in execution where the user may register field data:
+     * all of them for a teacher, those of his crews for a student (RN-089, R-340).
+     *
+     * @param actor user of the session
+     * @return studies in execution, newest first
+     */
+    public List<CharacterizationStudy> fieldStudies(User actor) {
+        return studies.findByStatus(StudyStatus.EN_EJECUCION).stream()
+                .filter(study -> fieldAccess.allows(actor, study))
+                .toList();
     }
 
     /**
@@ -88,6 +110,17 @@ public class StudyService {
     }
 
     /**
+     * Returns the name of the crew of a study, whatever its institution.
+     *
+     * @param study the study
+     * @return crew name, or null if it has none
+     */
+    public String crewName(CharacterizationStudy study) {
+        return study.getCrewId() == null ? null
+                : crews.findById(study.getCrewId()).map(Crew::getName).orElse(null);
+    }
+
+    /**
      * Counts the records of a study still pending verification.
      *
      * @param studyId study id
@@ -98,20 +131,23 @@ public class StudyService {
     }
 
     /**
-     * Creates a planned study with its 8 dates. All the active sources of the
-     * institution take part by default (R-331).
+     * Creates a planned study with its crew and its 8 dates. All the active
+     * sources of the institution take part by default (R-331, RN-088).
      *
      * @param actor         teacher that acts
      * @param institutionId institution to characterize
+     * @param crewId        crew that works the shifts
      * @param dates         the 8 dates in order; a date may be null while planning
      * @return the saved study
      */
     @Transactional
-    public CharacterizationStudy create(User actor, Long institutionId, List<LocalDate> dates) {
+    public CharacterizationStudy create(User actor, Long institutionId, Long crewId, List<LocalDate> dates) {
         AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
         StudyValidator.validateInstitutionAcceptsStudies(institutions.findById(institutionId)
                 .orElseThrow(() -> new ResourceNotFoundException("Institución", institutionId)));
         CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
+        study.assignCrew(crewId);
+        requireCrewExists(crewId);
         study.scheduleDates(dates);
         StudyValidator.validate(study);
         StudyValidator.validateNoOverlap(study, studies.findByInstitution(institutionId));
@@ -140,6 +176,26 @@ public class StudyService {
         StudyValidator.validate(study);
         StudyValidator.validateNoOverlap(study, studies.findByInstitution(study.getInstitutionId()));
         return studies.save(study);
+    }
+
+    /**
+     * Changes the crew of a planned study, or gives one to a study in execution
+     * left without it, together with its shifts without crew (RN-088).
+     *
+     * @param actor  teacher that acts
+     * @param id     study id
+     * @param crewId new crew
+     * @return the saved study
+     */
+    @Transactional
+    public CharacterizationStudy changeCrew(User actor, Long id, Long crewId) {
+        AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
+        CharacterizationStudy study = get(id);
+        study.assignCrew(crewId);
+        requireCrewExists(crewId);
+        CharacterizationStudy saved = studies.save(study);
+        studies.assignCrewToShiftsWithoutCrew(id, crewId);
+        return saved;
     }
 
     /**
@@ -233,6 +289,12 @@ public class StudyService {
         return (int) sources.findByInstitution(study.getInstitutionId()).stream()
                 .filter(source -> source.isActive() && participating.contains(source.getId()))
                 .count();
+    }
+
+    private void requireCrewExists(Long crewId) {
+        if (crews.findById(crewId).isEmpty()) {
+            throw new ResourceNotFoundException("Cuadrilla", crewId);
+        }
     }
 
     private CharacterizationStudy editable(Long id) {

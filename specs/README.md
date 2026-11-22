@@ -17,6 +17,7 @@ Esta carpeta contiene las especificaciones del sistema **EcoPoint Edu: caracteri
 | [006](006-indicadores-reportes/spec.md) | Indicadores y reportes | RF-12, RF-13 | 005 | Claude | Claude | Antigravity | **Aprobada** |
 | [007](007-plano-interactivo-fuentes/spec.md) | Plano interactivo de fuentes | RF-14 | 003 | Claude | Claude | Antigravity | **Aprobada** |
 | [D13](d13-ajustes-pruebas/plan.md) | Ajustes por las pruebas de uso (plan y tareas; los cambios están en las specs 001 a 004) | RF-01 a RF-05, RF-11 | 001–004 | Claude | Claude | Antigravity | **Hecha** |
+| [D14](d14-observaciones-uso/plan.md) | Segunda ronda de observaciones de uso (plan y tareas; los cambios están en las specs 001 a 004) | RF-01 a RF-05 | 001–004 | Claude | Claude | Antigravity | **Hecha** |
 
 El reparto sigue la sección 8 del plan de reestructuración. La 007 puede avanzar en paralelo con la 004–006.
 
@@ -69,6 +70,7 @@ Decisiones D1–D9 del plan de reestructuración, confirmadas el 11 nov 2026:
 | D11 | El código del modelo anterior (Swing, repositorios de archivos, puntos ecológicos) se **elimina al empezar** la spec 001. Antes se marca con un tag de git para poder consultarlo. |
 | D12 | Mientras no lleguen los datos reales de la I.E. Prudencia Daza, los datos semilla son **ficticios pero realistas**. |
 | D13 | **Ajustes por las pruebas de uso** (13 nov 2026): fechas del estudio recalculadas con días hábiles y festivos de Colombia; activar y desactivar fuentes, subcategorías e instituciones, con filtro de inactivos; sin códigos de reglas en pantalla; botones Atrás, Guardar y Descartar, y cursor de mano; pantalla Mi Perfil; eliminar un estudio planificado y cancelar uno iniciado; solo los estudiantes se desactivan; usuarios en tabla con filtros. Afecta las specs 001 a 004. |
+| D14 | **Segunda ronda de observaciones de uso** (18 nov 2026): menú del docente con Configuración del estudio primero; filtro de activos sin ícono de ojo; al crear un estudio se elige la institución, y la lista de estudios se filtra por institución; las fuentes se administran por institución y el registro en campo usa los límites de la institución del estudio; cada estudio tiene una cuadrilla, el estudiante solo registra en los estudios de su cuadrilla y en Registro en campo se elige el estudio en ejecución. Afecta las specs 001 a 004. |
 
 ### Diferencias con el Requerimiento Técnico oficial (registro de riesgo)
 

@@ -132,6 +132,10 @@ export interface SamplingDay {
 export interface CharacterizationStudy {
   id: number
   institutionId: number
+  /** Crew that works the shifts (RN-088); null only in old studies. */
+  crewId: number | null
+  /** Name of that crew, whatever its institution. */
+  crewName?: string | null
   status: StudyStatus
   startDate: string | null
   endDate: string | null

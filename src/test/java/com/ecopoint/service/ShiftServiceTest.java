@@ -5,6 +5,7 @@ import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.SamplingShift;
 import com.ecopoint.model.ShiftPopulation;
@@ -51,6 +52,7 @@ import static org.mockito.Mockito.when;
 class ShiftServiceTest {
 
     private static final Long STUDY = 7L;
+    private static final Long CREW = 5L;
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 12, 7, 30);
 
     private ShiftRepository shifts;
@@ -69,7 +71,7 @@ class ShiftServiceTest {
         studies = mock(StudyRepository.class);
         GenerationSourceRepository sources = mock(GenerationSourceRepository.class);
         CrewRepository crews = mock(CrewRepository.class);
-        service = new ShiftService(shifts, studies, sources, crews,
+        service = new ShiftService(shifts, studies, sources, new FieldAccess(crews),
                 Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
 
         study(StudyStatus.EN_EJECUCION);
@@ -83,12 +85,14 @@ class ShiftServiceTest {
             }
             return shift;
         });
-        when(crews.findById(99L)).thenReturn(Optional.empty());
+        Crew crew = new Crew(CREW, "Cuadrilla 1", teacher);
+        crew.addMember(student);
+        when(crews.findById(CREW)).thenReturn(Optional.of(crew));
     }
 
     @Test
     void r341_teacherOpensAShiftOfAStudyInExecution() {
-        SamplingShift shift = service.open(teacher, STUDY, 3, ShiftType.MANANA, null);
+        SamplingShift shift = service.open(teacher, STUDY, 3, ShiftType.MANANA);
 
         assertEquals(ShiftStatus.ABIERTO, shift.getStatus());
         assertEquals("D3-M", shift.getCode());
@@ -96,7 +100,7 @@ class ShiftServiceTest {
 
     @Test
     void ca204_studentCannotOpenOrCloseShifts() {
-        assertThrows(AccessDeniedException.class, () -> service.open(student, STUDY, 3, ShiftType.MANANA, null));
+        assertThrows(AccessDeniedException.class, () -> service.open(student, STUDY, 3, ShiftType.MANANA));
         stored(fullShift());
         assertThrows(AccessDeniedException.class, () -> service.close(student, 30L));
     }
@@ -105,19 +109,28 @@ class ShiftServiceTest {
     void rn020_secondShiftOfTheSameDayAndTypeIsRejected() {
         opened.add(new SamplingShift(30L, STUDY, 3, ShiftType.MANANA));
 
-        assertThrows(BusinessRuleException.class, () -> service.open(teacher, STUDY, 3, ShiftType.MANANA, null));
+        assertThrows(BusinessRuleException.class, () -> service.open(teacher, STUDY, 3, ShiftType.MANANA));
     }
 
     @Test
     void rn020_shiftsOnlyOpenWhileTheStudyIsInExecution() {
         study(StudyStatus.PLANIFICADO);
 
-        assertThrows(BusinessRuleException.class, () -> service.open(teacher, STUDY, 3, ShiftType.MANANA, null));
+        assertThrows(BusinessRuleException.class, () -> service.open(teacher, STUDY, 3, ShiftType.MANANA));
     }
 
     @Test
-    void r341_unknownCrewIsNotFound() {
-        assertThrows(ResourceNotFoundException.class, () -> service.open(teacher, STUDY, 3, ShiftType.MANANA, 99L));
+    void r341_shiftIsWorkedByTheCrewOfTheStudy() {
+        assertEquals(CREW, service.open(teacher, STUDY, 3, ShiftType.MANANA).getCrewId());
+    }
+
+    @Test
+    void ca084_onlyTheCrewOfTheStudyRegistersPopulation() {
+        stored(new SamplingShift(30L, STUDY, 3, ShiftType.MANANA));
+        User outsider = new User(12L, "Ana", "Ríos", "a@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
+
+        assertThrows(AccessDeniedException.class, () -> service.registerPopulation(outsider, 30L, 300, 20, 10));
+        assertEquals(330, service.registerPopulation(student, 30L, 300, 20, 10).getPopulation().getTotal());
     }
 
     @Test
@@ -231,7 +244,8 @@ class ShiftServiceTest {
     private void study(StudyStatus status) {
         List<LocalDate> dates = new ArrayList<>();
         IntStream.range(0, 8).forEach(i -> dates.add(LocalDate.of(2026, 11, 16).plusDays(i)));
-        when(studies.findById(STUDY)).thenReturn(Optional.of(
-                CharacterizationStudy.restore(STUDY, 1L, status, dates, List.of())));
+        CharacterizationStudy study = CharacterizationStudy.restore(STUDY, 1L, status, dates, List.of());
+        study.setCrewId(CREW);
+        when(studies.findById(STUDY)).thenReturn(Optional.of(study));
     }
 }

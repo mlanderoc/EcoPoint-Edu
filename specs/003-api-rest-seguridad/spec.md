@@ -8,7 +8,7 @@
 | Requerimientos | RF-11 (roles y permisos); expone RF-01 a RF-14 |
 | Depende de | Spec 002 aprobada; decisiones D3, D9 |
 | Fecha | 2026-11-11 |
-| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). |
+| Ajustes | **D13** (13 nov 2026): observaciones de las pruebas de uso. **Aprobados** (13 nov 2026). **D14** (18 nov 2026): segunda ronda de observaciones. **Aprobados** (18 nov 2026). |
 
 ## 1. Objetivo
 
@@ -100,7 +100,9 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 | `waste-categories` | Listar grupos y subcategorías (filtro por estado); crear (activa o inactiva), editar, activar y desactivar (docente) | 004, 005 |
 | `users` | Listar con filtros (rol, estado, texto) y paginación, ver, crear, editar; activar y desactivar estudiantes; ver totales de registros | 004 |
 | `crews` | Listar, crear, editar integrantes | 004 |
-| `studies` | Listar, ver, crear, editar, cambiar estado, cancelar (con motivo), eliminar si está planificado | 004, 006 |
+| `studies` | Listar, ver, crear (con su cuadrilla), editar, cambiar estado, cancelar (con motivo), eliminar si está planificado | 004, 006 |
+| `studies/field` | Estudios en ejecución para el registro en campo: todos para el docente; para el estudiante, los de su cuadrilla (RN-089, D14) | 004 |
+| `studies/{id}/crew` | Cambiar la cuadrilla de un estudio planificado (RN-088, D14) | 004 |
 | `studies/{id}/days` | Ver y editar fechas de los días | 004 |
 | `studies/{id}/shifts` | Listar turnos con su estado y su avance | 004 |
 | `shifts/{id}` | Ver, abrir, cerrar, reabrir | 004 |
@@ -135,6 +137,7 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 - **CA-209** — Eliminado: no hay menores de edad en el sistema (D9).
 - **CA-210.** Cuando se consulta la base de datos, entonces ninguna contraseña está en texto plano.
 - **CA-211.** Para cada fila de la matriz RN-081 existe al menos una prueba automática de API que confirma el "Sí" y una que confirma el "No".
+- **CA-213.** Dado un estudiante que no integra la cuadrilla del estudio, cuando llama a `POST /api/v1/shifts/{id}/bags` en uno de sus turnos, entonces recibe 403 con `ERR_FORBIDDEN`; y `GET /api/v1/studies/field` no le muestra ese estudio (RN-089).
 - **CA-212.** Cuando se abre la documentación OpenAPI, entonces aparecen todos los recursos de la sección 5.4.
 
 ## 7. Fuera de alcance

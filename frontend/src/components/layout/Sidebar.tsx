@@ -58,12 +58,8 @@ export function Sidebar({
   // Navigation structure adhering strictly to CA-300 and RN-081
   const isDocente = role === 'DOCENTE'
 
+  // The teacher configures the study before registering in the field (R-311, D14)
   const mainItems: NavItem[] = [
-    {
-      label: 'Registro en Campo',
-      href: '/campo',
-      icon: <ClipboardList className="w-5 h-5" />,
-    },
     ...(isDocente
       ? [
           {
@@ -73,6 +69,11 @@ export function Sidebar({
           },
         ]
       : []),
+    {
+      label: 'Registro en Campo',
+      href: '/campo',
+      icon: <ClipboardList className="w-5 h-5" />,
+    },
     {
       label: 'Verificación',
       href: '/calidad/verificacion',

@@ -1,6 +1,7 @@
 /**
  * New characterization study: dates of the 8 days and participating sources
- * (Spec 004, T314 and T315; R-330, R-331, R-333, CA-301, CA-311).
+ * (Spec 004, T314 and T315; R-330, R-331, R-333, CA-301, CA-311). The
+ * institution is chosen among the active ones (D14, CA-319).
  * Crews are assigned when each shift is opened (R-341), because the API keeps
  * the crew in the shift.
  *
@@ -14,24 +15,37 @@ import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTit
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { useAuth } from '@/features/auth'
 import { adminService } from '@/features/admin/services/adminService'
+import { InstitutionSelect, useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { ApiError } from '@/services/apiClient'
 import { GenerationSource } from '@/types'
 import { studyService } from '../services/studyService'
 import { StudyDatesEditor } from '../components/StudyDatesEditor'
+import { CrewSelect, useCrews } from '../components/CrewSelect'
 import { DAY_COUNT } from '../utils/samplingDays'
 
 export function NewStudyPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
-  const institutionId = user?.institutionId ?? 1
+  const { institutions, error: institutionsError } = useInstitutions(true)
+  const [chosenInstitution, setInstitutionId] = useState<number | null>(user?.institutionId ?? null)
+  const institutionId = institutions.some((item) => item.id === chosenInstitution)
+    ? chosenInstitution
+    : institutions[0]?.id ?? null
+  const { crews, error: crewsError } = useCrews()
+  const [crewId, setCrewId] = useState<number | null>(null)
   const [dates, setDates] = useState<string[]>(Array(DAY_COUNT).fill(''))
   const [sources, setSources] = useState<GenerationSource[]>([])
   const [selected, setSelected] = useState<Set<number>>(new Set())
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
-  const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && dates.some((date) => date !== ''))
+  const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && (
+    dates.some((date) => date !== '') || crewId !== null || chosenInstitution !== (user?.institutionId ?? null)
+  ))
 
   useEffect(() => {
+    setSources([])
+    setSelected(new Set())
+    if (institutionId === null) return
     adminService.getSources(institutionId)
       .then((all) => {
         const active = all.filter((source) => source.active)
@@ -56,6 +70,14 @@ export function NewStudyPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError(null)
+    if (institutionId === null) {
+      setError('Elija la institución del estudio.')
+      return
+    }
+    if (crewId === null) {
+      setError('Elija la cuadrilla del estudio.')
+      return
+    }
     if (!dates[0]) {
       setError('Elija la fecha del día 1.')
       return
@@ -68,6 +90,7 @@ export function NewStudyPage() {
       setIsSaving(true)
       const study = await studyService.create(
         institutionId,
+        crewId,
         dates.map((date, index) => ({ dayNumber: index + 1, date: date || null }))
       )
       const sameSources = study.participatingSourceIds.length === selected.size
@@ -94,8 +117,37 @@ export function NewStudyPage() {
       </div>
 
       {error && <AlertBanner variant="danger" title="No se pudo guardar" message={error} />}
+      {institutionsError && <AlertBanner variant="danger" message={institutionsError} />}
+      {crewsError && <AlertBanner variant="danger" message={crewsError} />}
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Institución</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <InstitutionSelect
+              institutions={institutions}
+              value={institutionId}
+              onChange={setInstitutionId}
+              label="Institución donde se hace el estudio"
+              disabled={isSaving}
+            />
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Cuadrilla</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-2">
+            <CrewSelect crews={crews} value={crewId} onChange={setCrewId} disabled={isSaving} />
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Sus integrantes son los que registran los datos de este estudio en campo.
+            </p>
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

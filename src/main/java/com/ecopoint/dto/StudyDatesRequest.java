@@ -11,11 +11,12 @@ import java.util.List;
  * Data to create a study or change its dates (spec 004, R-330).
  *
  * @param institutionId institution to characterize; only used when creating
+ * @param crewId        crew of the study; only used when creating (RN-088)
  * @param days          dates of the days; a day left out stays without date
  * @author craulgomez
  * @version 1.0
  */
-public record StudyDatesRequest(Long institutionId, List<SamplingDayDto> days) {
+public record StudyDatesRequest(Long institutionId, Long crewId, List<SamplingDayDto> days) {
 
     /**
      * Puts the dates in the order of the 8 days.

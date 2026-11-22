@@ -17,11 +17,19 @@ export const studyService = {
   list: (institutionId?: number): Promise<CharacterizationStudy[]> =>
     apiClient.get<CharacterizationStudy[]>('/api/v1/studies', { params: { institutionId } }),
 
+  /** Studies in execution where the user may register: all for a teacher, his crews' for a student (R-340). */
+  fieldStudies: (): Promise<CharacterizationStudy[]> =>
+    apiClient.get<CharacterizationStudy[]>('/api/v1/studies/field'),
+
   get: (id: number): Promise<CharacterizationStudy> =>
     apiClient.get<CharacterizationStudy>(`/api/v1/studies/${id}`),
 
-  create: (institutionId: number | undefined, days: StudyDayInput[]): Promise<CharacterizationStudy> =>
-    apiClient.post<CharacterizationStudy>('/api/v1/studies', { institutionId, days }),
+  create: (institutionId: number | undefined, crewId: number, days: StudyDayInput[]): Promise<CharacterizationStudy> =>
+    apiClient.post<CharacterizationStudy>('/api/v1/studies', { institutionId, crewId, days }),
+
+  /** Changes the crew of a planned study (RN-088). */
+  changeCrew: (id: number, crewId: number): Promise<CharacterizationStudy> =>
+    apiClient.put<CharacterizationStudy>(`/api/v1/studies/${id}/crew`, { crewId }),
 
   setSources: (id: number, sourceIds: number[]): Promise<CharacterizationStudy> =>
     apiClient.put<CharacterizationStudy>(`/api/v1/studies/${id}/sources`, { sourceIds }),

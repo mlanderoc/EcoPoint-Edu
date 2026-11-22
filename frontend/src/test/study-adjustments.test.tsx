@@ -84,6 +84,7 @@ describe('Eliminar y cancelar estudio (R-334 a R-336, CA-315)', () => {
     const user = userEvent.setup()
     renderAt('/estudios/nuevo')
     await user.type(await screen.findByLabelText('Día 1 (descarte)'), '2030-03-04')
+    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '1')
     await user.click(screen.getByRole('button', { name: 'Crear estudio' }))
     await screen.findByRole('heading', { name: /Estudio N\.º/ })
     return user

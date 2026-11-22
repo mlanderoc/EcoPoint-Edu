@@ -33,6 +33,7 @@ public class DensityService {
     private final DensityRepository densities;
     private final ShiftRepository shifts;
     private final StudyRepository studies;
+    private final FieldAccess fieldAccess;
     private final Clock clock;
 
     /**
@@ -41,12 +42,15 @@ public class DensityService {
      * @param densities density repository
      * @param shifts    shift repository
      * @param studies   study repository
+     * @param fieldAccess who may register in the study (RN-089)
      * @param clock     clock that dates the records
      */
-    public DensityService(DensityRepository densities, ShiftRepository shifts, StudyRepository studies, Clock clock) {
+    public DensityService(DensityRepository densities, ShiftRepository shifts, StudyRepository studies,
+                          FieldAccess fieldAccess, Clock clock) {
         this.densities = densities;
         this.shifts = shifts;
         this.studies = studies;
+        this.fieldAccess = fieldAccess;
         this.clock = clock;
     }
 
@@ -77,6 +81,7 @@ public class DensityService {
         SamplingShift shift = shifts.findById(shiftId).orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
         CharacterizationStudy study = studies.findById(shift.getStudyId())
                 .orElseThrow(() -> new ResourceNotFoundException("Estudio", shift.getStudyId()));
+        fieldAccess.require(actor, study);
         ShiftValidator.validateOpenForRegistration(shift, study);
         DensityValidator.validateNoExistingDensity(shift);
         DensityMeasurement measurement = new DensityMeasurement(null, shiftId, containerVolume, netWeight,

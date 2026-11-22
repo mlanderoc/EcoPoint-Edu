@@ -159,6 +159,24 @@ class SchemaIT extends PostgresIntegrationTest {
                 + "WHERE table_name = 'estudio' AND column_name = 'motivo_cancelacion'"));
     }
 
+    @Test
+    void r017_updateScriptGivesOldStudiesTheCrewOfTheirShifts() {
+        jdbc.execute("ALTER TABLE ESTUDIO DROP COLUMN id_cuadrilla");
+        String before = jdbc.queryForObject(CONTENT_HASH, String.class);
+
+        runScript("004_ajustes_d14.sql");
+        runScript("004_ajustes_d14.sql");
+
+        assertEquals(before, jdbc.queryForObject(CONTENT_HASH, String.class));
+        assertEquals(2, count("SELECT COUNT(*) FROM ESTUDIO WHERE id_cuadrilla = 1"));
+    }
+
+    @Test
+    void r017_crewWithStudiesCannotBeDeleted() {
+        assertEquals(2, count("SELECT COUNT(*) FROM ESTUDIO WHERE id_cuadrilla = 1"));
+        assertThrows(DataAccessException.class, () -> jdbc.update("DELETE FROM CUADRILLA WHERE id = 1"));
+    }
+
     private int count(String sql) {
         Integer value = jdbc.queryForObject(sql, Integer.class);
         return value == null ? 0 : value;

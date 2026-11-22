@@ -237,9 +237,10 @@ export const handlers = [
     return HttpResponse.json(institution)
   }),
 
-  http.get('/api/v1/institutions/:id/sources', ({ request }) => {
+  http.get('/api/v1/institutions/:id/sources', ({ params, request }) => {
     const active = new URL(request.url).searchParams.get('active')
-    return HttpResponse.json(sourcesState.filter((source) => active === null || String(source.active) === active))
+    return HttpResponse.json(sourcesState.filter((source) => source.institutionId === Number(params.id)
+      && (active === null || String(source.active) === active)))
   }),
 
   http.post('/api/v1/institutions/:id/sources', async ({ params, request }) => {
@@ -247,7 +248,7 @@ export const handlers = [
     const denied = requirePermission('MANAGE_ADMINISTRATION', path)
     if (denied) return denied
     const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'> & { active?: boolean }
-    if (sourcesState.some((source) => source.code === body.code)) {
+    if (sourcesState.some((source) => source.code === body.code && source.institutionId === Number(params.id))) {
       return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${body.code} en esta institución.`, path)
     }
     const created: GenerationSource = {
@@ -383,7 +384,10 @@ export const handlers = [
   }),
 
   // --- STUDIES (section 5.2) ---
-  http.get('/api/v1/studies', () => HttpResponse.json(studiesState)),
+  http.get('/api/v1/studies', ({ request }) => {
+    const institutionId = Number(new URL(request.url).searchParams.get('institutionId')) || 1
+    return HttpResponse.json(studiesState.filter((study) => study.institutionId === institutionId))
+  }),
 
   http.get('/api/v1/studies/:id/indicators', ({ params }) => {
     const path = `/api/v1/studies/${params.id}/indicators`
@@ -407,6 +411,26 @@ export const handlers = [
     })
   }),
 
+  http.get('/api/v1/studies/field', () => {
+    const teacher = activeUser?.role === 'DOCENTE'
+    return HttpResponse.json(studiesState.filter((study) => study.status === 'EN_EJECUCION'
+      && (teacher || crewsState.some((crew) => crew.id === study.crewId && crew.memberIds.includes(activeUser?.id ?? -1)))))
+  }),
+
+  http.put('/api/v1/studies/:id/crew', async ({ params, request }) => {
+    const path = `/api/v1/studies/${params.id}/crew`
+    const denied = requirePermission('MANAGE_STUDIES', path)
+    if (denied) return denied
+    const study = studiesState.find((item) => item.id === Number(params.id))
+    if (!study) return notFound(path, 'Estudio')
+    if (study.status !== 'PLANIFICADO' && !(study.status === 'EN_EJECUCION' && study.crewId === null)) {
+      return apiError(422, 'ERR_BUSINESS_RULE', 'La cuadrilla solo se cambia mientras el estudio está planificado.', path)
+    }
+    study.crewId = ((await request.json()) as { crewId: number }).crewId
+    study.crewName = crewsState.find((crew) => crew.id === study.crewId)?.name ?? null
+    return HttpResponse.json(study)
+  }),
+
   http.get('/api/v1/studies/:id', ({ params }) => {
     const study = studiesState.find((item) => item.id === Number(params.id))
     return study ? HttpResponse.json(study) : notFound(`/api/v1/studies/${params.id}`, 'Estudio')
@@ -415,7 +439,9 @@ export const handlers = [
   http.post('/api/v1/studies', async ({ request }) => {
     const denied = requirePermission('MANAGE_STUDIES', '/api/v1/studies')
     if (denied) return denied
-    const body = (await request.json()) as { institutionId?: number; days: { dayNumber: number; date: string | null }[] }
+    const body = (await request.json()) as {
+      institutionId?: number; crewId?: number; days: { dayNumber: number; date: string | null }[]
+    }
     const days = Array.from({ length: 8 }, (_, index) => ({
       dayNumber: index + 1,
       date: body.days.find((day) => day.dayNumber === index + 1)?.date ?? null,
@@ -424,6 +450,8 @@ export const handlers = [
     const created: CharacterizationStudy = {
       id: newId(),
       institutionId: body.institutionId ?? 1,
+      crewId: body.crewId ?? null,
+      crewName: crewsState.find((crew) => crew.id === body.crewId)?.name ?? null,
       status: 'PLANIFICADO',
       startDate: days[0].date,
       endDate: days[7].date,
@@ -531,7 +559,7 @@ export const handlers = [
     const path = `/api/v1/studies/${params.id}/shifts`
     const denied = requirePermission('MANAGE_SHIFTS', path)
     if (denied) return denied
-    const body = (await request.json()) as { dayNumber: number; type: ShiftType; crewId?: number | null }
+    const body = (await request.json()) as { dayNumber: number; type: ShiftType }
     const studyId = Number(params.id)
     if (shiftsState.some((shift) => shift.studyId === studyId && shift.dayNumber === body.dayNumber
       && shift.type === body.type)) {
@@ -540,7 +568,7 @@ export const handlers = [
     }
     const shift: MockShift = {
       id: newId(), studyId, dayNumber: body.dayNumber, type: body.type, status: 'ABIERTO',
-      crewId: body.crewId ?? null, population: null, sourcesWithoutGeneration: [],
+      crewId: studiesState.find((study) => study.id === studyId)?.crewId ?? null, population: null, sourcesWithoutGeneration: [],
     }
     shiftsState.push(shift)
     return HttpResponse.json(toShiftResponse(shift), { status: 201 })
@@ -955,6 +983,17 @@ export function resetMockState(userRole?: UserRole | null) {
   alertsState = []
   correctionsState = []
   nextId = 1000
+}
+
+/** Adds another study, to try the choice of the study in the field (D14). */
+export function addMockStudy(study: CharacterizationStudy) {
+  studiesState.push(study)
+}
+
+/** Adds another institution with its sources, to try studies of several institutions (D14). */
+export function addMockInstitution(institution: Institution, sources: GenerationSource[]) {
+  institutionsState.push(institution)
+  sourcesState.push(...sources)
 }
 
 /** Changes the user of the mock session. */

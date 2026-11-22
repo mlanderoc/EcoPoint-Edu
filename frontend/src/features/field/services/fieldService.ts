@@ -17,8 +17,9 @@ export interface BagInput {
 }
 
 export const fieldService = {
-  openShift: (studyId: number, dayNumber: number, type: ShiftType, crewId: number | null): Promise<SamplingShift> =>
-    apiClient.post<SamplingShift>(`/api/v1/studies/${studyId}/shifts`, { dayNumber, type, crewId }),
+  /** Opens a shift; the crew is the one of the study (R-341, RN-088). */
+  openShift: (studyId: number, dayNumber: number, type: ShiftType): Promise<SamplingShift> =>
+    apiClient.post<SamplingShift>(`/api/v1/studies/${studyId}/shifts`, { dayNumber, type }),
 
   getShift: (shiftId: number): Promise<SamplingShift> =>
     apiClient.get<SamplingShift>(`/api/v1/shifts/${shiftId}`),

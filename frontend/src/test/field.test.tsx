@@ -42,7 +42,8 @@ async function openDayFourMorning() {
   const user = userEvent.setup()
   renderField('/campo')
   await user.click(await screen.findByRole('button', { name: /Abrir turno/i }))
-  await user.selectOptions(await screen.findByLabelText('Cuadrilla'), '1')
+  expect(await screen.findByText('Cuadrilla Mañana A')).toBeInTheDocument()
+  expect(screen.queryByLabelText('Cuadrilla')).toBeNull()
   await user.click(screen.getByRole('button', { name: 'Confirmar apertura' }))
   expect(await screen.findByRole('heading', { name: 'Turno D4-M' })).toBeInTheDocument()
   return user

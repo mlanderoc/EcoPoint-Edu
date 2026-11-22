@@ -6,12 +6,14 @@ import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.QualityControlException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Institution;
 import com.ecopoint.model.SourceType;
 import com.ecopoint.model.StudyStatus;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
+import com.ecopoint.persistence.CrewRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.InstitutionRepository;
 import com.ecopoint.persistence.StudyRepository;
@@ -46,6 +48,7 @@ import static org.mockito.Mockito.when;
 class StudyServiceTest {
 
     private static final Long INSTITUTION = 1L;
+    private static final Long CREW = 3L;
     private static final LocalDate MONDAY = LocalDate.of(2026, 11, 16);
 
     private StudyRepository studies;
@@ -63,7 +66,12 @@ class StudyServiceTest {
         sources = mock(GenerationSourceRepository.class);
         institutions = mock(InstitutionRepository.class);
         Clock clock = Clock.fixed(Instant.parse("2026-11-12T12:00:00Z"), ZoneOffset.UTC);
-        service = new StudyService(studies, institutions, sources, clock);
+        CrewRepository crews = mock(CrewRepository.class);
+        service = new StudyService(studies, institutions, sources, crews, new FieldAccess(crews), clock);
+        Crew crew = new Crew(CREW, "Cuadrilla 1", teacher);
+        crew.addMember(student);
+        when(crews.findById(CREW)).thenReturn(Optional.of(crew));
+        when(crews.findById(4L)).thenReturn(Optional.of(new Crew(4L, "Cuadrilla 2", teacher)));
 
         when(institutions.findById(INSTITUTION)).thenReturn(Optional.of(new Institution(INSTITUTION, "I.E.", "V")));
         when(studies.findByInstitution(INSTITUTION)).thenReturn(existing);
@@ -82,7 +90,7 @@ class StudyServiceTest {
 
     @Test
     void r331_newStudyIsPlannedWithAllActiveSources() {
-        CharacterizationStudy created = service.create(teacher, INSTITUTION, eightDays(MONDAY));
+        CharacterizationStudy created = service.create(teacher, INSTITUTION, CREW, eightDays(MONDAY));
 
         assertEquals(StudyStatus.PLANIFICADO, created.getStatus());
         assertEquals(MONDAY, created.getStartDate());
@@ -90,8 +98,36 @@ class StudyServiceTest {
     }
 
     @Test
+    void ca322_studyWithoutCrewOrWithAnUnknownCrewIsRejected() {
+        assertThrows(InvalidDataException.class, () -> service.create(teacher, INSTITUTION, null, eightDays(MONDAY)));
+        assertThrows(ResourceNotFoundException.class, () -> service.create(teacher, INSTITUTION, 99L, eightDays(MONDAY)));
+        verify(studies, never()).save(any());
+    }
+
+    @Test
+    void ca083_crewOfAPlannedStudyIsChangedButNotOfARunningOne() {
+        stored(StudyStatus.PLANIFICADO);
+        assertEquals(4L, service.changeCrew(teacher, 7L, 4L).getCrewId());
+        verify(studies).assignCrewToShiftsWithoutCrew(7L, 4L);
+
+        when(studies.findById(7L)).thenReturn(Optional.of(running(7L, CREW)));
+        assertThrows(BusinessRuleException.class, () -> service.changeCrew(teacher, 7L, 4L));
+        assertThrows(AccessDeniedException.class, () -> service.changeCrew(student, 7L, 4L));
+    }
+
+    @Test
+    void ca321_fieldStudiesAreAllForTheTeacherAndOnlyTheCrewOnesForTheStudent() {
+        CharacterizationStudy ofTheCrew = running(20L, CREW);
+        CharacterizationStudy ofAnotherCrew = running(21L, 4L);
+        when(studies.findByStatus(StudyStatus.EN_EJECUCION)).thenReturn(List.of(ofTheCrew, ofAnotherCrew));
+
+        assertEquals(List.of(ofTheCrew, ofAnotherCrew), service.fieldStudies(teacher));
+        assertEquals(List.of(ofTheCrew), service.fieldStudies(student));
+    }
+
+    @Test
     void ca203_studentCannotCreateAStudy() {
-        assertThrows(AccessDeniedException.class, () -> service.create(student, INSTITUTION, eightDays(MONDAY)));
+        assertThrows(AccessDeniedException.class, () -> service.create(student, INSTITUTION, CREW, eightDays(MONDAY)));
         verify(studies, never()).save(any());
     }
 
@@ -100,7 +136,7 @@ class StudyServiceTest {
         List<LocalDate> dates = eightDays(MONDAY);
         dates.set(3, MONDAY);
 
-        assertThrows(InvalidDataException.class, () -> service.create(teacher, INSTITUTION, dates));
+        assertThrows(InvalidDataException.class, () -> service.create(teacher, INSTITUTION, CREW, dates));
     }
 
     @Test
@@ -110,7 +146,7 @@ class StudyServiceTest {
         existing.add(other);
 
         assertThrows(BusinessRuleException.class,
-                () -> service.create(teacher, INSTITUTION, eightDays(MONDAY.plusDays(2))));
+                () -> service.create(teacher, INSTITUTION, CREW, eightDays(MONDAY.plusDays(2))));
     }
 
     @Test
@@ -186,6 +222,13 @@ class StudyServiceTest {
         assertThrows(ResourceNotFoundException.class, () -> service.get(99L));
     }
 
+    private static CharacterizationStudy running(Long id, Long crewId) {
+        CharacterizationStudy study = CharacterizationStudy.restore(id, INSTITUTION, StudyStatus.EN_EJECUCION,
+                eightDays(MONDAY), List.of());
+        study.setCrewId(crewId);
+        return study;
+    }
+
     private void stored(StudyStatus status) {
         CharacterizationStudy study = CharacterizationStudy.restore(7L, INSTITUTION, status, eightDays(MONDAY),
                 List.of());
@@ -240,7 +283,7 @@ class StudyServiceTest {
         inactive.deactivate();
         when(institutions.findById(INSTITUTION)).thenReturn(Optional.of(inactive));
 
-        assertThrows(BusinessRuleException.class, () -> service.create(teacher, INSTITUTION, eightDays(MONDAY)));
+        assertThrows(BusinessRuleException.class, () -> service.create(teacher, INSTITUTION, CREW, eightDays(MONDAY)));
         verify(studies, never()).save(any());
     }
 }

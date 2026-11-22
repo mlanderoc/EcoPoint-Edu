@@ -1,6 +1,7 @@
 package com.ecopoint.validation;
 
 import com.ecopoint.exceptions.AccessDeniedException;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
@@ -26,6 +27,18 @@ class AccessPolicyTest {
 
     private static User student() {
         return new User(2L, "Luis", "Gómez", "luis@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
+    }
+
+    @Test
+    void ca084_onlyMembersOfTheStudyCrewMayRegister() {
+        Crew crew = new Crew(1L, "Cuadrilla 1", teacher());
+        User outsider = new User(3L, "Ana", "Ríos", "ana@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
+        crew.addMember(student());
+
+        assertDoesNotThrow(() -> AccessPolicy.requireCrewMember(student(), crew));
+        assertDoesNotThrow(() -> AccessPolicy.requireCrewMember(teacher(), null));
+        assertThrows(AccessDeniedException.class, () -> AccessPolicy.requireCrewMember(outsider, crew));
+        assertThrows(AccessDeniedException.class, () -> AccessPolicy.requireCrewMember(student(), null));
     }
 
     @Test

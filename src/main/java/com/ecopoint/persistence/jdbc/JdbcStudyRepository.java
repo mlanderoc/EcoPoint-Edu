@@ -33,7 +33,7 @@ import java.util.Set;
 public class JdbcStudyRepository implements StudyRepository {
 
     private static final String COLUMNS =
-            "id, id_institucion, estado, cancelado_por, cancelado_en, motivo_cancelacion";
+            "id, id_institucion, id_cuadrilla, estado, cancelado_por, cancelado_en, motivo_cancelacion";
 
     private final NamedParameterJdbcTemplate jdbc;
 
@@ -51,18 +51,21 @@ public class JdbcStudyRepository implements StudyRepository {
     public CharacterizationStudy save(CharacterizationStudy study) {
         DataAccessTranslator.execute("guardar el estudio de caracterización", () -> {
             if (study.getId() == null) {
-                study.setId(jdbc.queryForObject("INSERT INTO ESTUDIO (id_institucion, estado) "
-                                + "VALUES (:institucion, CAST(:estado AS estado_estudio)) RETURNING id",
+                study.setId(jdbc.queryForObject("INSERT INTO ESTUDIO (id_institucion, id_cuadrilla, estado) "
+                                + "VALUES (:institucion, :cuadrilla, CAST(:estado AS estado_estudio)) RETURNING id",
                         new MapSqlParameterSource("institucion", study.getInstitutionId())
+                                .addValue("cuadrilla", study.getCrewId())
                                 .addValue("estado", study.getStatus().name()), Long.class));
                 for (SamplingDay day : study.getDays()) {
                     jdbc.update("INSERT INTO DIA_MUESTREO (id_estudio, numero_dia, fecha) VALUES (:estudio, :dia, :fecha)",
                             dayParameters(study.getId(), day));
                 }
             } else {
-                jdbc.update("UPDATE ESTUDIO SET estado = CAST(:estado AS estado_estudio), cancelado_por = :canceladoPor, "
-                                + "cancelado_en = :canceladoEn, motivo_cancelacion = :motivo WHERE id = :id",
+                jdbc.update("UPDATE ESTUDIO SET estado = CAST(:estado AS estado_estudio), id_cuadrilla = :cuadrilla, "
+                                + "cancelado_por = :canceladoPor, cancelado_en = :canceladoEn, motivo_cancelacion = :motivo "
+                                + "WHERE id = :id",
                         cancellationParameters(study).addValue("id", study.getId())
+                                .addValue("cuadrilla", study.getCrewId())
                                 .addValue("estado", study.getStatus().name()));
                 // First clear the dates, so moving a date to another day never hits the UNIQUE (id_estudio, fecha).
                 jdbc.update("UPDATE DIA_MUESTREO SET fecha = NULL WHERE id_estudio = :estudio",
@@ -90,6 +93,22 @@ public class JdbcStudyRepository implements StudyRepository {
                 () -> jdbc.queryForList("SELECT " + COLUMNS + " FROM ESTUDIO "
                                 + "WHERE id_institucion = :institucion ORDER BY id DESC",
                         new MapSqlParameterSource("institucion", institutionId)).stream().map(this::toStudy).toList());
+    }
+
+    @Override
+    public List<CharacterizationStudy> findByStatus(StudyStatus status) {
+        return DataAccessTranslator.execute("listar los estudios " + status.getDisplayName().toLowerCase(),
+                () -> jdbc.queryForList("SELECT " + COLUMNS + " FROM ESTUDIO "
+                                + "WHERE estado = CAST(:estado AS estado_estudio) ORDER BY id DESC",
+                        new MapSqlParameterSource("estado", status.name())).stream().map(this::toStudy).toList());
+    }
+
+    @Override
+    public void assignCrewToShiftsWithoutCrew(Long studyId, Long crewId) {
+        DataAccessTranslator.execute("asignar la cuadrilla a los turnos del estudio " + studyId,
+                () -> jdbc.update("UPDATE TURNO SET id_cuadrilla = :cuadrilla "
+                                + "WHERE id_estudio = :estudio AND id_cuadrilla IS NULL",
+                        new MapSqlParameterSource("cuadrilla", crewId).addValue("estudio", studyId)));
     }
 
     @Override
@@ -170,8 +189,10 @@ public class JdbcStudyRepository implements StudyRepository {
                 "SELECT id_usuario, motivo, reabierto_en FROM REAPERTURA_ESTUDIO WHERE id_estudio = :estudio ORDER BY id",
                 byStudy, (rs, n) -> new StudyReopening(rs.getLong("id_usuario"), rs.getString("motivo"),
                         rs.getTimestamp("reabierto_en").toLocalDateTime()));
-        return CharacterizationStudy.restore(id, ((Number) row.get("id_institucion")).longValue(),
+        CharacterizationStudy study = CharacterizationStudy.restore(id, ((Number) row.get("id_institucion")).longValue(),
                 StudyStatus.valueOf(row.get("estado").toString()), dates, reopenings, cancellationOf(row));
+        study.setCrewId(row.get("id_cuadrilla") == null ? null : ((Number) row.get("id_cuadrilla")).longValue());
+        return study;
     }
 
     private static StudyCancellation cancellationOf(Map<String, Object> row) {

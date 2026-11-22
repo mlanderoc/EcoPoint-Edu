@@ -29,8 +29,8 @@ export function BottomNav({
   // Items per role strictly respecting CA-300
   const items = isDocente
     ? [
-        { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
         { label: 'Estudios', href: '/estudios', icon: <Calendar className="w-5 h-5" /> },
+        { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
         { label: 'Calidad', href: '/calidad/verificacion', icon: <ShieldCheck className="w-5 h-5" /> },
         { label: 'Indicadores', href: '/indicadores', icon: <BarChart3 className="w-5 h-5" /> },
         { label: 'Admin', href: '/admin/instituciones', icon: <Settings className="w-5 h-5" /> },

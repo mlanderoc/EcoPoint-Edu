@@ -21,6 +21,7 @@ import { ApiError } from '@/services/apiClient'
 import { Quartering, SamplingShift, WasteCategory, WasteGroup } from '@/types'
 import { cn } from '@/utils/cn'
 import { qualityService } from '../services/qualityService'
+import { settingsOfStudy } from '@/features/study/services/studySettings'
 import { CompositionChart } from '../components/CompositionChart'
 import {
   DEFAULT_QUARTERING_SETTINGS, checkQuality, formatKg, proposedFullSample, sampleError,
@@ -57,6 +58,9 @@ export function QuarteringPage() {
       .then(([loadedShift, loadedQuartering, loadedCategories]) => {
         setShift(loadedShift)
         setQuartering(loadedQuartering)
+        settingsOfStudy(loadedShift.studyId)
+          .then((found) => { if (found) setSettings(found) })
+          .catch(() => undefined)
         setCategories(loadedCategories.filter((category) => category.active))
         const full = proposedFullSample(loadedShift.totalNetWeight)
         if (full !== null) {
@@ -66,13 +70,7 @@ export function QuarteringPage() {
         }
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'No se pudo cargar el cuarteo.'))
-    adminService.getInstitutions()
-      .then((institutions) => {
-        const found = institutions.find((item) => item.id === user?.institutionId)?.settings
-        if (found) setSettings(found)
-      })
-      .catch(() => undefined)
-  }, [shiftId, user?.institutionId])
+  }, [shiftId])
 
   const sampleValue = parseDecimal(sample)
   const weightValues = categories.map((category) => parseDecimal(weights[category.id] ?? ''))

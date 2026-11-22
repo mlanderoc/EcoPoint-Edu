@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import com.ecopoint.dto.ReasonRequest;
 import com.ecopoint.dto.OpenShiftRequest;
 import com.ecopoint.dto.ShiftResponse;
+import com.ecopoint.dto.StudyCrewRequest;
 import com.ecopoint.dto.ShiftSlotResponse;
 import com.ecopoint.dto.SourceIdsRequest;
 import com.ecopoint.dto.StatusChangeRequest;
@@ -42,7 +43,7 @@ public class StudyController implements FieldNameMapping {
 
     private static final Map<String, String> FIELDS = Map.of(
             "fechas", "days", "fuentes", "sourceIds", "motivo", "reason", "estado", "status",
-            "institucion", "institutionId", "dia", "dayNumber", "turno", "type");
+            "institucion", "institutionId", "dia", "dayNumber", "turno", "type", "cuadrilla", "crewId");
 
     private final StudyService studies;
     private final ShiftService shifts;
@@ -81,6 +82,18 @@ public class StudyController implements FieldNameMapping {
     }
 
     /**
+     * Lists the studies in execution where the user may register field data:
+     * all for a teacher, those of his crews for a student (RN-089, R-340).
+     *
+     * @param principal user of the session
+     * @return studies in execution
+     */
+    @GetMapping("/field")
+    public List<StudyResponse> fieldStudies(@AuthenticationPrincipal EcoPointUserDetails principal) {
+        return studies.fieldStudies(currentUser.of(principal)).stream().map(this::toResponse).toList();
+    }
+
+    /**
      * Shows one study.
      *
      * @param id study id
@@ -92,10 +105,10 @@ public class StudyController implements FieldNameMapping {
     }
 
     /**
-     * Creates a planned study with its dates (R-330).
+     * Creates a planned study with its crew and dates (R-330, R-331).
      *
      * @param principal user of the session
-     * @param request   institution and dates
+     * @param request   institution, crew and dates
      * @return the created study
      */
     @PostMapping
@@ -104,7 +117,7 @@ public class StudyController implements FieldNameMapping {
                                 @RequestBody StudyDatesRequest request) {
         User actor = currentUser.of(principal);
         Long institution = request.institutionId() != null ? request.institutionId() : actor.getInstitutionId();
-        return toResponse(studies.create(actor, institution, request.toDates()));
+        return toResponse(studies.create(actor, institution, request.crewId(), request.toDates()));
     }
 
     /**
@@ -119,6 +132,20 @@ public class StudyController implements FieldNameMapping {
     public StudyResponse reschedule(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
                                     @RequestBody StudyDatesRequest request) {
         return toResponse(studies.reschedule(currentUser.of(principal), id, request.toDates()));
+    }
+
+    /**
+     * Changes the crew of a planned study (RN-088).
+     *
+     * @param principal user of the session
+     * @param id        study id
+     * @param request   new crew
+     * @return the saved study
+     */
+    @PutMapping("/{id}/crew")
+    public StudyResponse changeCrew(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
+                                    @RequestBody StudyCrewRequest request) {
+        return toResponse(studies.changeCrew(currentUser.of(principal), id, request.crewId()));
     }
 
     /**
@@ -166,15 +193,14 @@ public class StudyController implements FieldNameMapping {
      *
      * @param principal user of the session
      * @param id        study id
-     * @param request   day, type and crew
+     * @param request   day and type; the crew is the one of the study
      * @return the opened shift
      */
     @PostMapping("/{id}/shifts")
     @ResponseStatus(HttpStatus.CREATED)
     public ShiftResponse openShift(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
                                    @RequestBody OpenShiftRequest request) {
-        SamplingShift shift = shifts.open(currentUser.of(principal), id, request.dayNumber(), request.type(),
-                request.crewId());
+        SamplingShift shift = shifts.open(currentUser.of(principal), id, request.dayNumber(), request.type());
         return ShiftResponse.from(shift, shifts.progress(shift));
     }
 
@@ -205,7 +231,7 @@ public class StudyController implements FieldNameMapping {
     }
 
     private StudyResponse toResponse(CharacterizationStudy study) {
-        return StudyResponse.from(study, studies.participatingSources(study.getId()),
+        return StudyResponse.from(study, studies.crewName(study), studies.participatingSources(study.getId()),
                 studies.pendingRecords(study.getId()));
     }
 }

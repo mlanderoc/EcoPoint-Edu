@@ -14,6 +14,7 @@ import { ApiError } from '@/services/apiClient'
 import { CharacterizationStudy, ShiftSlot } from '@/types'
 import { cn } from '@/utils/cn'
 import { StudyDatesEditor } from '../components/StudyDatesEditor'
+import { CrewSelect, useCrews } from '../components/CrewSelect'
 import { studyService } from '../services/studyService'
 import { formatDate } from '../utils/samplingDays'
 import { NEXT_STEP, STATUS_LABELS, canCancel, canDelete, studyTitle } from '../utils/studyStatus'
@@ -49,6 +50,8 @@ export function StudyDetailPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [dates, setDates] = useState<string[] | null>(null)
   const [datesSaved, setDatesSaved] = useState(false)
+  const { crews } = useCrews()
+  const [crewSaved, setCrewSaved] = useState(false)
 
   const load = useCallback(async () => {
     try {
@@ -115,6 +118,11 @@ export function StudyDetailPage() {
     setDatesSaved(true)
   }, 'No se pudieron guardar las fechas.')
 
+  const handleChangeCrew = (crewId: number) => run(async () => {
+    setStudy(await studyService.changeCrew(study.id, crewId))
+    setCrewSaved(true)
+  }, 'No se pudo cambiar la cuadrilla.')
+
   return (
     <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
       <BackButton to="/estudios" label="Atrás a los estudios" />
@@ -153,6 +161,23 @@ export function StudyDetailPage() {
         <AlertBanner variant="danger" title="No se pudo completar la acción" message={rejection}
           onDismiss={() => setRejection(null)} />
       )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Cuadrilla</CardTitle>
+        </CardHeader>
+        <CardContent className="flex flex-col gap-3">
+          {crewSaved && <AlertBanner variant="success" message="Cuadrilla guardada." onDismiss={() => setCrewSaved(false)} />}
+          {study.status === 'PLANIFICADO' || (study.status === 'EN_EJECUCION' && study.crewId === null) ? (
+            <CrewSelect crews={crews} value={study.crewId} currentName={study.crewName}
+              onChange={handleChangeCrew} disabled={isSaving} />
+          ) : (
+            <p className="text-sm" data-testid="study-crew">
+              {study.crewName ?? 'Sin cuadrilla asignada'}
+            </p>
+          )}
+        </CardContent>
+      </Card>
 
       {study.status === 'PLANIFICADO' && (
         <Card>
