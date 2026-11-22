@@ -1,5 +1,5 @@
 import React from 'react'
-import { ClipboardList, Calendar, Bell, UserCheck, Settings, ShieldCheck, BarChart3 } from 'lucide-react'
+import { BarChart3, Calendar, ClipboardList, Grid2x2, Home, ShieldCheck } from 'lucide-react'
 import { UserRole } from '@/types'
 import { cn } from '@/utils/cn'
 import { useOptionalAuth } from '@/features/auth/hooks/useAuth'
@@ -9,6 +9,9 @@ export interface BottomNavProps {
   currentPath?: string
   onNavigate?: (href: string) => void
 }
+
+/** Paths reached through "Más" on the phone. */
+const MORE_PATHS = ['/mas', '/alertas', '/perfil', '/admin']
 
 export function BottomNav({
   role: roleProp,
@@ -24,57 +27,39 @@ export function BottomNav({
     return null
   }
 
-  const isDocente = role === 'DOCENTE'
-
   // Items per role strictly respecting CA-300
-  const items = isDocente
-    ? [
-        { label: 'Estudios', href: '/estudios', icon: <Calendar className="w-5 h-5" /> },
-        { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
-        { label: 'Calidad', href: '/calidad/verificacion', icon: <ShieldCheck className="w-5 h-5" /> },
-        { label: 'Indicadores', href: '/indicadores', icon: <BarChart3 className="w-5 h-5" /> },
-        { label: 'Admin', href: '/admin/instituciones', icon: <Settings className="w-5 h-5" /> },
-        { label: 'Alertas', href: '/alertas', icon: <Bell className="w-5 h-5" /> },
-      ]
-    : [
-        { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
-        { label: 'Calidad', href: '/calidad/verificacion', icon: <ShieldCheck className="w-5 h-5" /> },
-        { label: 'Indicadores', href: '/indicadores', icon: <BarChart3 className="w-5 h-5" /> },
-        { label: 'Alertas', href: '/alertas', icon: <Bell className="w-5 h-5" /> },
-        { label: 'Perfil', href: '/perfil', icon: <UserCheck className="w-5 h-5" /> },
-      ]
+  const items = [
+    { label: 'Inicio', href: '/inicio', icon: <Home className="w-5 h-5" /> },
+    ...(role === 'DOCENTE' ? [{ label: 'Estudios', href: '/estudios', icon: <Calendar className="w-5 h-5" /> }] : []),
+    { label: 'Campo', href: '/campo', icon: <ClipboardList className="w-5 h-5" /> },
+    { label: 'Calidad', href: '/calidad/verificacion', icon: <ShieldCheck className="w-5 h-5" /> },
+    { label: 'Indicadores', href: '/indicadores', icon: <BarChart3 className="w-5 h-5" /> },
+    { label: 'Más', href: '/mas', icon: <Grid2x2 className="w-5 h-5" /> },
+  ]
 
-  const handleNavigate = (e: React.MouseEvent, href: string) => {
-    e.preventDefault()
+  const handleNavigate = (event: React.MouseEvent, href: string) => {
+    event.preventDefault()
     onNavigate?.(href)
   }
 
+  const isActive = (href: string) => href === '/mas'
+    ? MORE_PATHS.some((path) => currentPath === path || currentPath.startsWith(`${path}/`))
+    : currentPath === href || currentPath.startsWith(`${href}/`)
+
   return (
-    <nav
-      aria-label="Navegación móvil"
-      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white border-t border-slate-200 px-2 py-1 shadow-lg flex items-center justify-around select-none"
-    >
-      {items.map((item) => {
-        const active = currentPath === item.href || currentPath.startsWith(`${item.href}/`)
-        return (
-          <a
-            key={item.href}
-            href={item.href}
-            onClick={(e) => handleNavigate(e, item.href)}
-            className={cn(
-              'min-h-[48px] min-w-[48px] flex-1 flex flex-col items-center justify-center gap-0.5 rounded-lg py-1 transition cursor-pointer',
-              active
-                ? 'text-[var(--color-primary)] font-bold'
-                : 'text-slate-500 hover:text-slate-800 font-medium'
-            )}
-          >
-            <span className={active ? 'text-[var(--color-primary)]' : 'text-slate-500'}>
-              {item.icon}
-            </span>
-            <span className="text-[10px] leading-tight tracking-tight">{item.label}</span>
-          </a>
-        )
-      })}
+    <nav aria-label="Navegación móvil" className="shell-bottom select-none">
+      {items.map((item) => (
+        <a
+          key={item.href}
+          href={item.href}
+          aria-current={isActive(item.href) ? 'page' : undefined}
+          onClick={(event) => handleNavigate(event, item.href)}
+          className={cn('min-h-[48px]', isActive(item.href) && 'on')}
+        >
+          {item.icon}
+          <span>{item.label}</span>
+        </a>
+      ))}
     </nav>
   )
 }
