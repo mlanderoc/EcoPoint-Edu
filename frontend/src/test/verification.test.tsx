@@ -140,7 +140,7 @@ describe('Alerts (T407, CA-411, R-432)', () => {
 
     await user.type(screen.getByLabelText('Observación'), 'Se volvió a pesar.')
     await user.click(screen.getByRole('button', { name: 'Guardar' }))
-    expect(await screen.findByText('No hay alertas con estos filtros.')).toBeInTheDocument()
+    expect(await screen.findByText('No hay alertas pendientes.')).toBeInTheDocument()
   })
 
   it('r432_menuShowsTheNumberOfPendingAlerts', async () => {

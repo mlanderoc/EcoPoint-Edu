@@ -27,16 +27,16 @@ export function formatValue(value: number | string | null): string {
 export function RecordCard({ record, children }: { record: VerifiableRecord; children?: React.ReactNode }) {
   const status = record.verification.status
   return (
-    <div className="rounded-xl border border-slate-200 p-3 flex flex-col gap-2" data-testid={`record-${record.recordType}-${record.recordId}`}>
+    <div className="record-card" data-testid={`record-${record.recordType}-${record.recordId}`}>
       <div className="flex items-center justify-between gap-2">
-        <p className="font-semibold">{record.title}</p>
+        <p className="m-0 font-[family-name:var(--display)] font-black">{record.title}</p>
         <Badge tone={status === 'PENDIENTE' ? 'warning' : 'success'}>{STATUS_LABELS[status]}</Badge>
       </div>
-      <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+      <dl>
         {record.fields.map((field) => (
-          <div key={field.field} className="flex justify-between gap-2">
-            <dt className="text-slate-500">{field.label}</dt>
-            <dd className="font-medium">{formatValue(field.value)}</dd>
+          <div key={field.field}>
+            <dt>{field.label}</dt>
+            <dd>{formatValue(field.value)}</dd>
           </div>
         ))}
       </dl>

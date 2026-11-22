@@ -5,42 +5,38 @@
  * @author craulgomez
  */
 
-import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { Composition } from '../types/indicatorTypes'
 import { GROUP_COLORS, formatNumber } from '../utils/format'
 
-export function CompositionDonutChart({ composition }: { composition: Composition }) {
-  const data = composition.groups.filter((group) => (group.percentage ?? 0) > 0)
+const ORDER = ['VERDE', 'BLANCO', 'NEGRO', 'SIN_COLOR']
+
+export function CompositionDonutChart({ composition, recoverable }: { composition: Composition; recoverable?: number | null }) {
+  const groups = ORDER.flatMap((key) => composition.groups.filter((group) => group.group === key))
+  const hasData = groups.some((group) => (group.percentage ?? 0) > 0)
+  const stops = groups.map((group, index) => {
+    const from = groups.slice(0, index).reduce((total, item) => total + (item.percentage ?? 0), 0)
+    return `${GROUP_COLORS[group.group]} ${from}% ${from + (group.percentage ?? 0)}%`
+  }).join(',')
   return (
-    <Card>
-      <CardHeader><CardTitle>Composición por grupo</CardTitle></CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        {data.length === 0 ? (
-          <p className="text-sm text-slate-500">Aún no hay cuarteos válidos para calcular la composición.</p>
-        ) : (
-          <div className="h-56 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie data={data} dataKey="percentage" nameKey="name" innerRadius="55%" outerRadius="85%" isAnimationActive={false}
-                  stroke="#ffffff" strokeWidth={2}>
-                  {data.map((group) => <Cell key={group.group} fill={GROUP_COLORS[group.group]} />)}
-                </Pie>
-                <Tooltip formatter={(value, name) => [`${formatNumber(Number(value))} %`, String(name)]} />
-              </PieChart>
-            </ResponsiveContainer>
+    <section className="panel">
+      <h3>Composición</h3>
+      {!hasData && <p className="m-0 text-sm text-slate-500">Aún no hay cuarteos válidos para calcular la composición.</p>}
+      <div className={hasData ? 'mix' : ''}>
+        {hasData && (
+          <div className="donut" style={{ background: `conic-gradient(${stops})` }} role="img"
+            aria-label={groups.map((group) => `${group.name} ${formatNumber(group.percentage, 0)} %`).join(', ')}>
+            <div><b>{formatNumber(recoverable, 0)} %</b><span>aprovechable</span></div>
           </div>
         )}
-        <ul className="grid grid-cols-2 gap-2 text-sm" data-testid="group-shares">
-          {composition.groups.map((group) => (
-            <li key={group.group} className="flex items-center gap-2">
-              <span className="inline-block w-3 h-3 rounded-sm border border-slate-300 shrink-0"
-                style={{ backgroundColor: GROUP_COLORS[group.group] }} aria-hidden="true" />
-              <span>{group.name}: <strong>{formatNumber(group.percentage)} %</strong></span>
+        <ul className="legend" data-testid="group-shares">
+          {groups.map((group) => (
+            <li key={group.group}>
+              <i style={{ background: GROUP_COLORS[group.group] }} aria-hidden="true" />
+              <span>{group.name}</span><b>{formatNumber(group.percentage)} %</b>
             </li>
           ))}
         </ul>
-      </CardContent>
-    </Card>
+      </div>
+    </section>
   )
 }

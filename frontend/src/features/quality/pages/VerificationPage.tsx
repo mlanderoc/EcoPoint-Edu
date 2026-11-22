@@ -8,13 +8,12 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertBanner, Button, Card, CardContent, CardHeader, CardTitle, Select } from '@/components/ui'
+import { AlertBanner, Button, Select } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { studyService } from '@/features/study/services/studyService'
 import { studyTitle } from '@/features/study/utils/studyStatus'
 import { ApiError } from '@/services/apiClient'
 import { CharacterizationStudy, RecordType, VerifiableRecord, VerificationStatus, VerificationSummary } from '@/types'
-import { cn } from '@/utils/cn'
 import { RecordCard } from '../components/RecordCard'
 import { verificationService } from '../services/verificationService'
 
@@ -108,46 +107,64 @@ export function VerificationPage() {
     return next
   })
 
+  const finished = summary ? summary.verified + summary.corrected : 0
+  const total = summary ? finished + summary.pending : 0
+  const percent = total > 0 ? Math.round((finished / total) * 100) : 0
+
   return (
-    <div className="max-w-6xl w-full mx-auto flex flex-col gap-5">
-      <div className="page-hero"><h1 className="page-hero-title">Verificación del doble registro</h1></div>
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
+      <div className="page-hero">
+        <div>
+          <h1 className="page-hero-title">Verificación del doble registro</h1>
+          <p className="m-0 mt-1">Compara la planilla en papel con lo digitado.</p>
+        </div>
+      </div>
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
       {studies.length === 0 && !error && (
         <AlertBanner variant="info" message="No hay estudios en ejecución ni en depuración para verificar." />
       )}
       {studies.length > 1 && (
-        <Select id="verification-study" label="Estudio" value={String(studyId ?? '')}
-          onChange={(event) => { setStudyId(Number(event.target.value)); setShiftId(null) }}
-          options={studies.map((study) => ({ value: String(study.id), label: studyTitle(study) }))} />
+        <div className="sm:max-w-md">
+          <Select id="verification-study" label="Estudio" value={String(studyId ?? '')}
+            onChange={(event) => { setStudyId(Number(event.target.value)); setShiftId(null) }}
+            options={studies.map((study) => ({ value: String(study.id), label: studyTitle(study) }))} />
+        </div>
       )}
 
-      {summary && (
-        <Card>
-          <CardHeader><CardTitle>Avance de la depuración</CardTitle></CardHeader>
-          <CardContent className="flex flex-col gap-3">
+      <div className="grid-left">
+        {summary && (
+          <section className="panel">
+            <h3>Avance de la depuración</h3>
+            <div className="ring" style={{ background: `conic-gradient(var(--brand) ${percent}%, #e4e8db 0)` }}>
+              <div><b>{percent} %</b><span className="text-[var(--muted)]">{finished} de {total}</span></div>
+            </div>
             <AlertBanner variant={summary.readyToClose ? 'success' : 'warning'}
               title={summary.readyToClose ? 'Listo para cerrar' : 'El estudio aún no puede cerrarse'}
               message={`${summary.pending} pendientes · ${summary.verified} verificados · ${summary.corrected} corregidos · ${summary.nonConformingQuarterings} cuarteos no conformes`} />
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2" data-testid="shift-progress">
-              {summary.shifts.map((shift) => (
-                <button key={shift.shiftId} type="button" onClick={() => setShiftId(shift.shiftId)}
-                  className={cn('min-h-[56px] rounded-lg border-2 px-2 py-1 text-left text-xs',
-                    shiftId === shift.shiftId ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]' : 'border-slate-200')}>
-                  <span className="block font-bold text-sm">{shift.code}</span>
-                  {shift.pending} pend. · {shift.verified + shift.corrected} listos
-                  {shift.nonConformingQuartering && <span className="block text-red-700 font-semibold">Cuarteo no conforme</span>}
-                </button>
-              ))}
+            <div className="flex flex-col gap-1" data-testid="shift-progress">
+              {summary.shifts.map((shift) => {
+                const all = shift.pending + shift.verified + shift.corrected
+                const done = shift.verified + shift.corrected
+                return (
+                  <button key={shift.shiftId} type="button" aria-pressed={shiftId === shift.shiftId}
+                    onClick={() => setShiftId(shift.shiftId)} className="shift-pick">
+                    <span className="shift-row">
+                      <span className="code">{shift.code}</span>
+                      <span className="track"><i style={{ width: `${all ? (done / all) * 100 : 0}%` }} /></span>
+                      <span className="text-[var(--muted)]">{shift.pending} pend.</span>
+                    </span>
+                    {shift.nonConformingQuartering && <span className="block text-xs text-red-700 font-semibold">Cuarteo no conforme</span>}
+                  </button>
+                )
+              })}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </section>
+        )}
 
-      {shiftId !== null && (
-        <Card>
-          <CardHeader><CardTitle>Registros del turno</CardTitle></CardHeader>
-          <CardContent className="flex flex-col gap-3">
+        {shiftId !== null && (
+          <section className="panel">
+            <h3>Registros del turno</h3>
             <div className="grid grid-cols-2 gap-3">
               <Select id="verification-type" label="Tipo" value={type} onChange={(event) => setType(event.target.value)}
                 options={TYPE_OPTIONS} />
@@ -160,13 +177,13 @@ export function VerificationPage() {
                 Coinciden con el papel ({selected.size})
               </Button>
             )}
-            {visible.length === 0 && <p className="text-sm text-slate-500">No hay registros con estos filtros.</p>}
+            {visible.length === 0 && <p className="m-0 text-sm text-slate-500">No hay registros con estos filtros.</p>}
             {visible.map((record) => (
               <RecordCard key={key(record)} record={record}>
                 {canAct(record) ? (
                   <div className="flex flex-wrap items-center gap-2">
                     <label className="flex items-center gap-2 min-h-[48px] text-sm">
-                      <input type="checkbox" className="w-5 h-5" checked={selected.has(key(record))}
+                      <input type="checkbox" className="w-5 h-5 accent-[var(--brand)]" checked={selected.has(key(record))}
                         onChange={() => toggle(record)} aria-label={`Seleccionar ${record.title}`} />
                       Seleccionar
                     </label>
@@ -190,9 +207,9 @@ export function VerificationPage() {
                 )}
               </RecordCard>
             ))}
-          </CardContent>
-        </Card>
-      )}
+          </section>
+        )}
+      </div>
     </div>
   )
 }

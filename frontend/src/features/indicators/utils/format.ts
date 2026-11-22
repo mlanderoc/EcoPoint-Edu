@@ -13,10 +13,10 @@ export function formatNumber(value: number | null | undefined, decimals = 2): st
 }
 
 export const GROUP_COLORS: Record<WasteGroupCode, string> = {
-  BLANCO: '#cbd5e1',
-  VERDE: '#059669',
-  NEGRO: '#1e293b',
-  SIN_COLOR: '#d97706',
+  BLANCO: '#ffffff',
+  VERDE: '#2aa35f',
+  NEGRO: '#25292a',
+  SIN_COLOR: '#b98a3e',
 }
 
 export const SHIFT_LABELS: Record<ShiftTypeCode, string> = {

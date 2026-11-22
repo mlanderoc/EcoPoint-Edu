@@ -120,10 +120,10 @@ export function QuarteringPage() {
   if (quartering) {
     const nonConforming = quartering.qualityStatus === 'NO_CONFORME'
     return (
-      <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+      <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
         <BackButton to={shiftPath} label="Atrás al turno" />
-        <ShiftSteps shift={shift} current="cuarteo" />
         <div className="page-hero"><h1 className="page-hero-title">Cuarteo · Turno {shift.code}</h1></div>
+        <ShiftSteps shift={shift} current="cuarteo" />
         {error && <AlertBanner variant="danger" message={error} />}
         {nonConforming && (
           <AlertBanner variant="danger" title="Cuarteo no conforme: repesar"
@@ -168,15 +168,17 @@ export function QuarteringPage() {
 
   const conforming = check.status === 'CONFORME'
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5 pb-48">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
       <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
-      <ShiftSteps shift={shift} current="cuarteo" />
       <div className="page-hero">
-        <h1 className="page-hero-title">Cuarteo · Turno {shift.code}</h1>
-        <p className="text-sm text-[var(--color-text-muted)]" data-testid="shift-net">
-          Peso neto del turno: <strong>{formatKg(shift.totalNetWeight)} kg</strong>
-        </p>
+        <div>
+          <h1 className="page-hero-title">Cuarteo · Turno {shift.code}</h1>
+          <p className="m-0 mt-1" data-testid="shift-net">
+            Peso neto del turno: <strong>{formatKg(shift.totalNetWeight)} kg</strong>
+          </p>
+        </div>
       </div>
+      <ShiftSteps shift={shift} current="cuarteo" />
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       {shift.status !== 'ABIERTO' && (
         <AlertBanner variant="warning" message="El turno está cerrado: no se puede registrar el cuarteo." />
@@ -186,51 +188,23 @@ export function QuarteringPage() {
           message={`El turno generó ${formatKg(shift.totalNetWeight)} kg, menos que la submuestra mínima: se clasifica todo.`} />
       )}
 
-      <form onSubmit={handleSave} className="flex flex-col gap-5">
-        <Input id="quartering-sample" label="Peso de la submuestra (kg)" inputMode="decimal" value={sample}
-          onChange={(event) => setSample(event.target.value)} error={sample ? sampleMessage ?? undefined : undefined}
-          helperText={`Entre ${formatKg(settings.minSampleWeight, 0)} y ${formatKg(settings.maxSampleWeight, 0)} kg`}
-          disabled={isSaving} className="min-h-[56px] text-xl" />
-
-        {GROUPS.map((group) => {
-          const inGroup = categories.filter((category) => category.group === group)
-          if (inGroup.length === 0) return null
-          const locked = group === 'SIN_COLOR' && !canRegisterHazardous
-          return (
-            <Card key={group}>
-              <CardHeader className="flex flex-row items-center justify-between gap-2">
-                <WasteGroupBadge group={group} />
-              </CardHeader>
-              <CardContent className="flex flex-col gap-3">
-                {group === 'SIN_COLOR' && (
-                  <p className="text-sm text-amber-900 flex items-start gap-2">
-                    <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
-                    {locked ? 'Solo un docente registra residuos peligrosos' : 'Residuos peligrosos: van a posconsumo'}
-                  </p>
-                )}
-                {inGroup.map((category) => (
-                  <Input key={category.id} id={`category-${category.id}`} label={`${category.name} (kg)`}
-                    inputMode="decimal" placeholder="0" value={weights[category.id] ?? ''}
-                    onChange={(event) => setWeights((previous) => ({ ...previous, [category.id]: event.target.value }))}
-                    disabled={isSaving || locked} className="min-h-[48px]" />
-                ))}
-              </CardContent>
-            </Card>
-          )
-        })}
-
-        <div className="fixed bottom-16 md:bottom-0 inset-x-0 z-20 px-4 pb-3">
-          <div className={cn('max-w-3xl mx-auto rounded-2xl border-2 p-3 shadow-lg bg-white flex flex-col gap-2',
-            conforming ? 'border-emerald-500' : 'border-red-500')} data-testid="quality-bar">
+      <form onSubmit={handleSave} className="grid-left">
+        <section className="panel">
+          <h3>Cuarteo</h3>
+          <Input id="quartering-sample" label="Peso de la submuestra (kg)" inputMode="decimal" value={sample}
+            onChange={(event) => setSample(event.target.value)} error={sample ? sampleMessage ?? undefined : undefined}
+            helperText={`Entre ${formatKg(settings.minSampleWeight, 0)} y ${formatKg(settings.maxSampleWeight, 0)} kg`}
+            disabled={isSaving} className="min-h-[56px] text-xl" />
+          <div className={cn('quality-box', conforming ? 'border-emerald-500' : 'border-red-500')} data-testid="quality-bar">
             <div className="grid grid-cols-3 gap-2 text-center text-sm">
-              <div><p className="text-xs text-slate-500">Clasificado</p><strong>{formatKg(check.classified)} kg</strong></div>
-              <div><p className="text-xs text-slate-500">Submuestra</p><strong>{formatKg(sampleValue ?? 0)} kg</strong></div>
+              <div><p className="m-0 text-xs text-slate-500">Clasificado</p><strong>{formatKg(check.classified)} kg</strong></div>
+              <div><p className="m-0 text-xs text-slate-500">Submuestra</p><strong>{formatKg(sampleValue ?? 0)} kg</strong></div>
               <div>
-                <p className="text-xs text-slate-500">Diferencia</p>
+                <p className="m-0 text-xs text-slate-500">Diferencia</p>
                 <strong>{formatKg(check.differenceKg)} kg ({formatKg(check.differencePercent)} %)</strong>
               </div>
             </div>
-            <p className={cn('text-center font-bold', conforming ? 'text-emerald-700' : 'text-red-700')}>
+            <p className={cn('m-0 text-center font-bold', conforming ? 'text-emerald-700' : 'text-red-700')}>
               {conforming
                 ? `Conforme (≤ ${formatKg(settings.qualityTolerancePercent, 0)} %)`
                 : `No conforme (> ${formatKg(settings.qualityTolerancePercent, 0)} %)`}
@@ -244,7 +218,37 @@ export function QuarteringPage() {
               Descartar
             </Button>
           </div>
-        </div>
+        </section>
+
+        <section className="panel">
+          <h3>Peso por subcategoría</h3>
+          <div className="groups">
+            {GROUPS.map((group) => {
+              const inGroup = categories.filter((category) => category.group === group)
+              if (inGroup.length === 0) return null
+              const locked = group === 'SIN_COLOR' && !canRegisterHazardous
+              return (
+                <div key={group} className="group-box">
+                  <h4><WasteGroupBadge group={group} /></h4>
+                  {group === 'SIN_COLOR' && (
+                    <p className="m-0 mb-1 text-xs text-amber-900 flex items-start gap-1.5">
+                      <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+                      {locked ? 'Solo un docente registra residuos peligrosos' : 'Residuos peligrosos: van a posconsumo'}
+                    </p>
+                  )}
+                  {inGroup.map((category) => (
+                    <label key={category.id} className="weight-row" htmlFor={`category-${category.id}`}>
+                      <span>{category.name} (kg)</span>
+                      <input id={`category-${category.id}`} inputMode="decimal" placeholder="0"
+                        value={weights[category.id] ?? ''} disabled={isSaving || locked}
+                        onChange={(event) => setWeights((previous) => ({ ...previous, [category.id]: event.target.value }))} />
+                    </label>
+                  ))}
+                </div>
+              )
+            })}
+          </div>
+        </section>
       </form>
       {discardDialog}
     </div>

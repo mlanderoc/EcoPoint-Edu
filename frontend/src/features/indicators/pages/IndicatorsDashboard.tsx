@@ -62,14 +62,17 @@ export function IndicatorsDashboard() {
       {indicators && (
         <>
           <KpiCardsGrid summary={indicators.summary} compositionNote={indicators.composition.note} />
-          <DailyGenerationChart days={indicators.days} />
-          <div id="composicion" className="grid grid-cols-1 lg:grid-cols-2 gap-5 scroll-mt-4">
-            <CompositionDonutChart composition={indicators.composition} />
-            <CompositionTable composition={indicators.composition} />
+          <div className="grid-side" style={{ alignItems: 'stretch' }}>
+            <DailyGenerationChart days={indicators.days} />
+            <CompositionDonutChart composition={indicators.composition}
+              recoverable={indicators.summary.recoverableFraction} />
           </div>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          <div className="grid-2">
             <SourceGenerationChart sources={indicators.sources} />
             <ShiftComparisonCard shifts={indicators.shifts} />
+          </div>
+          <div id="composicion" className="scroll-mt-4">
+            <CompositionTable composition={indicators.composition} />
           </div>
         </>
       )}
