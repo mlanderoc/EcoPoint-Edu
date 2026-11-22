@@ -65,8 +65,8 @@ export function AlertsPage() {
   }
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Alertas de calidad</h1>
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-5">
+      <div className="page-hero"><h1 className="page-hero-title">Alertas de calidad</h1></div>
       {error && <AlertBanner variant="danger" message={error} />}
       <div className="grid grid-cols-2 gap-3">
         <Select id="alerts-state" label="Estado" value={state} onChange={(event) => setState(event.target.value)}

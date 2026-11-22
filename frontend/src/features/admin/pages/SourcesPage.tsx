@@ -131,10 +131,10 @@ export function SourcesPage() {
   }
 
   return (
-    <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Fuentes de Generación</h1>
+          <h1 className="page-hero-title">Fuentes de Generación</h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Puntos ecológicos y áreas físicas de generación de residuos en la institución.
           </p>

@@ -7,7 +7,7 @@
  * @author craulgomez
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PlayCircle, ArrowRight, Clock } from 'lucide-react'
 import { AlertBanner, Button, Card, CardContent, Modal, Select } from '@/components/ui'
@@ -40,6 +40,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   const { institutions } = useInstitutions(false)
   const [studies, setStudies] = useState<CharacterizationStudy[] | undefined>(undefined)
   const chosenId = Number(params.get('estudio'))
+  const requested = useRef({ day: Number(params.get('dia')), type: params.get('turno') })
   const study: CharacterizationStudy | null | undefined = studies === undefined
     ? undefined
     : studies.find((item) => item.id === chosenId) ?? studies[0] ?? null
@@ -64,8 +65,10 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
       const loaded = await studyService.shifts(running.id)
       setSlots(loaded)
       const suggestion = suggestSlot(running, loaded, now ?? new Date())
-      setDayNumber(suggestion.dayNumber)
-      setType(suggestion.type)
+      const asked = loaded.some((item) => item.dayNumber === requested.current.day && item.type === requested.current.type)
+      setDayNumber(asked ? requested.current.day : suggestion.dayNumber)
+      setType(asked ? requested.current.type as ShiftType : suggestion.type)
+      requested.current = { day: 0, type: null }
     } catch {
       setError('No se pudieron cargar los turnos del estudio.')
     }
@@ -104,7 +107,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   }
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-6">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
       {accessDenied && (
         <AlertBanner
           variant="warning"
@@ -113,8 +116,8 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
         />
       )}
 
-      <div>
-        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Registro en campo</h1>
+      <div className="page-hero">
+        <h1 className="page-hero-title">Registro en campo</h1>
         {study && studies && studies.length === 1 && (
           <p className="text-sm text-[var(--color-text-muted)]">
             {studyTitle(study)}{institutionName(study.institutionId) ? ` · ${institutionName(study.institutionId)}` : ''}

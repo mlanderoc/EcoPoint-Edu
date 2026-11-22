@@ -109,8 +109,8 @@ export function NewStudyPage() {
   return (
     <div className="max-w-4xl w-full mx-auto flex flex-col gap-6">
       <BackButton to="/estudios" label="Atrás a los estudios" onLeave={confirmLeave} />
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--color-brand-dark)]">Nuevo estudio de caracterización</h1>
+      <div className="page-hero">
+        <h1 className="page-hero-title">Nuevo estudio de caracterización</h1>
         <p className="text-sm text-[var(--color-text-muted)]">
           8 días de muestreo con turnos de mañana y tarde. Las cuadrillas se asignan al abrir cada turno.
         </p>

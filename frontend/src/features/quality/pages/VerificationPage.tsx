@@ -109,8 +109,8 @@ export function VerificationPage() {
   })
 
   return (
-    <div className="max-w-4xl w-full mx-auto flex flex-col gap-5">
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Verificación del doble registro</h1>
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-5">
+      <div className="page-hero"><h1 className="page-hero-title">Verificación del doble registro</h1></div>
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
       {studies.length === 0 && !error && (

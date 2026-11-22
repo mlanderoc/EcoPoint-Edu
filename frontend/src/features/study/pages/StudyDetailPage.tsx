@@ -124,11 +124,11 @@ export function StudyDetailPage() {
   }, 'No se pudo cambiar la cuadrilla.')
 
   return (
-    <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
       <BackButton to="/estudios" label="Atrás a los estudios" />
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--color-brand-dark)]">{studyTitle(study)}</h1>
+          <h1 className="page-hero-title">{studyTitle(study)}</h1>
           <p className="text-sm text-[var(--color-text-muted)]">
             Estado: <strong>{STATUS_LABELS[study.status]}</strong> · Registros pendientes de verificación:{' '}
             <strong>{study.pendingRecords}</strong>

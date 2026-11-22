@@ -9,9 +9,11 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
+import { ShiftSteps } from '@/features/field/components/ShiftSteps'
+import { fieldService } from '@/features/field/services/fieldService'
 import { formatNumber, parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
-import { DensityMeasurement } from '@/types'
+import { DensityMeasurement, SamplingShift } from '@/types'
 import { qualityService } from '../services/qualityService'
 
 /** Measuring containers used by the crews (R-411); extend it with the list of Environmental Engineering (P2). */
@@ -22,6 +24,7 @@ export function DensityPage() {
   const shiftId = Number(id)
   const navigate = useNavigate()
   const [saved, setSaved] = useState<DensityMeasurement | null | undefined>(undefined)
+  const [shift, setShift] = useState<SamplingShift | null>(null)
   const [volume, setVolume] = useState('')
   const [weight, setWeight] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -30,6 +33,7 @@ export function DensityPage() {
   const { confirmLeave, discardDialog } = useUnsavedChanges(!saved && !isSaving && volume + weight !== '')
 
   useEffect(() => {
+    fieldService.getShift(shiftId).then(setShift).catch(() => setShift(null))
     qualityService.getDensity(shiftId)
       .then(setSaved)
       .catch((err) => {
@@ -63,7 +67,8 @@ export function DensityPage() {
   return (
     <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
       <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Densidad del turno</h1>
+      {shift && <ShiftSteps shift={shift} current="densidad" />}
+      <div className="page-hero"><h1 className="page-hero-title">Densidad del turno</h1></div>
       {error && <AlertBanner variant="danger" message={error} />}
       {saved ? (
         <Card>

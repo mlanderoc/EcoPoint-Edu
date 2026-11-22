@@ -15,6 +15,7 @@ import { WasteGroupBadge } from '@/components/waste'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
 import { adminService } from '@/features/admin/services/adminService'
+import { ShiftSteps } from '@/features/field/components/ShiftSteps'
 import { fieldService } from '@/features/field/services/fieldService'
 import { parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
@@ -121,7 +122,8 @@ export function QuarteringPage() {
     return (
       <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
         <BackButton to={shiftPath} label="Atrás al turno" />
-        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Cuarteo · Turno {shift.code}</h1>
+        <ShiftSteps shift={shift} current="cuarteo" />
+        <div className="page-hero"><h1 className="page-hero-title">Cuarteo · Turno {shift.code}</h1></div>
         {error && <AlertBanner variant="danger" message={error} />}
         {nonConforming && (
           <AlertBanner variant="danger" title="Cuarteo no conforme: repesar"
@@ -168,8 +170,9 @@ export function QuarteringPage() {
   return (
     <div className="max-w-3xl w-full mx-auto flex flex-col gap-5 pb-48">
       <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
-      <div>
-        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Cuarteo · Turno {shift.code}</h1>
+      <ShiftSteps shift={shift} current="cuarteo" />
+      <div className="page-hero">
+        <h1 className="page-hero-title">Cuarteo · Turno {shift.code}</h1>
         <p className="text-sm text-[var(--color-text-muted)]" data-testid="shift-net">
           Peso neto del turno: <strong>{formatKg(shift.totalNetWeight)} kg</strong>
         </p>

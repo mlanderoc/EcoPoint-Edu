@@ -109,10 +109,10 @@ export function CategoriesPage() {
   const inactiveCount = categories.filter((category) => !category.active).length
 
   return (
-    <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Subcategorías de Residuos</h1>
+          <h1 className="page-hero-title">Subcategorías de Residuos</h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Clasificación oficial de subcategorías según los 4 códigos de color de la Res. 2184/2019.
           </p>

@@ -106,9 +106,9 @@ export function ProfilePage() {
   const { user, crews, activity } = profile
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Mi Perfil</h1>
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
+      <div className="page-hero">
+        <h1 className="page-hero-title">Mi Perfil</h1>
         <p className="text-sm text-[var(--color-text-muted)]">Sus datos y lo que ha registrado en el estudio.</p>
       </div>
 

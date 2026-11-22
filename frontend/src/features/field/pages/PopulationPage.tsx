@@ -5,11 +5,13 @@
  * @author craulgomez
  */
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
+import { SamplingShift } from '@/types'
+import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
 
 function count(text: string): number {
@@ -21,6 +23,7 @@ export function PopulationPage() {
   const { id } = useParams()
   const shiftId = Number(id)
   const navigate = useNavigate()
+  const [shift, setShift] = useState<SamplingShift | null>(null)
   const [students, setStudents] = useState('')
   const [teachers, setTeachers] = useState('')
   const [staff, setStaff] = useState('')
@@ -29,6 +32,10 @@ export function PopulationPage() {
   const total = count(students) + count(teachers) + count(staff)
   const shiftPath = `/campo/turno/${shiftId}`
   const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && (students + teachers + staff) !== '')
+
+  useEffect(() => {
+    fieldService.getShift(shiftId).then(setShift).catch(() => setShift(null))
+  }, [shiftId])
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -55,7 +62,8 @@ export function PopulationPage() {
   return (
     <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
       <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Población del turno</h1>
+      {shift && <ShiftSteps shift={shift} current="poblacion" />}
+      <div className="page-hero"><h1 className="page-hero-title">Población del turno</h1></div>
       {error && <AlertBanner variant="danger" message={error} />}
       <Card>
         <CardContent className="py-5">

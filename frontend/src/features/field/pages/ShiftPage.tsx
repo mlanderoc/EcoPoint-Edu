@@ -15,6 +15,7 @@ import { ApiError } from '@/services/apiClient'
 import { QualityStatus, SamplingShift, SourceProgress } from '@/types'
 import { qualityService } from '@/features/quality/services/qualityService'
 import { cn } from '@/utils/cn'
+import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
 import { formatNumber, plural } from '../utils/fieldMath'
 
@@ -108,11 +109,12 @@ export function ShiftPage() {
   }
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-5">
       <BackButton to="/campo" label="Atrás a Registro en Campo" />
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <ShiftSteps shift={shift} />
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Turno {shift.code}</h1>
+          <h1 className="page-hero-title">Turno {shift.code}</h1>
           <p className="text-sm text-[var(--color-text-muted)]">
             {isOpen ? 'Abierto' : 'Cerrado'} · {plural(shift.bagCount, 'bolsa')} · {formatNumber(shift.totalNetWeight)} kg netos
           </p>
@@ -150,17 +152,6 @@ export function ShiftPage() {
           )}
         </CardContent>
       </Card>
-
-      {shift.population && shift.bagCount > 0 && (
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/cuarteo`)}>
-            {shift.hasQuartering ? 'Ver cuarteo' : 'Cuarteo'}
-          </Button>
-          <Button variant="outline" className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/densidad`)}>
-            {shift.hasDensity ? 'Ver densidad' : 'Densidad'}
-          </Button>
-        </div>
-      )}
 
       <Card>
         <CardHeader>
