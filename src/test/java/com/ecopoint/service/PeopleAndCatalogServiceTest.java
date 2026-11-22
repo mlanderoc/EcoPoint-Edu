@@ -10,6 +10,7 @@ import com.ecopoint.model.UserRole;
 import com.ecopoint.model.WasteCategory;
 import com.ecopoint.model.WasteGroup;
 import com.ecopoint.persistence.CrewRepository;
+import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.UserActivity;
 import com.ecopoint.persistence.UserActivityRepository;
 import com.ecopoint.persistence.UserRepository;
@@ -19,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -48,6 +50,7 @@ class PeopleAndCatalogServiceTest {
     private WasteCategoryRepository categories;
     private UserService userService;
     private CrewService crewService;
+    private StudyRepository studies;
     private WasteCategoryService categoryService;
     private final User teacher = new User(10L, "Daniela", "Arias", "daniela@unicesar.edu.co", UserRole.DOCENTE, 1L);
     private final User student = new User(11L, "Laura", "Pérez", "laura@unicesar.edu.co",
@@ -60,7 +63,8 @@ class PeopleAndCatalogServiceTest {
         crews = mock(CrewRepository.class);
         categories = mock(WasteCategoryRepository.class);
         userService = new UserService(users, new BCryptPasswordEncoder(4), activity);
-        crewService = new CrewService(crews, users);
+        studies = mock(StudyRepository.class);
+        crewService = new CrewService(crews, users, studies);
         categoryService = new WasteCategoryService(categories);
 
         when(users.findById(10L)).thenReturn(Optional.of(teacher));
@@ -146,6 +150,43 @@ class PeopleAndCatalogServiceTest {
         assertEquals(teacher, crew.getResponsible());
         assertEquals(1, crew.getMembers().size());
         assertTrue(crew.isMember(student));
+    }
+
+    @Test
+    void ca085_busyStudentCannotJoinACrew() {
+        when(studies.findMembersInOpenStudies(null)).thenReturn(Map.of(11L, 2L));
+
+        BusinessRuleException error = assertThrows(BusinessRuleException.class,
+                () -> crewService.create(teacher, "Cuadrilla A", 10L, List.of(11L)));
+
+        assertTrue(error.getMessage().contains("Estudio N.º 2"));
+        verify(crews, never()).save(any());
+    }
+
+    @Test
+    void ca085_currentMemberStaysWhenTheCrewIsEdited() {
+        Crew current = new Crew(5L, "Cuadrilla A", teacher);
+        current.addMember(student);
+        when(crews.findById(5L)).thenReturn(Optional.of(current));
+        when(studies.findMembersInOpenStudies(5L)).thenReturn(Map.of(11L, 3L));
+
+        Crew saved = crewService.update(teacher, 5L, "Cuadrilla B", 10L, List.of(11L));
+
+        assertEquals("Cuadrilla B", saved.getName());
+        assertTrue(saved.isMember(student));
+    }
+
+    @Test
+    void ca085_busyStudentCannotBeAddedWhenEditing() {
+        when(crews.findById(5L)).thenReturn(Optional.of(new Crew(5L, "Cuadrilla A", teacher)));
+        when(studies.findMembersInOpenStudies(5L)).thenReturn(Map.of(11L, 3L));
+
+        assertThrows(BusinessRuleException.class, () -> crewService.update(teacher, 5L, "Cuadrilla A", 10L, List.of(11L)));
+    }
+
+    @Test
+    void ca085_studentCannotAskForBusyMembers() {
+        assertThrows(AccessDeniedException.class, () -> crewService.busyMembers(student, null));
     }
 
     @Test

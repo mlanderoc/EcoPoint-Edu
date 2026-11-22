@@ -5,13 +5,17 @@ import com.ecopoint.model.Crew;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.User;
 import com.ecopoint.persistence.CrewRepository;
+import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.UserRepository;
 import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.CrewValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Field crews with their responsible teacher and members (RN-085; spec 003,
@@ -25,16 +29,32 @@ public class CrewService {
 
     private final CrewRepository crews;
     private final UserRepository users;
+    private final StudyRepository studies;
 
     /**
      * Creates the service.
      *
      * @param crews crew repository
-     * @param users user repository
+     * @param users   user repository
+     * @param studies study repository, to know who has an open study (RN-090)
      */
-    public CrewService(CrewRepository crews, UserRepository users) {
+    public CrewService(CrewRepository crews, UserRepository users, StudyRepository studies) {
         this.crews = crews;
         this.users = users;
+        this.studies = studies;
+    }
+
+    /**
+     * Lists the users that cannot join a crew because they have another open
+     * study (RN-090).
+     *
+     * @param actor  teacher that asks
+     * @param crewId crew being edited; null for a new crew
+     * @return id of each busy user with the id of his study
+     */
+    public Map<Long, Long> busyMembers(User actor, Long crewId) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        return studies.findMembersInOpenStudies(crewId);
     }
 
     /**
@@ -72,6 +92,7 @@ public class CrewService {
         Crew crew = new Crew(null, name, findUser(responsibleId));
         addMembers(crew, memberIds);
         CrewValidator.validate(crew);
+        CrewValidator.validateAddedMembersAreFree(crew, idsOf(crew), studies.findMembersInOpenStudies(null));
         return crews.save(crew);
     }
 
@@ -88,11 +109,20 @@ public class CrewService {
     @Transactional
     public Crew update(User actor, Long id, String name, Long responsibleId, List<Long> memberIds) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
-        get(id);
+        Crew current = get(id);
         Crew crew = new Crew(id, name, findUser(responsibleId));
         addMembers(crew, memberIds);
         CrewValidator.validate(crew);
+        Set<Long> added = idsOf(crew);
+        added.removeAll(idsOf(current));
+        CrewValidator.validateAddedMembersAreFree(crew, added, studies.findMembersInOpenStudies(id));
         return crews.save(crew);
+    }
+
+    private Set<Long> idsOf(Crew crew) {
+        Set<Long> ids = new HashSet<>();
+        crew.getMembers().forEach(member -> ids.add(member.getId()));
+        return ids;
     }
 
     private void addMembers(Crew crew, List<Long> memberIds) {
