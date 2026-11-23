@@ -6,6 +6,7 @@
 
 import { useEffect, useState } from 'react'
 import { AlertBanner } from '@/components/ui'
+import { useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { studyService } from '@/features/study/services/studyService'
 import { CharacterizationStudy } from '@/types'
 import { CompositionDonutChart } from '../components/CompositionDonutChart'
@@ -19,21 +20,23 @@ import { SourceGenerationChart } from '../components/SourceGenerationChart'
 import { useIndicators } from '../hooks/useIndicators'
 
 export function IndicatorsDashboard() {
+  const { institutions } = useInstitutions(false)
   const [studies, setStudies] = useState<CharacterizationStudy[]>([])
   const [studyId, setStudyId] = useState<number | null>(null)
   const [listError, setListError] = useState<string | null>(null)
   const { indicators, isLoading, error } = useIndicators(studyId)
 
   useEffect(() => {
-    studyService.list()
+    studyService.visible(institutions.map((institution) => institution.id))
       .then((all) => {
+        setListError(null)
         // A planned study has no data yet, and a cancelled one has no baseline (D13, A20).
         const withData = all.filter((study) => study.status !== 'PLANIFICADO' && study.status !== 'CANCELADO')
         setStudies(withData)
-        setStudyId(withData[0]?.id ?? null)
+        setStudyId((current) => current ?? withData[0]?.id ?? null)
       })
       .catch(() => setListError('No se pudieron cargar los estudios.'))
-  }, [])
+  }, [institutions])
 
   return (
     <div className="max-w-5xl w-full mx-auto flex flex-col gap-5">

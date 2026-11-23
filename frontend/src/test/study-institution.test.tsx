@@ -55,7 +55,7 @@ describe('Institución del estudio (R-330, R-337, CA-319)', () => {
     expect(screen.queryByLabelText(/^AU /)).toBeNull()
 
     await user.type(screen.getByLabelText('Día 1 (descarte)'), '2027-02-01')
-    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '1')
+    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '2')
     await user.click(screen.getByRole('button', { name: /Crear estudio/ }))
     expect(await screen.findByText(/Planificado/)).toBeInTheDocument()
     unmount()

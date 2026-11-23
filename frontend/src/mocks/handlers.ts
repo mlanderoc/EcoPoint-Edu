@@ -289,6 +289,20 @@ export const handlers = [
     return HttpResponse.json(page(matching, url))
   }),
 
+  http.put('/api/v1/users/:id', async ({ params, request }) => {
+    const path = `/api/v1/users/${params.id}`
+    const denied = requirePermission('MANAGE_ADMINISTRATION', path)
+    if (denied) return denied
+    const user = usersState.find((item) => item.id === Number(params.id))
+    if (!user) return notFound(path, 'Usuario')
+    const body = (await request.json()) as Pick<User, 'firstName' | 'lastName' | 'email' | 'role'>
+    if (user.role === 'DOCENTE' && body.role !== 'DOCENTE' && crewsState.some((crew) => crew.responsibleId === user.id)) {
+      return apiError(422, 'ERR_BUSINESS_RULE', `${user.firstName} ${user.lastName} es responsable de una cuadrilla.`, path)
+    }
+    Object.assign(user, body)
+    return HttpResponse.json(user)
+  }),
+
   http.post('/api/v1/users/:id/:action', ({ params }) => {
     const path = `/api/v1/users/${params.id}/${params.action}`
     const denied = requirePermission('MANAGE_ADMINISTRATION', path)
@@ -344,6 +358,34 @@ export const handlers = [
   }),
 
   http.get('/api/v1/crews', () => HttpResponse.json(crewsState)),
+
+  http.get('/api/v1/crews/unavailable', ({ request }) => {
+    const studyId = Number(new URL(request.url).searchParams.get('studyId'))
+    const open = studiesState.filter((study) => ['PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION'].includes(study.status)
+      && study.id !== studyId)
+    const unavailable = crewsState.flatMap((crew) => {
+      const holder = open.find((study) => study.crewId === crew.id
+        || crewsState.find((item) => item.id === study.crewId)?.memberIds.some((id) => crew.memberIds.includes(id)))
+      return holder ? [{ crewId: crew.id, studyId: holder.id }] : []
+    })
+    return HttpResponse.json(unavailable)
+  }),
+
+  http.get('/api/v1/crews/busy-members', ({ request }) => {
+    const crewId = Number(new URL(request.url).searchParams.get('crewId'))
+    const open = ['PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION']
+    const busy = studiesState.filter((study) => open.includes(study.status) && study.crewId !== crewId)
+      .flatMap((study) => (crewsState.find((crew) => crew.id === study.crewId)?.memberIds ?? [])
+        .map((userId) => ({ userId, studyId: study.id })))
+    return HttpResponse.json(busy)
+  }),
+
+  http.put('/api/v1/crews/:id', async ({ params, request }) => {
+    const body = (await request.json()) as Omit<Crew, 'id'>
+    const id = Number(params.id)
+    crewsState = crewsState.map((crew) => (crew.id === id ? { ...crew, ...body } : crew))
+    return HttpResponse.json(crewsState.find((crew) => crew.id === id))
+  }),
 
   http.post('/api/v1/crews', async ({ request }) => {
     const body = (await request.json()) as Omit<Crew, 'id'>
@@ -414,6 +456,12 @@ export const handlers = [
   http.get('/api/v1/studies/field', () => {
     const teacher = activeUser?.role === 'DOCENTE'
     return HttpResponse.json(studiesState.filter((study) => study.status === 'EN_EJECUCION'
+      && (teacher || crewsState.some((crew) => crew.id === study.crewId && crew.memberIds.includes(activeUser?.id ?? -1)))))
+  }),
+
+  http.get('/api/v1/studies/verifiable', () => {
+    const teacher = activeUser?.role === 'DOCENTE'
+    return HttpResponse.json(studiesState.filter((study) => ['EN_EJECUCION', 'EN_DEPURACION'].includes(study.status)
       && (teacher || crewsState.some((crew) => crew.id === study.crewId && crew.memberIds.includes(activeUser?.id ?? -1)))))
   }),
 
@@ -892,9 +940,10 @@ function applyCorrection(type: string, id: number, values: Record<string, number
   let changed = 0
   for (const [name, value] of Object.entries(values ?? {})) {
     const current = record?.fields.find((item) => item.field === name)
-    if (!current || !current.editable || Number(current.value) === Number(value)) continue
+    const addsResult = !current && type === 'quartering' && name.startsWith('result:')
+    if (!addsResult && (!current || !current.editable || Number(current.value) === Number(value))) continue
     changed += 1
-    correctionsState.push({ type, id, entry: { field: name, oldValue: String(current.value), newValue: String(value), reason,
+    correctionsState.push({ type, id, entry: { field: name, oldValue: current ? String(current.value) : null, newValue: String(value), reason,
       userId: activeUser?.id ?? 0, at: new Date().toISOString() } })
     if (type === 'population') {
       const population = shiftsState.find((shift) => shift.population?.id === id)?.population as unknown as Record<string, number>
@@ -914,6 +963,9 @@ function applyCorrection(type: string, id: number, values: Record<string, number
       if (name === 'sampleWeight') quartering.sampleWeight = Number(value)
       const result = quartering.results.find((item) => `result:${item.categoryId}` === name)
       if (result) result.weight = Number(value)
+      if (!result && name.startsWith('result:')) {
+        quartering.results.push({ categoryId: Number(name.slice('result:'.length)), weight: Number(value) } as Quartering['results'][number])
+      }
     }
   }
   if (type === 'quartering' && changed > 0) {

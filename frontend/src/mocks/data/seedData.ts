@@ -82,7 +82,7 @@ export const mockSources: GenerationSource[] = [
 
 export const mockCrews: Crew[] = [
   { id: 1, name: 'Cuadrilla Mañana A', responsibleId: 1, memberIds: [2] },
-  { id: 2, name: 'Cuadrilla Tarde B', responsibleId: 1, memberIds: [2] },
+  { id: 2, name: 'Cuadrilla Tarde B', responsibleId: 1, memberIds: [] },
 ]
 
 export const mockCategories: WasteCategory[] = [

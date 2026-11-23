@@ -8,12 +8,14 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/features/auth'
 import { FieldDashboard } from '@/features/field'
 import { NewStudyPage, StudyDetailPage } from '@/features/study'
 import { mockStudy, mockUsers } from '@/mocks/data/seedData'
 import { addMockStudy, resetMockState } from '@/mocks/handlers'
+import { server } from '@/mocks/server'
 import { User } from '@/types'
 
 const teacher = mockUsers[0]
@@ -89,14 +91,24 @@ describe('Cuadrilla del estudio (R-331, CA-322)', () => {
     renderAt('/estudios/nuevo')
 
     await screen.findByRole('option', { name: 'Cuadrilla Tarde B' })
-    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '1')
+    await user.selectOptions(await screen.findByLabelText('Cuadrilla del estudio'), '2')
     await user.click(screen.getByRole('button', { name: /Atrás a los estudios/ }))
 
     expect(await screen.findByRole('dialog')).toBeInTheDocument()
   })
 
+  it('ca095_busyCrewIsShownAsOccupiedAndCannotBeChosen', async () => {
+    resetMockState('DOCENTE')
+    renderAt('/estudios/nuevo')
+
+    const busy = await screen.findByRole('option', { name: /Cuadrilla Mañana A \(ocupada: Estudio N\.º 2\)/ })
+    expect(busy).toBeDisabled()
+    expect(screen.getByRole('option', { name: 'Cuadrilla Tarde B' })).toBeEnabled()
+  })
+
   it('ca322_studyNeedsACrewThatCanBeChangedWhilePlanned', async () => {
     resetMockState('DOCENTE')
+    server.use(http.get('/api/v1/crews/unavailable', () => HttpResponse.json([])))
     const user = userEvent.setup()
     renderAt('/estudios/nuevo')
 
