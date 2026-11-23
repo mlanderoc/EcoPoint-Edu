@@ -51,12 +51,13 @@ public class BagController implements FieldNameMapping {
     /**
      * Shows a bag.
      *
-     * @param bagId bag id
+     * @param principal user of the session
+     * @param bagId     bag id
      * @return the bag
      */
     @GetMapping
-    public BagResponse get(@PathVariable Long bagId) {
-        return BagResponse.from(bags.shiftOf(bagId), bags.get(bagId));
+    public BagResponse get(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long bagId) {
+        return BagResponse.from(bags.shiftOf(bagId), bags.getFor(currentUser.of(principal), bagId));
     }
 
     /**

@@ -105,13 +105,34 @@ export const adminService = {
     return apiClient.post<User>(`/api/v1/users/${id}/${active ? 'activate' : 'deactivate'}`)
   },
 
+  /** Returns a teacher to student; the backend keeps at least one teacher and protects crew leaders (RN-096). */
+  changeUserRole: async (user: Pick<User, 'id' | 'firstName' | 'lastName' | 'email'>, role: UserRole): Promise<User> => {
+    return apiClient.put<User>(`/api/v1/users/${user.id}`, {
+      firstName: user.firstName, lastName: user.lastName, email: user.email, role,
+    })
+  },
+
   // Crews
+  /** Crews that cannot take a study because of another open study (RN-098). */
+  getUnavailableCrews: async (studyId?: number): Promise<Array<{ crewId: number; studyId: number }>> => {
+    return apiClient.get<Array<{ crewId: number; studyId: number }>>('/api/v1/crews/unavailable', { params: { studyId } })
+  },
+
   getCrews: async (): Promise<Crew[]> => {
     return apiClient.get<Crew[]>('/api/v1/crews')
   },
 
   createCrew: async (data: Omit<Crew, 'id'>): Promise<Crew> => {
     return apiClient.post<Crew>('/api/v1/crews', data)
+  },
+
+  updateCrew: async (id: number, data: Omit<Crew, 'id'>): Promise<Crew> => {
+    return apiClient.put<Crew>(`/api/v1/crews/${id}`, data)
+  },
+
+  /** Students with another open study, who cannot join the crew (RN-091). */
+  getBusyMembers: async (crewId?: number): Promise<Array<{ userId: number; studyId: number }>> => {
+    return apiClient.get<Array<{ userId: number; studyId: number }>>('/api/v1/crews/busy-members', { params: { crewId } })
   },
 
   // Waste Categories

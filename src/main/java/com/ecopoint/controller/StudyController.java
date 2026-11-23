@@ -78,7 +78,7 @@ public class StudyController implements FieldNameMapping {
     public List<StudyResponse> list(@AuthenticationPrincipal EcoPointUserDetails principal,
                                     @RequestParam(required = false) Long institutionId) {
         Long institution = institutionId != null ? institutionId : currentUser.of(principal).getInstitutionId();
-        return studies.list(institution).stream().map(this::toResponse).toList();
+        return studies.listFor(currentUser.of(principal), institution).stream().map(this::toResponse).toList();
     }
 
     /**
@@ -94,14 +94,26 @@ public class StudyController implements FieldNameMapping {
     }
 
     /**
+     * Lists the studies whose records the user may verify (RN-097).
+     *
+     * @param principal user of the session
+     * @return studies in execution or being cleaned
+     */
+    @GetMapping("/verifiable")
+    public List<StudyResponse> verifiableStudies(@AuthenticationPrincipal EcoPointUserDetails principal) {
+        return studies.verifiableStudies(currentUser.of(principal)).stream().map(this::toResponse).toList();
+    }
+
+    /**
      * Shows one study.
      *
-     * @param id study id
+     * @param principal user of the session
+     * @param id        study id
      * @return the study
      */
     @GetMapping("/{id}")
-    public StudyResponse get(@PathVariable Long id) {
-        return toResponse(studies.get(id));
+    public StudyResponse get(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id) {
+        return toResponse(studies.getFor(currentUser.of(principal), id));
     }
 
     /**
@@ -180,11 +192,14 @@ public class StudyController implements FieldNameMapping {
     /**
      * Lists the 16 possible shifts of the study with their progress.
      *
-     * @param id study id
+     * @param principal user of the session
+     * @param id        study id
      * @return one entry per day and shift type
      */
     @GetMapping("/{id}/shifts")
-    public List<ShiftSlotResponse> shifts(@PathVariable Long id) {
+    public List<ShiftSlotResponse> shifts(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                          @PathVariable Long id) {
+        studies.getFor(currentUser.of(principal), id);
         return shifts.slots(id).stream().map(ShiftSlotResponse::from).toList();
     }
 

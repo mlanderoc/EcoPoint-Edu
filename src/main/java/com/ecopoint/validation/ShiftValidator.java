@@ -102,6 +102,21 @@ public final class ShiftValidator {
     }
 
     /**
+     * Validates that the study still admits changes in its shifts and
+     * quarterings: not closed nor cancelled (RN-100).
+     *
+     * @param study study of the shift
+     * @throws BusinessRuleException if the study is finished
+     */
+    public static void validateStudyNotFinished(CharacterizationStudy study) {
+        ValidationSupport.requireNonNull(study, "estudio", "El estudio no puede ser nulo.");
+        if (study.getStatus().isReadOnly()) {
+            throw new BusinessRuleException("El estudio está " + study.getStatus().getDisplayName().toLowerCase()
+                    + ": no admite cambios.");
+        }
+    }
+
+    /**
      * Validates that the shift may be closed: every participating source has
      * bags or is marked as having no generation (RN-024).
      *
@@ -117,6 +132,10 @@ public final class ShiftValidator {
         if (participatingSources == null) {
             return;
         }
+        if (participatingSources.isEmpty()) {
+            throw new BusinessRuleException("No se puede cerrar el turno " + shift.getCode()
+                    + ": el estudio no tiene fuentes participantes.");
+        }
         List<String> pending = participatingSources.entrySet().stream()
                 .filter(entry -> !shift.isSourceCovered(entry.getKey()))
                 .map(Map.Entry::getValue)
@@ -126,6 +145,10 @@ public final class ShiftValidator {
             throw new BusinessRuleException("No se puede cerrar el turno " + shift.getCode()
                     + ": faltan registros de las fuentes " + String.join(", ", pending)
                     + ". Registre sus bolsas o márquelas como \"sin generación\".");
+        }
+        if (shift.getPopulation() == null) {
+            throw new BusinessRuleException("No se puede cerrar el turno " + shift.getCode()
+                    + ": falta registrar la población.");
         }
     }
 

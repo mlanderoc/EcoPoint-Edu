@@ -52,7 +52,21 @@ public final class AccessPolicy {
             return;
         }
         if (crew == null || !crew.isMember(user)) {
-            throw new AccessDeniedException("Solo los integrantes de la cuadrilla del estudio pueden registrar datos en él.");
+            throw new AccessDeniedException("Solo los integrantes de la cuadrilla del estudio pueden registrar o verificar sus datos.");
+        }
+    }
+
+    /**
+     * Requires that the user being managed belongs to the institution of the
+     * actor (RN-096).
+     *
+     * @param actor  user that acts
+     * @param target user being managed
+     * @throws AccessDeniedException if they belong to different institutions
+     */
+    public static void requireSameInstitution(User actor, User target) {
+        if (!java.util.Objects.equals(actor.getInstitutionId(), target.getInstitutionId())) {
+            throw new AccessDeniedException("Solo puede editar usuarios de su institución.");
         }
     }
 

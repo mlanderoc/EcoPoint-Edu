@@ -62,7 +62,8 @@ class AdjustmentsD14IT extends PostgresIntegrationTest {
     @Test
     void ca322_studyNeedsACrewAndTheShiftTakesIt() throws Exception {
         ApiClient teacher = ApiClient.loggedIn(mvc, TEACHER, PASSWORD);
-        Long crew = jdbc.queryForObject("SELECT id FROM CUADRILLA LIMIT 1", Long.class);
+        Long crew = jdbc.queryForObject("INSERT INTO CUADRILLA (nombre, id_responsable) "
+                + "SELECT 'Cuadrilla libre', id_responsable FROM CUADRILLA LIMIT 1 RETURNING id", Long.class);
         String days = "[{\"dayNumber\":1,\"date\":\"2027-02-01\"}]";
 
         teacher.json(post("/api/v1/studies"), "{\"days\":" + days + "}")

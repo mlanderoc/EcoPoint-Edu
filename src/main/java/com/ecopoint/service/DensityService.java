@@ -67,6 +67,20 @@ public class DensityService {
     }
 
     /**
+     * Finds the density of a shift of a study the user may see (RN-097).
+     *
+     * @param actor   user of the session
+     * @param shiftId shift id
+     * @return the measurement
+     */
+    public DensityMeasurement getFor(User actor, Long shiftId) {
+        SamplingShift shift = shifts.findById(shiftId).orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
+        fieldAccess.require(actor, studies.findById(shift.getStudyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", shift.getStudyId())));
+        return get(shiftId);
+    }
+
+    /**
      * Registers the density measurement of a shift; a shift has at most one (RN-057).
      *
      * @param actor           user that types it

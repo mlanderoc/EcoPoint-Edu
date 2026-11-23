@@ -8,11 +8,12 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Input, Select } from '@/components/ui'
+import { adminService } from '@/features/admin/services/adminService'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
-import { CorrectionEntry, RecordType, VerifiableRecord } from '@/types'
+import { CorrectionEntry, RecordType, VerifiableRecord, WasteCategory } from '@/types'
 import { RecordCard, formatValue } from '../components/RecordCard'
 import { verificationService } from '../services/verificationService'
 
@@ -28,6 +29,9 @@ export function RecordPage() {
   const [reasonError, setReasonError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
+  const [categories, setCategories] = useState<WasteCategory[]>([])
+  const [newCategory, setNewCategory] = useState('')
+  const [newWeight, setNewWeight] = useState('')
 
   const load = useCallback(async () => {
     try {
@@ -44,6 +48,13 @@ export function RecordPage() {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    if (type !== 'quartering') return
+    adminService.getCategories()
+      .then((all) => setCategories(all.filter((category) => category.active)))
+      .catch(() => setCategories([]))
+  }, [type])
+
   if (!record) {
     return error
       ? <AlertBanner variant="danger" title="Registro no disponible" message={error} />
@@ -51,6 +62,7 @@ export function RecordPage() {
   }
 
   const typedByMe = record.verification.enteredBy === user?.id
+  const forgotten = categories.filter((category) => !record.fields.some((field) => field.field === `result:${category.id}`))
 
   const handleCorrect = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -65,6 +77,14 @@ export function RecordPage() {
       const parsed = parseDecimal(values[field.field] ?? '')
       if (parsed !== null && parsed !== Number(field.value)) changed[field.field] = parsed
     }
+    if (newCategory) {
+      const added = parseDecimal(newWeight)
+      if (added === null || added <= 0) {
+        setError('Escriba el peso de la subcategoría que va a agregar.')
+        return
+      }
+      changed[`result:${newCategory}`] = added
+    }
     if (Object.keys(changed).length === 0) {
       setError('No hay cambios que corregir: los valores son iguales.')
       return
@@ -73,6 +93,8 @@ export function RecordPage() {
       setIsSaving(true)
       await verificationService.correct(type, recordId, changed, reason.trim())
       setReason('')
+      setNewCategory('')
+      setNewWeight('')
       await load()
     } catch (err) {
       if (err instanceof ApiError && err.getFieldError('reason')) setReasonError(err.getFieldError('reason') ?? null)
@@ -106,6 +128,16 @@ export function RecordPage() {
                   value={values[field.field] ?? ''} disabled={isSaving} className="min-h-[48px]"
                   onChange={(event) => setValues((previous) => ({ ...previous, [field.field]: event.target.value }))} />
               ))}
+              {type === 'quartering' && forgotten.length > 0 && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="add-subcategory">
+                  <Select id="correct-new-category" label="Agregar subcategoría olvidada" value={newCategory}
+                    disabled={isSaving} onChange={(event) => setNewCategory(event.target.value)}
+                    options={[{ value: '', label: 'Ninguna' },
+                      ...forgotten.map((category) => ({ value: String(category.id), label: category.name }))]} />
+                  <Input id="correct-new-weight" label="Peso a agregar (kg)" inputMode="decimal" value={newWeight}
+                    disabled={isSaving || !newCategory} onChange={(event) => setNewWeight(event.target.value)} />
+                </div>
+              )}
               <Input id="correct-reason" label="Motivo de la corrección" value={reason} error={reasonError ?? undefined}
                 onChange={(event) => setReason(event.target.value)} disabled={isSaving} className="min-h-[48px]" />
               <Button type="submit" className="min-h-[48px]" isLoading={isSaving} disabled={isSaving}>
@@ -127,7 +159,7 @@ export function RecordPage() {
                 const label = record.fields.find((field) => field.field === entry.field)?.label ?? entry.field
                 return (
                   <li key={index} className="border-b border-slate-100 pb-2">
-                    <strong>{label}</strong>: {formatValue(Number(entry.oldValue))} → {formatValue(Number(entry.newValue))}
+                    <strong>{label}</strong>: {entry.oldValue === null ? 'Sin registrar' : formatValue(Number(entry.oldValue))} → {formatValue(Number(entry.newValue))}
                     <br />Motivo: {entry.reason} · usuario {entry.userId} · {new Date(entry.at).toLocaleString('es-CO')}
                   </li>
                 )

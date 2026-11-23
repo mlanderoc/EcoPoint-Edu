@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.IntStream;
@@ -126,6 +127,66 @@ class StudyServiceTest {
     }
 
     @Test
+    void ca093_verifiableStudiesAreOnlyThoseOfTheCurrentCrewForAStudent() {
+        CharacterizationStudy running = running(20L, CREW);
+        CharacterizationStudy ofAnotherCrew = running(21L, 4L);
+        CharacterizationStudy cleaning = running(22L, CREW);
+        when(studies.findByStatus(StudyStatus.EN_EJECUCION)).thenReturn(List.of(ofAnotherCrew, running));
+        when(studies.findByStatus(StudyStatus.EN_DEPURACION)).thenReturn(List.of(cleaning));
+
+        assertEquals(List.of(cleaning, running), service.verifiableStudies(student));
+        assertEquals(List.of(cleaning, ofAnotherCrew, running), service.verifiableStudies(teacher));
+    }
+
+    @Test
+    void ca095_crewWithABusyMemberCannotBeAssignedToAStudy() {
+        when(studies.findMembersInOpenStudiesOtherThan(null)).thenReturn(Map.of(student.getId(), 9L));
+
+        BusinessRuleException error = assertThrows(BusinessRuleException.class,
+                () -> service.create(teacher, INSTITUTION, CREW, eightDays(MONDAY)));
+
+        assertTrue(error.getMessage().contains("Estudio N.º 9"));
+        verify(studies, never()).save(any());
+    }
+
+    @Test
+    void ca098_studentOnlyReadsTheStudiesOfHisCrew() {
+        CharacterizationStudy mine = running(20L, CREW);
+        CharacterizationStudy other = running(21L, 4L);
+        when(studies.findByInstitution(INSTITUTION)).thenReturn(List.of(mine, other));
+        when(studies.findById(21L)).thenReturn(Optional.of(other));
+
+        assertEquals(List.of(mine), service.listFor(student, INSTITUTION));
+        assertEquals(List.of(mine, other), service.listFor(teacher, INSTITUTION));
+        assertThrows(AccessDeniedException.class, () -> service.getFor(student, 21L));
+    }
+
+    @Test
+    void ca095_crewWithAnotherOpenStudyCannotTakeOneNorReopen() {
+        when(studies.findCrewsWithOpenStudiesOtherThan(null)).thenReturn(Map.of(CREW, 9L));
+        assertThrows(BusinessRuleException.class, () -> service.create(teacher, INSTITUTION, CREW, eightDays(MONDAY)));
+
+        CharacterizationStudy closed = CharacterizationStudy.restore(30L, INSTITUTION, StudyStatus.CERRADO, eightDays(MONDAY), List.of());
+        closed.setCrewId(CREW);
+        when(studies.findById(30L)).thenReturn(Optional.of(closed));
+        when(studies.findMembersInOpenStudiesOtherThan(30L)).thenReturn(Map.of(student.getId(), 9L));
+
+        assertThrows(BusinessRuleException.class,
+                () -> service.changeStatus(teacher, 30L, StudyStatus.EN_DEPURACION, "Corregir datos"));
+        assertEquals(StudyStatus.CERRADO, closed.getStatus());
+    }
+
+    @Test
+    void ca099_studyWithAnOpenShiftCannotBeClosed() {
+        stored(StudyStatus.EN_DEPURACION);
+        when(studies.countOpenShifts(7L)).thenReturn(1);
+
+        BusinessRuleException error = assertThrows(BusinessRuleException.class,
+                () -> service.changeStatus(teacher, 7L, StudyStatus.CERRADO, null));
+        assertTrue(error.getMessage().contains("turno abierto"));
+    }
+
+    @Test
     void ca203_studentCannotCreateAStudy() {
         assertThrows(AccessDeniedException.class, () -> service.create(student, INSTITUTION, CREW, eightDays(MONDAY)));
         verify(studies, never()).save(any());
@@ -208,6 +269,14 @@ class StudyServiceTest {
 
         assertThrows(InvalidDataException.class, () -> service.setParticipatingSources(teacher, 7L, Set.of(1L, 99L)));
         assertEquals(Set.of(1L), service.setParticipatingSources(teacher, 7L, Set.of(1L)));
+    }
+
+    @Test
+    void ca089_runningStudyCannotChangeDatesNorSources() {
+        stored(StudyStatus.EN_EJECUCION);
+
+        assertThrows(BusinessRuleException.class, () -> service.reschedule(teacher, 7L, eightDays(MONDAY)));
+        assertThrows(BusinessRuleException.class, () -> service.setParticipatingSources(teacher, 7L, Set.of()));
     }
 
     @Test

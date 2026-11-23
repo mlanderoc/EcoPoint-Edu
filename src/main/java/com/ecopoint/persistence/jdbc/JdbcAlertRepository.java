@@ -91,6 +91,15 @@ public class JdbcAlertRepository implements AlertRepository {
     }
 
     @Override
+    public List<Alert> findOpenByTarget(AlertType type, String targetType, Long targetId) {
+        return DataAccessTranslator.execute("buscar las alertas pendientes del registro " + targetId,
+                () -> jdbc.query(SELECT + "WHERE NOT atendida AND tipo = CAST(:tipo AS tipo_alerta) "
+                                + "AND tipo_registro = :tipoRegistro AND id_registro = :registro ORDER BY id",
+                        new MapSqlParameterSource("tipo", type.name()).addValue("tipoRegistro", targetType)
+                                .addValue("registro", targetId), MAPPER));
+    }
+
+    @Override
     public List<Alert> findByStudy(Long studyId) {
         return DataAccessTranslator.execute("listar las alertas del estudio " + studyId,
                 () -> jdbc.query(SELECT + "WHERE (tipo_registro = 'Turno' AND id_registro IN ("

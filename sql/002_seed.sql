@@ -80,6 +80,16 @@ INSERT INTO USUARIO (nombre, apellido, correo, rol, id_institucion, clave_hash) 
 INSERT INTO CUADRILLA (nombre, id_responsable) VALUES ('Cuadrilla 1', 1);
 INSERT INTO CUADRILLA_INTEGRANTE (id_cuadrilla, id_usuario) VALUES (1, 2), (1, 3), (1, 4), (1, 5);
 
+-- Cuadrilla 2: libre, para poder crear un estudio nuevo en la demostración (RN-098).
+INSERT INTO USUARIO (nombre, apellido, correo, rol, id_institucion, clave_hash)
+SELECT f.nombre, f.apellido, f.correo, 'ESTUDIANTE_UNIVERSITARIO', 1, u.clave_hash
+FROM (VALUES ('Sofía', 'Torres', 'sofia.torres@unicesar.edu.co'),
+             ('Daniel', 'Rojas', 'daniel.rojas@unicesar.edu.co')) AS f (nombre, apellido, correo)
+CROSS JOIN (SELECT clave_hash FROM USUARIO WHERE correo = 'estudiante.demo@unicesar.edu.co') AS u;
+INSERT INTO CUADRILLA (nombre, id_responsable) VALUES ('Cuadrilla 2', 1);
+INSERT INTO CUADRILLA_INTEGRANTE (id_cuadrilla, id_usuario)
+SELECT 2, id FROM USUARIO WHERE correo IN ('sofia.torres@unicesar.edu.co', 'daniel.rojas@unicesar.edu.co');
+
 -- -----------------------------------------------------------------------------
 -- 3. Estudios: 1 = CERRADO completo (R-043); 2 = EN_EJECUCION a medio llenar (R-044)
 -- -----------------------------------------------------------------------------

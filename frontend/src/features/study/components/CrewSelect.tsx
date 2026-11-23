@@ -31,9 +31,19 @@ export interface CrewSelectProps {
   currentName?: string | null
   onChange: (id: number) => void
   disabled?: boolean
+  /** Study being edited, so its own crew is not shown as busy. */
+  studyId?: number
 }
 
-export function CrewSelect({ crews, value, currentName, onChange, disabled }: CrewSelectProps) {
+export function CrewSelect({ crews, value, currentName, onChange, disabled, studyId }: CrewSelectProps) {
+  const [unavailable, setUnavailable] = useState<Map<number, number>>(new Map())
+
+  useEffect(() => {
+    adminService.getUnavailableCrews(studyId)
+      .then((items) => setUnavailable(new Map(items.map((item) => [item.crewId, item.studyId]))))
+      .catch(() => setUnavailable(new Map()))
+  }, [studyId])
+
   const isForeign = value !== null && !crews.some((crew) => crew.id === value)
   return (
     <Select
@@ -45,9 +55,14 @@ export function CrewSelect({ crews, value, currentName, onChange, disabled }: Cr
     >
       {value === null && <option value="">Elija una cuadrilla</option>}
       {isForeign && <option value={value}>{currentName ?? 'Cuadrilla asignada'}</option>}
-      {crews.map((crew) => (
-        <option key={crew.id} value={crew.id}>{crew.name}</option>
-      ))}
+      {crews.map((crew) => {
+        const holder = crew.id === value ? undefined : unavailable.get(crew.id)
+        return (
+          <option key={crew.id} value={crew.id} disabled={holder !== undefined}>
+            {holder === undefined ? crew.name : `${crew.name} (ocupada: Estudio N.º ${holder})`}
+          </option>
+        )
+      })}
     </Select>
   )
 }

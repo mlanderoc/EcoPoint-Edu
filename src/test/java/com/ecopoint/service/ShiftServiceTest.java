@@ -163,6 +163,18 @@ class ShiftServiceTest {
     }
 
     @Test
+    void ca099_shiftOfAFinishedStudyCannotBeClosed() {
+        SamplingShift shift = fullShift();
+        stored(shift);
+        CharacterizationStudy cancelled = CharacterizationStudy.restore(STUDY, 1L, StudyStatus.CANCELADO,
+                java.util.stream.IntStream.range(0, 8).mapToObj(i -> java.time.LocalDate.of(2026, 3, 2).plusDays(i)).toList(),
+                List.of());
+        when(studies.findById(STUDY)).thenReturn(Optional.of(cancelled));
+
+        assertThrows(BusinessRuleException.class, () -> service.close(teacher, 30L));
+    }
+
+    @Test
     void rn024_shiftClosesWhenEverySourceHasBagsOrNoGeneration() {
         stored(fullShift());
 
