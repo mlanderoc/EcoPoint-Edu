@@ -200,7 +200,7 @@ public class VerificationService {
             records.add(shift.getPopulation());
         }
         records.addAll(shift.getBags());
-        if (shift.getQuartering() != null) {
+        if (shift.getQuartering() != null && shift.getQuartering().getQualityStatus() != QualityStatus.ANULADO) {
             records.add(shift.getQuartering());
         }
         if (shift.getDensity() != null) {
@@ -433,10 +433,11 @@ public class VerificationService {
         CharacterizationSettings settings = settingsOf(located.study());
         quartering.updateShiftNetWeight(located.shift().calculateTotalNetWeight());
         QuarteringValidator.validate(quartering, settings);
+        QualityStatus before = quartering.getQualityStatus();
         quartering.calculateCompositionPercentages();
         quartering.evaluateQuality(settings.qualityTolerancePercent());
         quarterings.save(quartering);
-        reconciler.syncAlert(quartering, located.shift().getCode(), actor, now);
+        reconciler.syncAlert(quartering, located.shift().getCode(), actor, now, before);
     }
 
     private void requireStudyAccess(User actor, Long studyId) {

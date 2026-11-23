@@ -43,9 +43,15 @@ export function checkQuality(sample: number, weights: (number | null)[],
                              settings: QuarteringSettings = DEFAULT_QUARTERING_SETTINGS): QualityCheck {
   const classified = classifiedTotal(weights)
   const differenceKg = round2(Math.abs(sample - classified))
-  const differencePercent = sample > 0 ? round2((differenceKg * 100) / sample) : 100
   const conforming = sample > 0 && differenceKg * 100 <= sample * settings.qualityTolerancePercent + 1e-9
+  const exactPercent = sample > 0 ? (differenceKg * 100) / sample : 100
+  const differencePercent = conforming ? round2(exactPercent) : Math.round(exactPercent * 10000) / 10000
   return { classified, differenceKg, differencePercent, status: conforming ? 'CONFORME' : 'NO_CONFORME' }
+}
+
+/** Shows a difference with 2 decimals, or up to 4 so that 2.0004 % is not read as 2.00 %. */
+export function formatPercent(value: number): string {
+  return value.toLocaleString('es-CO', { minimumFractionDigits: 2, maximumFractionDigits: 4 })
 }
 
 /** Proposes a full sample when the shift weighs less than the minimum subsample (CA-401). */

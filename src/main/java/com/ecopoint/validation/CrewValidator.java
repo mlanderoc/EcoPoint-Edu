@@ -59,42 +59,31 @@ public final class CrewValidator {
     }
 
     /**
-     * Checks that no member of a crew has another open study before the crew
-     * is assigned to a study (RN-098).
-     *
-     * @param crew        crew being assigned
-     * @param busyMembers id of each busy user with the id of his other study
-     * @throws BusinessRuleException naming the members that are busy
-     */
-    public static void validateMembersFreeForStudy(Crew crew, Map<Long, Long> busyMembers) {
-        requireMembersFree(crew, busyMembers);
-    }
-
-    /**
      * Checks that a crew has no other open study and that none of its members
      * has one, before it takes a study (RN-098).
      *
      * @param crew        crew being assigned
      * @param openStudy   other open study of the crew, or null
      * @param busyMembers id of each busy user with the id of his other study
+     * @param action      what is being done, e.g. "reabrir el estudio"
      * @throws BusinessRuleException if the crew or a member is busy
      */
-    public static void validateCrewFreeForStudy(Crew crew, Long openStudy, Map<Long, Long> busyMembers) {
+    public static void validateCrewFreeForStudy(Crew crew, Long openStudy, Map<Long, Long> busyMembers, String action) {
         if (openStudy != null) {
-            throw new BusinessRuleException("La cuadrilla " + crew.getName() + " ya tiene abierto el Estudio N.º "
-                    + openStudy + ".");
+            throw new BusinessRuleException("No se puede " + action + ": la cuadrilla " + crew.getName()
+                    + " ya tiene abierto el Estudio N.º " + openStudy + ".");
         }
-        requireMembersFree(crew, busyMembers);
+        requireMembersFree(crew, busyMembers, action);
     }
 
-    private static void requireMembersFree(Crew crew, Map<Long, Long> busyMembers) {
+    private static void requireMembersFree(Crew crew, Map<Long, Long> busyMembers, String action) {
         String busy = crew.getMembers().stream()
                 .filter(member -> busyMembers.containsKey(member.getId()))
                 .map(member -> member.getFullName() + " (Estudio N.º " + busyMembers.get(member.getId()) + ")")
                 .collect(Collectors.joining(", "));
         if (!busy.isEmpty()) {
-            throw new BusinessRuleException("No se puede asignar la cuadrilla " + crew.getName()
-                    + ": estos integrantes ya están en otro estudio abierto: " + busy + ".");
+            throw new BusinessRuleException("No se puede " + action + ": estos integrantes de la cuadrilla "
+                    + crew.getName() + " ya están en otro estudio abierto: " + busy + ".");
         }
     }
 

@@ -173,7 +173,7 @@ public class QuarteringService {
         LocalDateTime now = LocalDateTime.now(clock);
         quartering.annul(reason, actor.getId(), now);
         Quartering saved = quarterings.save(quartering);
-        reconciler.syncAlert(saved, shift.getCode(), actor, now);
+        reconciler.syncAlert(saved, shift.getCode(), actor, now, QualityStatus.NO_CONFORME);
         return saved;
     }
 

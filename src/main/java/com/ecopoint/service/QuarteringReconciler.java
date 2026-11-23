@@ -55,22 +55,33 @@ public class QuarteringReconciler {
         if (quartering == null || quartering.getQualityStatus() == QualityStatus.ANULADO) {
             return;
         }
+        QualityStatus before = quartering.getQualityStatus();
         BigDecimal storedNet = quartering.getShiftNetWeight();
-        quartering.updateShiftNetWeight(shift.calculateTotalNetWeight());
-        BigDecimal currentNet = quartering.getShiftNetWeight();
-        boolean fits = QuarteringValidator.sampleFitsShift(quartering, settings);
-        if (fits) {
+        BigDecimal currentNet = shift.calculateTotalNetWeight();
+        quartering.updateShiftNetWeight(currentNet);
+        if (QuarteringValidator.sampleFitsShift(quartering, settings)) {
             quartering.evaluateQuality(settings.qualityTolerancePercent());
-        } else {
+            quarterings.save(quartering);
+            syncAlert(quartering, shift.getCode(), actor, now, before);
+            return;
+        }
+        if (currentNet.signum() <= 0 || quartering.getSampleWeight().compareTo(currentNet) > 0) {
             quartering.updateShiftNetWeight(storedNet);
-            quartering.markNonConforming();
         }
+        quartering.markNonConforming();
         quarterings.save(quartering);
-        if (fits) {
-            syncAlert(quartering, shift.getCode(), actor, now);
-        } else if (openAlerts(quartering).isEmpty()) {
-            alerts.save(AlertFactory.forSampleOutOfShift(quartering, shift.getCode(), currentNet, now));
+        keepOneAlert(AlertFactory.forSampleOutOfShift(quartering, shift.getCode(), currentNet, now), quartering, before);
+    }
+
+    private void keepOneAlert(Alert wanted, Quartering quartering, QualityStatus before) {
+        List<Alert> open = openAlerts(quartering);
+        if (open.isEmpty()) {
+            if (before != QualityStatus.NO_CONFORME) {
+                alerts.save(wanted);
+            }
+            return;
         }
+        open.stream().filter(alert -> alert.reviseDescription(wanted.getDescription())).forEach(alerts::save);
     }
 
     private List<Alert> openAlerts(Quartering quartering) {
@@ -85,15 +96,14 @@ public class QuarteringReconciler {
      * @param shiftCode  code of its shift
      * @param actor      user whose action resolved it
      * @param now        moment of the change
+     * @param before     quality status before the change
      */
-    public void syncAlert(Quartering quartering, String shiftCode, User actor, LocalDateTime now) {
-        List<Alert> open = openAlerts(quartering);
+    public void syncAlert(Quartering quartering, String shiftCode, User actor, LocalDateTime now, QualityStatus before) {
         if (quartering.getQualityStatus() == QualityStatus.NO_CONFORME) {
-            if (open.isEmpty()) {
-                alerts.save(AlertFactory.forNonConformingQuartering(quartering, shiftCode, now));
-            }
+            keepOneAlert(AlertFactory.forNonConformingQuartering(quartering, shiftCode, now), quartering, before);
             return;
         }
+        List<Alert> open = openAlerts(quartering);
         String note = quartering.getQualityStatus() == QualityStatus.ANULADO
                 ? "Cerrada automáticamente: el cuarteo fue anulado. Motivo: " + quartering.getAnnulReason()
                 : "Cerrada automáticamente: el cuarteo quedó conforme después de la corrección.";

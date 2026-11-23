@@ -95,12 +95,13 @@ public class CrewController implements FieldNameMapping {
     /**
      * Shows one crew.
      *
-     * @param id crew id
+     * @param principal user of the session
+     * @param id        crew id
      * @return the crew
      */
     @GetMapping("/{id}")
-    public CrewResponse get(@PathVariable Long id) {
-        return CrewResponse.from(crews.get(id));
+    public CrewResponse get(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id) {
+        return CrewResponse.from(crews.getFor(currentUser.of(principal), id));
     }
 
     /**

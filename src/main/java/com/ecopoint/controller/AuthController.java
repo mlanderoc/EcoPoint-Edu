@@ -3,6 +3,7 @@ package com.ecopoint.controller;
 import com.ecopoint.dto.LoginRequest;
 import com.ecopoint.dto.UserResponse;
 import com.ecopoint.security.EcoPointUserDetails;
+import com.ecopoint.security.SessionControl;
 import com.ecopoint.service.AuthService;
 import com.ecopoint.service.AuthenticatedUser;
 import jakarta.servlet.http.HttpServletRequest;
@@ -33,16 +34,20 @@ public class AuthController {
 
     private final AuthService authService;
     private final SecurityContextRepository contextRepository;
+    private final SessionControl sessions;
 
     /**
      * Creates the controller.
      *
      * @param authService       login service
      * @param contextRepository keeps the authenticated user in the session
+     * @param sessions          registry of the open sessions
      */
-    public AuthController(AuthService authService, SecurityContextRepository contextRepository) {
+    public AuthController(AuthService authService, SecurityContextRepository contextRepository,
+                          SessionControl sessions) {
         this.authService = authService;
         this.contextRepository = contextRepository;
+        this.sessions = sessions;
     }
 
     /**
@@ -111,6 +116,7 @@ public class AuthController {
                 principal.getAuthorities()));
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, request, response);
+        sessions.register(request.getSession().getId(), principal);
     }
 
     private static UserResponse toResponse(AuthenticatedUser user) {

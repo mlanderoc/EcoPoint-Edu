@@ -8,8 +8,11 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertBanner, Button, Input, Modal, Select } from '@/components/ui'
+import { useInstitutions } from '@/features/admin/components/InstitutionSelect'
+import { studyService } from '@/features/study/services/studyService'
+import { studyTitle } from '@/features/study/utils/studyStatus'
 import { ApiError } from '@/services/apiClient'
-import { Alert, AlertType } from '@/types'
+import { Alert, AlertType, CharacterizationStudy } from '@/types'
 import { Badge } from '../components/Badge'
 import { alertService, recordTypeOf } from '../services/verificationService'
 
@@ -25,19 +28,31 @@ export function AlertsPage() {
   const [attendedTab, setAttendedTab] = useState(false)
   const [type, setType] = useState('')
   const [attending, setAttending] = useState<Alert | null>(null)
+  const { institutions } = useInstitutions(false)
+  const [studies, setStudies] = useState<CharacterizationStudy[]>([])
+  const [studyId, setStudyId] = useState('')
   const [note, setNote] = useState('')
   const [noteError, setNoteError] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     try {
-      setAlerts(await alertService.list({ type: (type || undefined) as AlertType | undefined }))
+      setAlerts(await alertService.list({
+        studyId: studyId ? Number(studyId) : undefined,
+        type: (type || undefined) as AlertType | undefined,
+      }))
     } catch {
       setError('No se pudieron cargar las alertas.')
     }
-  }, [type])
+  }, [studyId, type])
 
   useEffect(() => { load() }, [load])
+
+  useEffect(() => {
+    studyService.visible(institutions.map((institution) => institution.id))
+      .then((all) => setStudies(all.filter((study) => study.status !== 'CANCELADO')))
+      .catch(() => setStudies([]))
+  }, [institutions])
 
   const openRecord = (alert: Alert) => {
     const recordType = recordTypeOf(alert.targetType)
@@ -79,6 +94,15 @@ export function AlertsPage() {
           <button type="button" aria-pressed={!attendedTab} onClick={() => setAttendedTab(false)}>Pendientes ({pending.length})</button>
           <button type="button" aria-pressed={attendedTab} onClick={() => setAttendedTab(true)}>Atendidas ({attended.length})</button>
         </div>
+        <div className="w-full sm:w-72">
+          <Select id="alerts-study" aria-label="Estudio de la alerta" value={studyId}
+            onChange={(event) => setStudyId(event.target.value)}
+            options={[{ value: '', label: 'Todos los estudios' },
+              ...studies.map((study) => {
+                const name = institutions.find((item) => item.id === study.institutionId)?.name
+                return { value: String(study.id), label: name ? `${studyTitle(study)} · ${name}` : studyTitle(study) }
+              })]} />
+        </div>
         <div className="w-full sm:w-64">
           <Select id="alerts-type" aria-label="Tipo de alerta" value={type} onChange={(event) => setType(event.target.value)}
             options={[{ value: '', label: 'Todos los tipos' },
@@ -103,7 +127,7 @@ export function AlertsPage() {
               <p className="font-bold">{alert.description}</p>
               {alert.attended && (
                 <blockquote>
-                  Atendida por el usuario {alert.attendedBy} el {alert.attendedAt ? new Date(alert.attendedAt).toLocaleString('es-CO') : ''}: {alert.note}
+                  Atendida por {alert.attendedByName ?? `el usuario ${alert.attendedBy}`} el {alert.attendedAt ? new Date(alert.attendedAt).toLocaleString('es-CO') : ''}: {alert.note}
                 </blockquote>
               )}
               <div className="flex flex-wrap gap-2">

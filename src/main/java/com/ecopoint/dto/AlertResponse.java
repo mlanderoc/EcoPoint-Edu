@@ -18,22 +18,24 @@ import java.time.LocalDateTime;
  * @param attendedBy  user that attended it, or null
  * @param attendedAt  when it was attended, or null
  * @param note        what was done about it, or null
+ * @param attendedByName name of the user that attended it, or null
  * @author craulgomez
  * @version 1.0
  */
 public record AlertResponse(Long id, AlertType type, String targetType, Long targetId, String description,
                             LocalDateTime createdAt, boolean attended, Long attendedBy, LocalDateTime attendedAt,
-                            String note) {
+                            String note, String attendedByName) {
 
     /**
      * Copies an alert of the domain.
      *
-     * @param alert domain alert
+     * @param alert          domain alert
+     * @param attendedByName name of the user that attended it, or null
      * @return the response
      */
-    public static AlertResponse from(Alert alert) {
+    public static AlertResponse from(Alert alert, String attendedByName) {
         return new AlertResponse(alert.getId(), alert.getType(), alert.getTargetType(), alert.getTargetId(),
                 alert.getDescription(), alert.getCreatedAt(), alert.isAttended(), alert.getAttendedBy(),
-                alert.getAttendedAt(), alert.getAttendNote());
+                alert.getAttendedAt(), alert.getAttendNote(), attendedByName);
     }
 }
