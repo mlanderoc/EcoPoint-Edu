@@ -7,7 +7,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { AlertBanner, Button, Card, CardContent, Input, Modal, Select } from '@/components/ui'
+import { AlertBanner, Button, Input, Modal, Select } from '@/components/ui'
 import { ApiError } from '@/services/apiClient'
 import { Alert, AlertType } from '@/types'
 import { Badge } from '../components/Badge'
@@ -22,7 +22,7 @@ const TYPE_LABELS: Record<AlertType, string> = {
 export function AlertsPage() {
   const navigate = useNavigate()
   const [alerts, setAlerts] = useState<Alert[]>([])
-  const [state, setState] = useState('false')
+  const [attendedTab, setAttendedTab] = useState(false)
   const [type, setType] = useState('')
   const [attending, setAttending] = useState<Alert | null>(null)
   const [note, setNote] = useState('')
@@ -31,14 +31,11 @@ export function AlertsPage() {
 
   const load = useCallback(async () => {
     try {
-      setAlerts(await alertService.list({
-        attended: state === '' ? undefined : state === 'true',
-        type: (type || undefined) as AlertType | undefined,
-      }))
+      setAlerts(await alertService.list({ type: (type || undefined) as AlertType | undefined }))
     } catch {
       setError('No se pudieron cargar las alertas.')
     }
-  }, [state, type])
+  }, [type])
 
   useEffect(() => { load() }, [load])
 
@@ -64,42 +61,63 @@ export function AlertsPage() {
     }
   }
 
+  const pending = alerts.filter((alert) => !alert.attended)
+  const attended = alerts.filter((alert) => alert.attended)
+  const shown = attendedTab ? attended : pending
+
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Alertas de calidad</h1>
-      {error && <AlertBanner variant="danger" message={error} />}
-      <div className="grid grid-cols-2 gap-3">
-        <Select id="alerts-state" label="Estado" value={state} onChange={(event) => setState(event.target.value)}
-          options={[{ value: 'false', label: 'Pendientes' }, { value: 'true', label: 'Atendidas' }, { value: '', label: 'Todas' }]} />
-        <Select id="alerts-type" label="Tipo" value={type} onChange={(event) => setType(event.target.value)}
-          options={[{ value: '', label: 'Todos los tipos' },
-            ...Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))]} />
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
+      <div className="page-hero">
+        <div>
+          <h1 className="page-hero-title">Alertas de calidad</h1>
+          <p className="m-0 mt-1">Datos que necesitan una segunda mirada.</p>
+        </div>
       </div>
-      {alerts.length === 0 && <p className="text-sm text-slate-500">No hay alertas con estos filtros.</p>}
-      {alerts.map((alert) => (
-        <Card key={alert.id}>
-          <CardContent className="flex flex-col gap-2 py-4" data-testid={`alert-${alert.id}`}>
-            <div className="flex flex-wrap items-center gap-2">
-              <Badge tone={alert.type === 'CUARTEO_NO_CONFORME' ? 'danger' : 'warning'}>{TYPE_LABELS[alert.type]}</Badge>
-              <Badge tone={alert.attended ? 'success' : 'neutral'}>{alert.attended ? 'Atendida' : 'Pendiente'}</Badge>
-            </div>
-            <p className="text-sm">{alert.description}</p>
-            {alert.attended && (
-              <p className="text-xs text-slate-500">
-                Atendida por el usuario {alert.attendedBy} el {alert.attendedAt ? new Date(alert.attendedAt).toLocaleString('es-CO') : ''}: {alert.note}
-              </p>
-            )}
-            <div className="flex flex-wrap gap-2">
-              <Button variant="outline" className="min-h-[48px]" onClick={() => openRecord(alert)}>Ver registro</Button>
-              {!alert.attended && (
-                <Button className="min-h-[48px]" onClick={() => { setAttending(alert); setNote(''); setNoteError(null) }}>
-                  Marcar atendida
-                </Button>
+      {error && <AlertBanner variant="danger" message={error} />}
+      <div className="toolbar">
+        <div className="segmented" role="group" aria-label="Filtrar alertas">
+          <button type="button" aria-pressed={!attendedTab} onClick={() => setAttendedTab(false)}>Pendientes ({pending.length})</button>
+          <button type="button" aria-pressed={attendedTab} onClick={() => setAttendedTab(true)}>Atendidas ({attended.length})</button>
+        </div>
+        <div className="w-full sm:w-64">
+          <Select id="alerts-type" aria-label="Tipo de alerta" value={type} onChange={(event) => setType(event.target.value)}
+            options={[{ value: '', label: 'Todos los tipos' },
+              ...Object.entries(TYPE_LABELS).map(([value, label]) => ({ value, label }))]} />
+        </div>
+      </div>
+      <section className="panel">
+        {shown.length === 0 && (
+          <div className="empty">
+            <h3>Todo en orden</h3>
+            <p className="m-0 text-[var(--muted)]">{attendedTab ? 'No hay alertas atendidas.' : 'No hay alertas pendientes.'}</p>
+          </div>
+        )}
+        {shown.map((alert) => (
+          <article key={alert.id} className="alert-card" data-testid={`alert-${alert.id}`}>
+            <span className="mark">{alert.attended ? '✓' : '!'}</span>
+            <div className="flex flex-col gap-2 min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge tone={alert.type === 'CUARTEO_NO_CONFORME' ? 'danger' : 'warning'}>{TYPE_LABELS[alert.type]}</Badge>
+                <Badge tone={alert.attended ? 'success' : 'neutral'}>{alert.attended ? 'Atendida' : 'Pendiente'}</Badge>
+              </div>
+              <p className="font-bold">{alert.description}</p>
+              {alert.attended && (
+                <blockquote>
+                  Atendida por el usuario {alert.attendedBy} el {alert.attendedAt ? new Date(alert.attendedAt).toLocaleString('es-CO') : ''}: {alert.note}
+                </blockquote>
               )}
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" className="min-h-[48px]" onClick={() => openRecord(alert)}>Ver registro</Button>
+                {!alert.attended && (
+                  <Button className="min-h-[48px]" onClick={() => { setAttending(alert); setNote(''); setNoteError(null) }}>
+                    Marcar atendida
+                  </Button>
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      ))}
+          </article>
+        ))}
+      </section>
       <Modal open={attending !== null} onClose={() => setAttending(null)} title="Atender alerta"
         description="Escriba qué se hizo. La alerta atendida queda en el historial con su nombre y la fecha.">
         <div className="flex flex-col gap-4 mt-2">

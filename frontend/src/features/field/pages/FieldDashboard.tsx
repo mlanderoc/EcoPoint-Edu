@@ -7,7 +7,7 @@
  * @author craulgomez
  */
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { PlayCircle, ArrowRight, Clock } from 'lucide-react'
 import { AlertBanner, Button, Card, CardContent, Modal, Select } from '@/components/ui'
@@ -40,6 +40,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   const { institutions } = useInstitutions(false)
   const [studies, setStudies] = useState<CharacterizationStudy[] | undefined>(undefined)
   const chosenId = Number(params.get('estudio'))
+  const requested = useRef({ day: Number(params.get('dia')), type: params.get('turno') })
   const study: CharacterizationStudy | null | undefined = studies === undefined
     ? undefined
     : studies.find((item) => item.id === chosenId) ?? studies[0] ?? null
@@ -64,8 +65,10 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
       const loaded = await studyService.shifts(running.id)
       setSlots(loaded)
       const suggestion = suggestSlot(running, loaded, now ?? new Date())
-      setDayNumber(suggestion.dayNumber)
-      setType(suggestion.type)
+      const asked = loaded.some((item) => item.dayNumber === requested.current.day && item.type === requested.current.type)
+      setDayNumber(asked ? requested.current.day : suggestion.dayNumber)
+      setType(asked ? requested.current.type as ShiftType : suggestion.type)
+      requested.current = { day: 0, type: null }
     } catch {
       setError('No se pudieron cargar los turnos del estudio.')
     }
@@ -104,7 +107,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   }
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-6">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
       {accessDenied && (
         <AlertBanner
           variant="warning"
@@ -113,13 +116,13 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
         />
       )}
 
-      <div>
-        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Registro en campo</h1>
-        {study && studies && studies.length === 1 && (
-          <p className="text-sm text-[var(--color-text-muted)]">
-            {studyTitle(study)}{institutionName(study.institutionId) ? ` · ${institutionName(study.institutionId)}` : ''}
+      <div className="page-hero">
+        <div>
+          <h1 className="page-hero-title">Registro en campo</h1>
+          <p className="m-0 mt-1">
+            {study ? `${studyTitle(study)}${institutionName(study.institutionId) ? ` · ${institutionName(study.institutionId)}` : ''}` : 'Elige el estudio y el turno.'}
           </p>
-        )}
+        </div>
       </div>
 
       {study && studies && studies.length > 1 && (
@@ -150,6 +153,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
       )}
 
       {study && (
+        <div className="grid-side">
         <Card>
           <CardContent className="flex flex-col gap-5 py-5">
             <div className="grid grid-cols-2 gap-3">
@@ -193,6 +197,31 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
             )}
           </CardContent>
         </Card>
+        <section className="panel">
+          <div className="panel-head"><h3>Turnos del estudio</h3><small>{slots.filter((item) => item.status === 'CERRADO').length} de {slots.length} cerrados</small></div>
+          <div className="field-days">
+            {study.days.map((item) => (
+              <div key={item.dayNumber} className="field-day">
+                <b>Día {item.dayNumber}</b>
+                <div>
+                  {(['MANANA', 'TARDE'] as ShiftType[]).map((shiftType) => {
+                    const dayShift = slots.find((entry) => entry.dayNumber === item.dayNumber && entry.type === shiftType)
+                    const tone = dayShift?.status === 'CERRADO' ? 'closed' : dayShift?.status === 'ABIERTO' ? 'open' : ''
+                    return (
+                      <button key={shiftType} type="button" className={tone}
+                        aria-label={`Elegir día ${item.dayNumber}, ${SHIFT_LABELS[shiftType]}`}
+                        aria-pressed={dayNumber === item.dayNumber && type === shiftType}
+                        onClick={() => { setDayNumber(item.dayNumber); setType(shiftType) }}>
+                        {shiftType === 'MANANA' ? 'M' : 'T'}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+        </div>
       )}
 
       <Modal open={isConfirming} onClose={() => setIsConfirming(false)} title="Abrir turno"

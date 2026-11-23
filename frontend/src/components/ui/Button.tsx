@@ -26,7 +26,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ) => {
     const isButtonLoading = loading || isLoading
     const baseStyles =
-      'inline-flex items-center justify-center font-bold tracking-wide rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer active:scale-[0.98]'
+      'inline-flex items-center justify-center font-[family-name:var(--display)] font-black rounded-xl transition-[background-color,transform] duration-150 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none cursor-pointer active:scale-[0.98]'
 
     // All default and large buttons maintain touch target >= 48px (R-301)
     const sizeStyles = {
@@ -37,13 +37,13 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const variantStyles = {
       primary:
-        'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white focus:ring-[var(--color-primary)] shadow-sm',
+        'bg-[var(--color-primary)] hover:bg-[var(--color-primary-hover)] text-white focus:ring-[var(--color-primary)]',
       secondary:
         'bg-[var(--color-brand-dark)] hover:bg-slate-900 text-white focus:ring-[var(--color-brand-dark)] shadow-sm',
       danger:
         'bg-[var(--color-danger)] hover:bg-red-700 text-white focus:ring-[var(--color-danger)] shadow-sm',
       outline:
-        'border-2 border-slate-300 hover:border-slate-400 bg-white text-slate-800 hover:bg-slate-50 focus:ring-slate-400',
+        'bg-[#eef1e7] text-[var(--forest)] hover:bg-[var(--mint)] focus:ring-slate-400',
       ghost:
         'bg-transparent hover:bg-slate-100 text-slate-800 focus:ring-slate-400',
     }

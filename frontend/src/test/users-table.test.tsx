@@ -71,12 +71,12 @@ describe('Tabla de usuarios (R-322, CA-313)', () => {
     renderUsers()
 
     const teacherRow = await screen.findByTestId(`user-row-${mockUsers[0].id}`)
-    expect(within(teacherRow).queryByRole('button', { name: /Desactivar/ })).toBeNull()
+    expect(within(teacherRow).queryByRole('switch', { name: /Desactivar/ })).toBeNull()
 
     await user.type(screen.getByLabelText('Buscar'), 'estudiante.demo')
     await waitFor(() => expect(screen.getByTestId('users-total')).toHaveTextContent(/^1 usuario/))
     const studentRow = screen.getByTestId(`user-row-${mockUsers[1].id}`)
-    await user.click(within(studentRow).getByRole('button', { name: /Desactivar/ }))
-    expect(await within(studentRow).findByRole('button', { name: /Activar/ })).toBeInTheDocument()
+    await user.click(within(studentRow).getByRole('switch', { name: /Desactivar/ }))
+    expect(await within(studentRow).findByRole('switch', { name: /Activar/ })).toBeInTheDocument()
   })
 })

@@ -21,20 +21,20 @@ export function CompositionTable({ composition }: { composition: Composition }) 
       <CardContent className="flex flex-col gap-3">
         <p className="text-sm font-semibold text-slate-700" data-testid="composition-note">{composition.note}</p>
         {composition.subcategories.length > 0 && (
-          <table className="w-full text-sm">
+          <table className="data-table">
             <thead>
-              <tr className="text-left text-xs text-slate-500">
-                <th className="py-1 font-semibold">Subcategoría</th>
-                <th className="py-1 font-semibold text-right">kg</th>
-                <th className="py-1 font-semibold text-right">%</th>
+              <tr>
+                <th>Subcategoría</th>
+                <th className="num">kg</th>
+                <th className="num">%</th>
               </tr>
             </thead>
             <tbody>
               {rows.map((row) => (
-                <tr key={row.categoryId} className="border-t border-slate-100">
-                  <td className="py-2 pr-2">{row.name}</td>
-                  <td className="py-2 text-right">{formatNumber(row.weight)}</td>
-                  <td className="py-2 text-right font-semibold">{formatNumber(row.percentage)}</td>
+                <tr key={row.categoryId}>
+                  <td>{row.name}</td>
+                  <td className="num">{formatNumber(row.weight)}</td>
+                  <td className="num font-bold">{formatNumber(row.percentage)}</td>
                 </tr>
               ))}
             </tbody>

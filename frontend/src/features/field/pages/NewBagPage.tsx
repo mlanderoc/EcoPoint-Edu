@@ -13,7 +13,8 @@ import { AlertBanner, BackButton, Button, Card, CardContent, Input } from '@/com
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
 import { CharacterizationSettings, SamplingShift, WasteBag } from '@/types'
-import { cn } from '@/utils/cn'
+import { BagIcon } from '@/features/home/components/BagIcon'
+import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
 import { settingsOfStudy } from '@/features/study/services/studySettings'
 import { DEFAULT_LIMITS, density, formatNumber, isAtypical, netWeight, parseDecimal } from '../utils/fieldMath'
@@ -34,6 +35,7 @@ export function NewBagPage() {
   const [isSaving, setIsSaving] = useState(false)
   const [saved, setSaved] = useState<WasteBag | null>(null)
   const submitting = useRef(false)
+  const weighing = useRef<HTMLElement>(null)
   const shiftPath = `/campo/turno/${shiftId}`
   const isDirty = !saved && !isSaving && (sourceId !== null || gross + tare + volume !== '')
   const { confirmLeave, discardDialog } = useUnsavedChanges(isDirty)
@@ -59,6 +61,23 @@ export function NewBagPage() {
   const bagDensity = net !== null && volumeValue !== null ? density(net, volumeValue) : null
   const atypical = net !== null && isAtypical(net, bagDensity, limits)
   const complete = sourceId !== null && net !== null && volumeValue !== null && volumeValue > 0
+
+  /** Chooses the source and brings the weighing form into view (D15). */
+  const chooseSource = (id: number) => {
+    setSourceId(id)
+    requestAnimationFrame(() => {
+      const form = weighing.current
+      if (!form) return
+      const { top, bottom } = form.getBoundingClientRect()
+      if (top < 12 || bottom > window.innerHeight) {
+        const calm = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches
+        form.scrollIntoView?.({ behavior: calm ? 'auto' : 'smooth', block: 'start' })
+      }
+      if (window.matchMedia?.('(pointer: fine)')?.matches) {
+        document.getElementById('bag-gross')?.focus({ preventScroll: true })
+      }
+    })
+  }
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
@@ -134,74 +153,74 @@ export function NewBagPage() {
     )
   }
 
+  const chosen = shift.sources.find((source) => source.sourceId === sourceId)
+
   return (
-    <div className="max-w-xl w-full mx-auto flex flex-col gap-5">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
       <BackButton to={shiftPath} label="Atrás al turno" onLeave={confirmLeave} />
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Registrar bolsa · {shift.code}</h1>
+      <div className="page-hero"><div><h1 className="page-hero-title">Registrar bolsa · {shift.code}</h1>
+        <p className="m-0 mt-1">Pesa la bolsa y el sistema calcula el neto y la densidad.</p></div></div>
+      <ShiftSteps shift={shift} current="bolsas" />
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
-      <form onSubmit={handleSave} className="flex flex-col gap-5">
-        <fieldset className="flex flex-col gap-2">
-          <legend className="text-sm font-semibold mb-2">Fuente</legend>
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+      <form onSubmit={handleSave} className="grid-left">
+        <fieldset className="panel m-0">
+          <legend className="sr-only">Fuente</legend>
+          <div className="panel-head"><h3>Fuentes</h3><small>{formatNumber(shift.totalNetWeight)} kg</small></div>
+          <div className="source-pick">
             {shift.sources.map((source) => (
               <button
                 key={source.sourceId}
                 type="button"
-                onClick={() => setSourceId(source.sourceId)}
+                onClick={() => chooseSource(source.sourceId)}
                 aria-pressed={sourceId === source.sourceId}
                 aria-label={`${source.code} ${source.name}`}
                 disabled={source.status === 'SIN_GENERACION'}
-                className={cn(
-                  'min-h-[64px] rounded-xl border-2 px-2 py-2 flex flex-col items-center justify-center text-center',
-                  sourceId === source.sourceId
-                    ? 'border-[var(--color-primary)] bg-[var(--color-primary-light)]'
-                    : 'border-slate-200 bg-white',
-                  source.status === 'SIN_GENERACION' && 'opacity-50'
-                )}
+                className="source-row min-h-[56px]"
               >
-                <span className="font-mono text-xl font-black">{source.code}</span>
-                <span className="text-xs leading-tight">{source.name}</span>
+                <BagIcon kg={source.totalNetWeight} />
+                <span className="min-w-0"><b>{source.code}</b> <small>{source.name}</small></span>
+                <span>{source.bagCount > 0 ? `${formatNumber(source.totalNetWeight)} kg`
+                  : source.status === 'SIN_GENERACION' ? 'Sin generación' : 'Pendiente'}</span>
               </button>
             ))}
           </div>
         </fieldset>
 
-        <Input id="bag-gross" label="Peso bruto (kg)" inputMode="decimal" placeholder="Ej. 12,40" value={gross}
-          onChange={(event) => setGross(event.target.value)} disabled={isSaving} className="min-h-[56px] text-xl" />
-        <Input id="bag-tare" label="Tara del recipiente (kg)" inputMode="decimal" placeholder="Ej. 0,40" value={tare}
-          onChange={(event) => setTare(event.target.value)} error={tareError} disabled={isSaving}
-          className="min-h-[56px] text-xl" />
-        <Input id="bag-volume" label="Volumen de la bolsa (m³)" inputMode="decimal" placeholder="Ej. 0,080"
-          value={volume} onChange={(event) => setVolume(event.target.value)} disabled={isSaving}
-          className="min-h-[56px] text-xl" />
-
-        <Card>
-          <CardContent className="grid grid-cols-2 gap-3 py-4">
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)]">Peso neto</p>
-              <p className="text-2xl font-bold" data-testid="live-net">{formatNumber(net)} kg</p>
-            </div>
-            <div>
-              <p className="text-xs text-[var(--color-text-muted)]">Densidad</p>
-              <p className="text-2xl font-bold" data-testid="live-density">{formatNumber(bagDensity)} kg/m³</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {atypical && (
-          <AlertBanner variant="warning" title="Valor fuera de lo esperado"
-            message="Revise antes de continuar. Si el valor es correcto, puede guardar la bolsa." />
-        )}
-
-        <Button type="submit" className="min-h-[56px] text-lg" isLoading={isSaving}
-          disabled={!complete || isSaving}>
-          Guardar bolsa
-        </Button>
-        <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
-          onClick={() => confirmLeave(() => navigate(shiftPath))}>
-          Descartar
-        </Button>
+        <section ref={weighing} className="panel bag-form">
+          <div className="panel-head">
+            <h3>Pesaje</h3>
+            <span className={chosen ? 'pill' : 'pill grey'}>{chosen ? `Fuente ${chosen.code}` : 'Elige una fuente'}</span>
+          </div>
+          <div className="scale" aria-live="polite">
+            <div><small>Peso neto</small><b data-testid="live-net">{formatNumber(net)} kg</b></div>
+            <div><small>Densidad</small><b data-testid="live-density">{formatNumber(bagDensity)} kg/m³</b></div>
+          </div>
+          <div className="form-row">
+            <Input id="bag-gross" label="Peso bruto (kg)" inputMode="decimal" placeholder="Ej. 12,40" value={gross}
+              onChange={(event) => setGross(event.target.value)} disabled={isSaving} className="min-h-[56px] text-xl" />
+            <Input id="bag-tare" label="Tara del recipiente (kg)" inputMode="decimal" placeholder="Ej. 0,40" value={tare}
+              onChange={(event) => setTare(event.target.value)} error={tareError} disabled={isSaving}
+              className="min-h-[56px] text-xl" />
+            <Input id="bag-volume" label="Volumen de la bolsa (m³)" inputMode="decimal" placeholder="Ej. 0,080"
+              value={volume} onChange={(event) => setVolume(event.target.value)} disabled={isSaving}
+              className="min-h-[56px] text-xl" />
+          </div>
+          {atypical && (
+            <AlertBanner variant="warning" title="Valor fuera de lo esperado"
+              message="Revise antes de continuar. Si el valor es correcto, puede guardar la bolsa." />
+          )}
+          <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+            <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
+              onClick={() => confirmLeave(() => navigate(shiftPath))}>
+              Descartar
+            </Button>
+            <Button type="submit" className="min-h-[56px] text-lg" isLoading={isSaving}
+              disabled={!complete || isSaving}>
+              Guardar bolsa
+            </Button>
+          </div>
+        </section>
       </form>
       {discardDialog}
     </div>

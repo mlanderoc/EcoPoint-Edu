@@ -5,6 +5,7 @@
  */
 
 import React, { useState } from 'react'
+import { Eye, EyeOff } from 'lucide-react'
 import { z } from 'zod'
 import { Button, Input, AlertBanner } from '@/components/ui'
 import { ApiError } from '@/services/apiClient'
@@ -32,6 +33,7 @@ export function LoginForm({ onSuccess, className = '' }: LoginFormProps) {
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
   const [serverError, setServerError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -104,8 +106,8 @@ export function LoginForm({ onSuccess, className = '' }: LoginFormProps) {
           name="email"
           type="email"
           inputMode="email"
-          label="Correo Institucional"
-          placeholder="ejemplo@unicesar.edu.co"
+          label="Correo institucional"
+          placeholder="nombre@unicesar.edu.co"
           value={email}
           onChange={(e) => {
             setEmail(e.target.value)
@@ -116,38 +118,43 @@ export function LoginForm({ onSuccess, className = '' }: LoginFormProps) {
           autoComplete="email"
         />
 
-        <Input
-          id="login-password"
-          name="password"
-          type="password"
-          label="Contraseña"
-          placeholder="••••••••"
-          value={password}
-          onChange={(e) => {
-            setPassword(e.target.value)
-            if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
-          }}
-          error={errors.password}
-          required
-          autoComplete="current-password"
-        />
+        <div className="lg-password">
+          <Input
+            id="login-password"
+            name="password"
+            type={showPassword ? 'text' : 'password'}
+            label="Contraseña"
+            placeholder="Tu contraseña"
+            value={password}
+            onChange={(e) => {
+              setPassword(e.target.value)
+              if (errors.password) setErrors((prev) => ({ ...prev, password: undefined }))
+            }}
+            error={errors.password}
+            required
+            autoComplete="current-password"
+          />
+          <button
+            type="button"
+            className="lg-eye"
+            aria-label={showPassword ? 'Ocultar clave' : 'Mostrar clave'}
+            aria-pressed={showPassword}
+            onClick={() => setShowPassword((shown) => !shown)}
+          >
+            {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
-      <div className="pt-2">
-        <Button
-          type="submit"
-          variant="primary"
-          size="lg"
-          className="w-full min-h-[48px] text-base font-bold shadow-md"
-          isLoading={isSubmitting}
-        >
-          Iniciar Sesión
-        </Button>
-      </div>
-
-      <p className="text-xs text-center text-[var(--color-text-muted)] mt-2">
-        Uso exclusivo para docentes y cuadrillas de estudiantes autorizados en el estudio de caracterización.
-      </p>
+      <Button
+        type="submit"
+        variant="primary"
+        size="lg"
+        className="w-full min-h-[48px] text-base font-bold"
+        isLoading={isSubmitting}
+      >
+        Iniciar sesión
+      </Button>
     </form>
   )
 }

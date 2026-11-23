@@ -72,8 +72,8 @@ describe('Layout and Menu per Role (T307, CA-300, CA-307)', () => {
       </div>
     )
 
-    // Verify root layout has overflow-x-hidden
-    const layoutRoot = container.querySelector('.overflow-x-hidden')
+    // The root clips horizontal overflow without breaking the sticky menu
+    const layoutRoot = container.querySelector('.overflow-x-clip')
     expect(layoutRoot).toBeInTheDocument()
 
     // Verify touch targets in BottomNav are >= 48px

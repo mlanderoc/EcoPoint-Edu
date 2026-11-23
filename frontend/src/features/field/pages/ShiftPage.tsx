@@ -8,13 +8,15 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircle2, CircleDashed, Lock, MinusCircle, Plus, Users } from 'lucide-react'
-import { AlertBanner, BackButton, Button, Card, CardContent, CardHeader, CardTitle, Modal } from '@/components/ui'
+import { AlertBanner, BackButton, Button, Modal } from '@/components/ui'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
 import { ApiError } from '@/services/apiClient'
 import { QualityStatus, SamplingShift, SourceProgress } from '@/types'
 import { qualityService } from '@/features/quality/services/qualityService'
 import { cn } from '@/utils/cn'
+import { BagIcon } from '@/features/home/components/BagIcon'
+import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
 import { formatNumber, plural } from '../utils/fieldMath'
 
@@ -108,109 +110,100 @@ export function ShiftPage() {
   }
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-4">
       <BackButton to="/campo" label="Atrás a Registro en Campo" />
-      <div className="flex flex-wrap items-start justify-between gap-3">
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Turno {shift.code}</h1>
-          <p className="text-sm text-[var(--color-text-muted)]">
+          <h1 className="page-hero-title">Turno {shift.code}</h1>
+          <p className="m-0 mt-1">
             {isOpen ? 'Abierto' : 'Cerrado'} · {plural(shift.bagCount, 'bolsa')} · {formatNumber(shift.totalNetWeight)} kg netos
           </p>
         </div>
-        {isOpen && shift.population && (
-          <Button className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/bolsas/nueva`)}>
-            <Plus className="w-5 h-5 mr-2" /> Registrar bolsa
-          </Button>
-        )}
+        <div className="flex flex-wrap gap-2">
+          {isOpen && shift.population && (
+            <Button className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${shiftId}/bolsas/nueva`)}>
+              <Plus className="w-5 h-5 mr-2" /> Registrar bolsa
+            </Button>
+          )}
+          {canClose && isOpen && (
+            <Button className="min-h-[48px]" disabled={pending.length > 0 || !shift.population}
+              onClick={() => setIsConfirming(true)}>
+              Cerrar turno
+            </Button>
+          )}
+        </div>
       </div>
+      <ShiftSteps shift={shift} />
 
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       {quarteringStatus === 'NO_CONFORME' && (
         <AlertBanner variant="danger" title="Cuarteo no conforme: repesar"
           message="La diferencia supera la tolerancia del 2 %. Revise el cuarteo." />
       )}
+      {canClose && isOpen && pending.length > 0 && (
+        <p className="m-0 text-sm text-amber-900 flex items-center gap-2">
+          <Lock className="w-4 h-4 shrink-0" /> Faltan {plural(pending.length, 'fuente')}: {pending.map((source) => source.code).join(', ')}.
+          Registre sus bolsas o márquelas sin generación.
+        </p>
+      )}
 
-      <Card>
-        <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
-          <div className="flex items-center gap-3">
-            <Users className="w-5 h-5 text-[var(--color-primary)]" />
-            {shift.population ? (
-              <p className="text-sm">
+      <div className="grid-left">
+        <section className="panel">
+          <h3>Población del turno</h3>
+          {shift.population ? (
+            <>
+              <div className="total-band"><span>Total</span><b>{shift.population.total} personas</b></div>
+              <p className="m-0 text-sm">
                 Población: <strong>{shift.population.total}</strong> personas ({shift.population.students} estudiantes,{' '}
                 {shift.population.teachers} docentes, {shift.population.staff} personal)
               </p>
-            ) : (
-              <p className="text-sm font-medium text-amber-900">Registre primero la población del turno.</p>
-            )}
+            </>
+          ) : (
+            <>
+              <p className="m-0 text-sm font-medium text-amber-900 flex items-center gap-2">
+                <Users className="w-5 h-5 shrink-0" /> Registre primero la población del turno.
+              </p>
+              {isOpen && (
+                <Button className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${shiftId}/poblacion`)}>
+                  Registrar población
+                </Button>
+              )}
+            </>
+          )}
+        </section>
+
+        <section className="panel">
+          <div className="panel-head"><h3>Fuentes del turno</h3><small>{formatNumber(shift.totalNetWeight)} kg</small></div>
+          <div className="flex flex-col gap-1.5">
+            {shift.sources.map((source) => (
+              <div key={source.sourceId} className="source-line" data-testid={`source-${source.code}`}>
+                <div>
+                  <BagIcon kg={source.totalNetWeight} />
+                  <span className="min-w-0">
+                    <b>{source.code}</b> <span className="text-sm text-[var(--muted)]">{source.name}</span>
+                    {source.bagCount > 0 && <small>{plural(source.bagCount, 'bolsa')} · {formatNumber(source.totalNetWeight)} kg</small>}
+                  </span>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <StatusBadge status={source.status} />
+                  {isOpen && source.status === 'PENDIENTE' && (
+                    <Button variant="outline" size="sm" className="min-h-[48px]" disabled={busySource !== null}
+                      isLoading={busySource === source.sourceId} onClick={() => markNoGeneration(source.sourceId, true)}>
+                      Marcar sin generación
+                    </Button>
+                  )}
+                  {isOpen && source.status === 'SIN_GENERACION' && (
+                    <Button variant="ghost" size="sm" className="min-h-[48px]" disabled={busySource !== null}
+                      onClick={() => markNoGeneration(source.sourceId, false)}>
+                      Quitar marca
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-          {isOpen && !shift.population && (
-            <Button className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${shiftId}/poblacion`)}>
-              Registrar población
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      {shift.population && shift.bagCount > 0 && (
-        <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/cuarteo`)}>
-            {shift.hasQuartering ? 'Ver cuarteo' : 'Cuarteo'}
-          </Button>
-          <Button variant="outline" className="min-h-[56px]" onClick={() => navigate(`/campo/turno/${shiftId}/densidad`)}>
-            {shift.hasDensity ? 'Ver densidad' : 'Densidad'}
-          </Button>
-        </div>
-      )}
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Fuentes del turno</CardTitle>
-        </CardHeader>
-        <CardContent className="flex flex-col divide-y divide-slate-100">
-          {shift.sources.map((source) => (
-            <div key={source.sourceId} className="flex flex-wrap items-center justify-between gap-3 py-3"
-              data-testid={`source-${source.code}`}>
-              <div className="min-w-0">
-                <p className="font-mono font-bold text-lg">{source.code}</p>
-                <p className="text-sm text-[var(--color-text-muted)]">{source.name}</p>
-                {source.bagCount > 0 && (
-                  <p className="text-xs">{plural(source.bagCount, 'bolsa')} · {formatNumber(source.totalNetWeight)} kg</p>
-                )}
-              </div>
-              <div className="flex items-center gap-2">
-                <StatusBadge status={source.status} />
-                {isOpen && source.status === 'PENDIENTE' && (
-                  <Button variant="outline" className="min-h-[48px]" disabled={busySource !== null}
-                    isLoading={busySource === source.sourceId} onClick={() => markNoGeneration(source.sourceId, true)}>
-                    Marcar sin generación
-                  </Button>
-                )}
-                {isOpen && source.status === 'SIN_GENERACION' && (
-                  <Button variant="ghost" className="min-h-[48px]" disabled={busySource !== null}
-                    onClick={() => markNoGeneration(source.sourceId, false)}>
-                    Quitar marca
-                  </Button>
-                )}
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-
-      {canClose && isOpen && (
-        <div className="flex flex-col gap-2">
-          {pending.length > 0 && (
-            <p className="text-sm text-amber-900 flex items-center gap-2">
-              <Lock className="w-4 h-4" /> Faltan {plural(pending.length, 'fuente')}: {pending.map((source) => source.code).join(', ')}.
-              Registre sus bolsas o márquelas sin generación.
-            </p>
-          )}
-          <Button variant="danger" className="min-h-[56px]" disabled={pending.length > 0 || !shift.population}
-            onClick={() => setIsConfirming(true)}>
-            Cerrar turno
-          </Button>
-        </div>
-      )}
+        </section>
+      </div>
 
       <Modal open={isConfirming} onClose={() => setIsConfirming(false)} title={`Cerrar turno ${shift.code}`}
         description="Revise el resumen. Un turno cerrado ya no admite registros.">

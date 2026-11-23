@@ -11,15 +11,15 @@ import App from '@/App'
 import { resetMockState } from '@/mocks/handlers'
 
 describe('App initial render', () => {
-  it('renders the layout with the institutional logo and the field dashboard', async () => {
+  it('renders the layout with the institutional logo and the home screen', async () => {
     resetMockState('DOCENTE')
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: 'Registro en campo' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /Hola/ })).toBeInTheDocument()
     expect((await screen.findAllByAltText('EcoPoint Edu Logo')).length).toBeGreaterThanOrEqual(1)
   })
 
-  it('shows the study in execution on the field dashboard', async () => {
+  it('shows the study in execution on the home screen', async () => {
     resetMockState('DOCENTE')
     render(<App />)
 

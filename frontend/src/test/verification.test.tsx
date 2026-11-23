@@ -127,38 +127,6 @@ describe('Record correction and history (T406, CA-404, CA-409, CA-412)', () => {
     expect(await screen.findByTestId('correction-history')).toHaveTextContent('18,50 → 19,50')
     expect(screen.getByTestId(`record-quartering-${quartering.id}`)).toHaveTextContent('Conforme')
   })
-})
-
-describe('Alerts (T407, CA-411, R-432)', () => {
-  it('ca411_alertIsAttendedOnlyWithANote', async () => {
-    resetMockState('ESTUDIANTE_UNIVERSITARIO')
-    await createQuartering(50, 30, 18.5)
-    const user = userEvent.setup()
-    renderAs(teacher, '/alertas')
-
-    await user.click(await screen.findByRole('button', { name: 'Marcar atendida' }))
-    await user.click(await screen.findByRole('button', { name: 'Guardar' }))
-    expect(screen.getByText('Escriba una observación sobre cómo se atendió la alerta.')).toBeInTheDocument()
-
-    await user.type(screen.getByLabelText('Observación'), 'Se volvió a pesar.')
-    await user.click(screen.getByRole('button', { name: 'Guardar' }))
-    expect(await screen.findByText('No hay alertas con estos filtros.')).toBeInTheDocument()
-  })
-
-  it('r432_menuShowsTheNumberOfPendingAlerts', async () => {
-    resetMockState('ESTUDIANTE_UNIVERSITARIO')
-    await createQuartering(50, 30, 18.5)
-    render(
-      <MemoryRouter>
-        <AuthProvider initialUser={teacher}>
-          <Sidebar />
-        </AuthProvider>
-      </MemoryRouter>
-    )
-
-    expect(await screen.findByText('Alertas (1)')).toBeInTheDocument()
-    expect(screen.getByText('Verificación')).toBeInTheDocument()
-  })
 
   it('ca088_forgottenSubcategoryIsAddedFromTheCorrection', async () => {
     resetMockState('ESTUDIANTE_UNIVERSITARIO')

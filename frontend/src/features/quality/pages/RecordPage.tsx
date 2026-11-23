@@ -105,9 +105,9 @@ export function RecordPage() {
   }
 
   return (
-    <div className="max-w-3xl w-full mx-auto flex flex-col gap-5">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-5">
       <BackButton to="/calidad/verificacion" label="Atrás a la verificación" />
-      <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">{record.title}</h1>
+      <div className="page-hero"><h1 className="page-hero-title">{record.title}</h1></div>
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       <RecordCard record={record}>
         <p className="text-xs text-slate-500">
@@ -129,7 +129,7 @@ export function RecordPage() {
                   onChange={(event) => setValues((previous) => ({ ...previous, [field.field]: event.target.value }))} />
               ))}
               {type === 'quartering' && forgotten.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3" data-testid="add-subcategory">
+                <div className="form-row" data-testid="add-subcategory">
                   <Select id="correct-new-category" label="Agregar subcategoría olvidada" value={newCategory}
                     disabled={isSaving} onChange={(event) => setNewCategory(event.target.value)}
                     options={[{ value: '', label: 'Ninguna' },

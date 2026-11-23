@@ -14,6 +14,8 @@ import { NewStudyPage, StudiesPage, StudyDetailPage } from '@/features/study'
 import { IndicatorsDashboard } from '@/features/indicators'
 import { AlertsPage, DensityPage, QuarteringPage, RecordPage, VerificationPage } from '@/features/quality'
 import { ProfilePage } from '@/features/profile'
+import { HomePage, MorePage } from '@/features/home'
+import { LandingPage } from '@/features/landing'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui'
 import { User } from '@/types'
 
@@ -45,10 +47,20 @@ function LoginRoute() {
   const navigate = useNavigate()
 
   if (isAuthenticated) {
-    return <Navigate to="/campo" replace />
+    return <Navigate to="/inicio" replace />
   }
 
-  return <LoginPage onSuccess={() => navigate('/campo', { replace: true })} />
+  return <LoginPage onSuccess={() => navigate('/inicio', { replace: true })} />
+}
+
+/** Public welcome page; a user with a session goes straight to the home screen (D15). */
+function RootRoute() {
+  const { isAuthenticated, isLoading } = useAuth()
+
+  if (isLoading) {
+    return null
+  }
+  return isAuthenticated ? <Navigate to="/inicio" replace /> : <LandingPage />
 }
 
 function PlaceholderPage({ title, description }: { title: string; description: string }) {
@@ -74,6 +86,23 @@ export function AppRoutes() {
 
       {/* Protected Routes requiring authenticated session */}
       <Route element={<RequireAuth />}>
+        <Route
+          path="/inicio"
+          element={
+            <RoutedAppLayout>
+              <HomePage />
+            </RoutedAppLayout>
+          }
+        />
+        <Route
+          path="/mas"
+          element={
+            <RoutedAppLayout>
+              <MorePage />
+            </RoutedAppLayout>
+          }
+        />
+
         {/* Field Dashboard (Common to Docente and Estudiante) */}
         <Route
           path="/campo"
@@ -249,9 +278,9 @@ export function AppRoutes() {
         </Route>
       </Route>
 
-      {/* Redirect root to /campo */}
-      <Route path="/" element={<Navigate to="/campo" replace />} />
-      <Route path="*" element={<Navigate to="/campo" replace />} />
+      {/* Public welcome page */}
+      <Route path="/" element={<RootRoute />} />
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )
 }

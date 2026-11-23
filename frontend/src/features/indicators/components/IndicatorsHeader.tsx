@@ -1,12 +1,12 @@
 /**
  * Study selector and the "Preliminar" or "Oficial" label (Spec 006, R-520,
- * R-502, CA-504).
+ * R-502, CA-504; D15).
  *
  * @author craulgomez
  */
 
 import { Select } from '@/components/ui'
-import { studyTitle } from '@/features/study/utils/studyStatus'
+import { STATUS_LABELS, studyTitle } from '@/features/study/utils/studyStatus'
 import { CharacterizationStudy } from '@/types'
 import { StudyIndicators } from '../types/indicatorTypes'
 import { formatNumber } from '../utils/format'
@@ -17,33 +17,42 @@ export interface IndicatorsHeaderProps {
   studyId: number | null
   onStudyChange: (studyId: number) => void
   indicators: StudyIndicators | null
+  institutionName?: (institutionId: number) => string | undefined
 }
 
-export function IndicatorsHeader({ studies, studyId, onStudyChange, indicators }: IndicatorsHeaderProps) {
+export function IndicatorsHeader({ studies, studyId, onStudyChange, indicators, institutionName }: IndicatorsHeaderProps) {
   const verified = indicators ? `${formatNumber(indicators.quality.verifiedPercentage)} % de los registros verificados` : ''
+  const optionLabel = (study: CharacterizationStudy) => {
+    const name = institutionName?.(study.institutionId)
+    return [studyTitle(study), name, STATUS_LABELS[study.status]].filter(Boolean).join(' · ')
+  }
+  const chosen = studies.find((study) => study.id === studyId)
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-        <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Indicadores de línea base</h1>
-        {indicators && (
-          <span data-testid="indicators-label" title={verified}
-            className={indicators.official
-              ? 'text-sm font-bold px-3 py-1 rounded-full border bg-emerald-50 text-emerald-800 border-emerald-300'
-              : 'text-sm font-bold px-3 py-1 rounded-full border bg-amber-50 text-amber-900 border-amber-300'}>
-            {indicators.label}
-          </span>
-        )}
+      <div className="page-hero">
+        <div>
+          <h1 className="page-hero-title">Indicadores de línea base</h1>
+          {chosen && <p className="m-0 mt-1">{optionLabel(chosen)}</p>}
         </div>
-        {indicators && studyId !== null && <ReportDownloads studyId={studyId} />}
+        <div className="flex flex-wrap items-center gap-2">
+          {indicators && (
+            <span data-testid="indicators-label" title={verified}
+              className={indicators.official ? 'pill' : 'pill warm'}>
+              {indicators.label}
+            </span>
+          )}
+          {indicators && studyId !== null && <ReportDownloads studyId={studyId} />}
+        </div>
       </div>
       {indicators && !indicators.official && (
-        <p className="text-sm text-amber-900">Datos sin depurar del todo: {verified}.</p>
+        <p className="m-0 text-sm text-amber-900">Datos sin depurar del todo: {verified}.</p>
       )}
-      {studies.length > 1 && (
-        <Select id="indicators-study" label="Estudio" value={String(studyId ?? '')}
-          onChange={(event) => onStudyChange(Number(event.target.value))}
-          options={studies.map((study) => ({ value: String(study.id), label: studyTitle(study) }))} />
+      {studies.length > 0 && (
+        <div className="sm:max-w-2xl">
+          <Select id="indicators-study" label="Ver los indicadores de" value={String(studyId ?? '')}
+            onChange={(event) => onStudyChange(Number(event.target.value))}
+            options={studies.map((study) => ({ value: String(study.id), label: optionLabel(study) }))} />
+        </div>
       )}
     </div>
   )

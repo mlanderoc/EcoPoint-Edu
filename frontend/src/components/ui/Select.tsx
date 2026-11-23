@@ -30,7 +30,7 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
           id={selectId}
           ref={ref}
           className={cn(
-            'min-h-[48px] px-4 py-2.5 rounded-lg border text-sm md:text-base font-medium transition-colors bg-white appearance-none',
+            'min-h-[48px] px-4 py-2.5 rounded-xl border text-sm md:text-base font-medium transition-colors bg-white appearance-none',
             'focus:outline-none focus:ring-2 focus:ring-offset-1',
             error
               ? 'border-red-500 text-red-900 focus:ring-red-500 bg-red-50/30'

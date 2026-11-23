@@ -7,15 +7,11 @@
  */
 
 import { useEffect, useState } from 'react'
-import { Building, Plus, MapPin } from 'lucide-react'
+import { Plus, MapPin } from 'lucide-react'
 import {
   ActiveFilter,
   AlertBanner,
   Button,
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
   Input,
   Modal,
   StatusToggleButton,
@@ -103,10 +99,10 @@ export function InstitutionsPage() {
   }
 
   return (
-    <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Instituciones Educativas</h1>
+          <h1 className="page-hero-title">Instituciones Educativas</h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Gestión de planteles educativos participantes en el muestreo de caracterización.
           </p>
@@ -121,38 +117,31 @@ export function InstitutionsPage() {
 
       <ActiveFilter value={filter} onChange={setFilter} inactiveCount={inactiveCount} />
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid-2">
         {isLoading ? (
           <p className="text-sm text-[var(--color-text-muted)]">Cargando instituciones...</p>
         ) : visible.length === 0 ? (
           <p className="text-sm text-[var(--color-text-muted)]">No hay instituciones con este filtro.</p>
         ) : (
           visible.map((inst) => (
-            <Card key={inst.id} className={cn('hover:border-slate-300 transition-colors', !isActive(inst) && 'opacity-60')}
+            <article key={inst.id} className={cn('inst-card', !isActive(inst) && 'opacity-60')}
               data-testid={`institution-${inst.id}`}>
-              <CardHeader className="pb-2">
-                <div className="flex items-start gap-3">
-                  <div className="p-3 bg-[var(--color-primary-light)] rounded-xl text-[var(--color-primary)]">
-                    <Building className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <CardTitle className="text-lg">{inst.name}</CardTitle>
-                    <div className="flex items-center gap-1.5 text-xs text-[var(--color-text-muted)] mt-1">
-                      <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
-                      <span>{inst.address}</span>
-                    </div>
-                  </div>
-                </div>
-              </CardHeader>
-              <CardContent className="pt-2 flex items-center justify-between gap-2">
-                <span className={cn('text-xs font-bold px-2.5 py-1 rounded-full',
-                  isActive(inst) ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-500')}>
-                  {isActive(inst) ? 'Activa' : 'Inactiva'}
-                </span>
+              <div className="panel-head" style={{ alignItems: 'center' }}>
+                <h3>{inst.name}</h3>
                 <StatusToggleButton active={isActive(inst)} itemName={inst.name} onToggle={() => handleToggle(inst)}
                   disabled={togglingId === inst.id} />
-              </CardContent>
-            </Card>
+              </div>
+              <span className="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)]">
+                <MapPin className="w-4 h-4 shrink-0" aria-hidden="true" />{inst.address}
+              </span>
+              {inst.settings && (
+                <div className="chips">
+                  <span>Submuestra {inst.settings.minSampleWeight} a {inst.settings.maxSampleWeight} kg</span>
+                  <span>Tolerancia {inst.settings.qualityTolerancePercent} %</span>
+                  <span>Bolsa máx. {inst.settings.maxBagNetWeight} kg</span>
+                </div>
+              )}
+            </article>
           ))
         )}
       </div>

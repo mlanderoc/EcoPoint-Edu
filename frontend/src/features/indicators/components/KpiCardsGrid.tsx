@@ -10,7 +10,7 @@ import { KpiCard } from './KpiCard'
 
 export function KpiCardsGrid({ summary, compositionNote }: { summary: SummaryKPIs; compositionNote: string }) {
   return (
-    <div className="grid grid-cols-1 min-[400px]:grid-cols-2 lg:grid-cols-3 gap-3" data-testid="kpi-cards">
+    <div className="kpis kpis-six" data-testid="kpi-cards">
       <KpiCard label="Generación diaria promedio" value={formatNumber(summary.averageDailyGeneration)} unit="kg/día"
         hint={`Días 2 a 8 (${summary.countedDays} días)`} />
       <KpiCard label="PPC promedio" value={formatNumber(summary.averagePpc, 3)} unit="kg/persona/día"

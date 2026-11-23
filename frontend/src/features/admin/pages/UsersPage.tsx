@@ -202,10 +202,10 @@ export function UsersPage() {
   }
 
   return (
-    <div className="max-w-5xl w-full mx-auto flex flex-col gap-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div className="max-w-6xl w-full mx-auto flex flex-col gap-6">
+      <div className="page-hero">
         <div>
-          <h1 className="text-2xl font-black text-[var(--color-brand-dark)]">Usuarios del Sistema</h1>
+          <h1 className="page-hero-title">Usuarios del Sistema</h1>
           <p className="text-sm text-[var(--color-text-muted)] mt-1">
             Gestión de docentes responsables y estudiantes universitarios participantes en la caracterización.
           </p>
@@ -239,39 +239,33 @@ export function UsersPage() {
           ) : rows.length === 0 ? (
             <p className="text-sm text-[var(--color-text-muted)]">No hay usuarios con estos filtros.</p>
           ) : (
-            <table className="w-full text-left text-sm" data-testid="users-table">
+            <div className="overflow-x-auto"><table className="data-table" data-testid="users-table">
               <thead>
-                <tr className="border-b border-slate-200 text-xs font-bold text-[var(--color-text-muted)] uppercase tracking-wider">
+                <tr>
                   <th className="py-3 px-2">Usuario</th>
                   <th className="py-3 px-2 hidden sm:table-cell">Rol</th>
-                  <th className="py-3 px-2 hidden sm:table-cell">Estado</th>
                   <th className="py-3 px-2 hidden md:table-cell text-right">Registros</th>
                   <th className="py-3 px-2 text-right"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody>
                 {rows.map((u) => {
                   const isTeacher = u.role === 'DOCENTE'
                   return (
                     <tr key={u.id} className={cn('align-middle', !u.active && 'opacity-60')} data-testid={`user-row-${u.id}`}>
                       <td className="py-3 px-2 min-w-0">
-                        <p className="font-semibold text-slate-800 break-words">{u.firstName} {u.lastName}</p>
-                        <p className="text-xs text-[var(--color-text-muted)] break-all">{u.email}</p>
-                        <p className="text-xs text-[var(--color-text-muted)] sm:hidden mt-1">
-                          {isTeacher ? 'Rol docente' : 'Rol estudiante'} · {u.active ? 'activo' : 'inactivo'} ·{' '}
-                          {u.activity.typedRecords} registros
-                        </p>
+                        <div className="who">
+                          <span className="avatar">{`${u.firstName?.[0] ?? ''}${u.lastName?.[0] ?? ''}`.toUpperCase()}</span>
+                          <div className="min-w-0">
+                            <b className="break-words">{u.firstName} {u.lastName}</b>
+                            <small>{u.email}</small>
+                            <small className="who-phone">{isTeacher ? 'Rol docente' : 'Rol estudiante'} · {u.activity.typedRecords} registros</small>
+                          </div>
+                        </div>
                       </td>
                       <td className="py-3 px-2 hidden sm:table-cell">
-                        <span className={cn('inline-flex px-2.5 py-1 rounded-full text-xs font-bold border',
-                          isTeacher ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-blue-50 text-blue-700 border-blue-200')}>
+                        <span className={isTeacher ? 'pill dark' : 'pill'}>
                           {isTeacher ? 'Docente' : 'Estudiante'}
-                        </span>
-                      </td>
-                      <td className="py-3 px-2 hidden sm:table-cell">
-                        <span className={cn('text-xs font-bold', u.active ? 'text-emerald-700' : 'text-slate-500')}>
-                          {u.active ? 'Activo' : 'Inactivo'}
                         </span>
                       </td>
                       <td className="py-3 px-2 hidden md:table-cell text-right tabular-nums"
@@ -298,7 +292,7 @@ export function UsersPage() {
                   )
                 })}
               </tbody>
-            </table>
+            </table></div>
           )}
 
           <div className="flex flex-wrap items-center justify-between gap-3 text-sm">

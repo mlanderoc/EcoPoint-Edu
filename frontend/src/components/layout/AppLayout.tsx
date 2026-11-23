@@ -1,5 +1,5 @@
 /**
- * Main application responsive layout with Header, Sidebar, and BottomNav (T307 / T310).
+ * Main application responsive layout with Sidebar, top bar and BottomNav (T307 / T310; D15).
  * Connects with AuthContext to enforce role-based menu display and session redirect.
  *
  * @author craulgomez
@@ -43,30 +43,14 @@ export function AppLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[var(--color-bg-app)] text-[var(--color-text-main)] flex flex-col overflow-x-hidden w-full">
-      {/* Header fijo superior */}
-      <Header user={user} onLogout={handleLogout} />
-
-      {/* Cuerpo principal con Sidebar y Contenido */}
-      <div className="flex-1 flex w-full overflow-x-hidden">
-        {/* Sidebar visible solo en md:flex (>= 768px) */}
-        <Sidebar
-          role={user?.role}
-          currentPath={currentPath}
-          onNavigate={onNavigate}
-          className="hidden md:flex"
-        />
-
-        {/* Contenedor de contenido principal */}
-        <main
-          id="main-content"
-          className="flex-1 w-full max-w-full p-4 md:p-6 pb-24 md:pb-6 overflow-x-hidden flex flex-col"
-        >
+    <div className="shell overflow-x-clip w-full">
+      <Sidebar role={user?.role} user={user} currentPath={currentPath} onNavigate={onNavigate} />
+      <div className="shell-main">
+        <Header user={user} currentPath={currentPath} onLogout={handleLogout} />
+        <main id="main-content" className="shell-content">
           {children}
         </main>
       </div>
-
-      {/* Barra de navegación inferior visible en celulares (< 768px) */}
       <BottomNav role={user?.role} currentPath={currentPath} onNavigate={onNavigate} />
     </div>
   )
