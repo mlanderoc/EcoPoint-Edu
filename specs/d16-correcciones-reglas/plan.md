@@ -25,6 +25,13 @@ Corrige errores de reglas encontrados al revisar la aplicación. No incluye el d
 | 8 | Una cuadrilla tiene un solo estudio abierto y sus integrantes no están en otro | RN-098, CA-095 |
 | 9 | Un cuarteo tiene una sola alerta abierta, que se cierra al resolverse | RN-099, CA-094 |
 | 10 | Los estudios terminados no se alteran | RN-100, CA-099 |
+| 11 | Un estudio en depuración puede volver a ejecución con motivo | RN-101 |
+| 12 | Los estudios terminados no reciben evidencias | RN-102 |
+| 13 | La composición solo usa cuarteos conformes y un cuarteo anulado no bloquea el cierre | RN-103 |
+| 14 | Datos coherentes: peso del cuarteo, alertas, densidad sin redondeo previo, límites de la institución en muestra completa y PDF | RN-093, RN-099, R-511 |
+| 15 | Alertas por estudio, nombres reales y cierre de otras sesiones al cambiar la contraseña | R-352, R-430 |
+
+Quedan fuera por decisión del equipo: la edición general de usuarios y la alerta automática de 24 horas (RN-072).
 
 ## 2. Base de datos
 
