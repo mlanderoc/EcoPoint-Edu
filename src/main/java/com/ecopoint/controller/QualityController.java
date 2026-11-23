@@ -60,12 +60,14 @@ public class QualityController implements FieldNameMapping {
     /**
      * Shows the quartering of the shift.
      *
-     * @param shiftId shift id
+     * @param principal user of the session
+     * @param shiftId   shift id
      * @return the quartering with its quality control and composition
      */
     @GetMapping("/quartering")
-    public QuarteringResponse quartering(@PathVariable Long shiftId) {
-        return QuarteringResponse.from(quarterings.get(shiftId));
+    public QuarteringResponse quartering(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                         @PathVariable Long shiftId) {
+        return QuarteringResponse.from(quarterings.getFor(currentUser.of(principal), shiftId));
     }
 
     /**
@@ -104,12 +106,13 @@ public class QualityController implements FieldNameMapping {
     /**
      * Shows the density measurement of the shift.
      *
-     * @param shiftId shift id
+     * @param principal user of the session
+     * @param shiftId   shift id
      * @return the measurement
      */
     @GetMapping("/density")
-    public DensityDto density(@PathVariable Long shiftId) {
-        return DensityDto.from(densities.get(shiftId));
+    public DensityDto density(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long shiftId) {
+        return DensityDto.from(densities.getFor(currentUser.of(principal), shiftId));
     }
 
     /**

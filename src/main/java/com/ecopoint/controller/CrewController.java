@@ -1,7 +1,9 @@
 package com.ecopoint.controller;
 
+import com.ecopoint.dto.BusyMemberResponse;
 import com.ecopoint.dto.CrewRequest;
 import com.ecopoint.dto.CrewResponse;
+import com.ecopoint.dto.UnavailableCrewResponse;
 import com.ecopoint.security.EcoPointUserDetails;
 import com.ecopoint.service.CrewService;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -58,6 +61,35 @@ public class CrewController implements FieldNameMapping {
     @GetMapping
     public List<CrewResponse> list(@AuthenticationPrincipal EcoPointUserDetails principal) {
         return crews.list(currentUser.of(principal)).stream().map(CrewResponse::from).toList();
+    }
+
+    /**
+     * Lists the students that cannot join a crew because they have another
+     * open study (RN-091).
+     *
+     * @param principal user of the session
+     * @param crewId    crew being edited; empty for a new crew
+     * @return busy students with their study
+     */
+    @GetMapping("/busy-members")
+    public List<BusyMemberResponse> busyMembers(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                                @RequestParam(required = false) Long crewId) {
+        return crews.busyMembers(currentUser.of(principal), crewId).entrySet().stream()
+                .map(entry -> new BusyMemberResponse(entry.getKey(), entry.getValue())).toList();
+    }
+
+    /**
+     * Lists the crews that cannot take a study right now (RN-098).
+     *
+     * @param principal user of the session
+     * @param studyId   study being edited; empty for a new one
+     * @return unavailable crews with the study that holds them
+     */
+    @GetMapping("/unavailable")
+    public List<UnavailableCrewResponse> unavailable(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                                     @RequestParam(required = false) Long studyId) {
+        return crews.unavailableCrews(currentUser.of(principal), studyId).entrySet().stream()
+                .map(entry -> new UnavailableCrewResponse(entry.getKey(), entry.getValue())).toList();
     }
 
     /**

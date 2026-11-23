@@ -51,6 +51,7 @@ public class AlertController implements FieldNameMapping {
     /**
      * Lists the alerts with filters, one page at a time (R-103).
      *
+     * @param principal user of the session
      * @param studyId  study whose records caused the alert, optional
      * @param type     type of alert, optional
      * @param attended attention state, optional
@@ -59,12 +60,13 @@ public class AlertController implements FieldNameMapping {
      * @return one page of alerts, newest first
      */
     @GetMapping
-    public PageResponse<AlertResponse> list(@RequestParam(required = false) Long studyId,
+    public PageResponse<AlertResponse> list(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                            @RequestParam(required = false) Long studyId,
                                             @RequestParam(required = false) AlertType type,
                                             @RequestParam(required = false) Boolean attended,
                                             @RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "50") int size) {
-        return PageResponse.of(alerts.list(studyId, type, attended), page, size, AlertResponse::from);
+        return PageResponse.of(alerts.list(currentUser.of(principal), studyId, type, attended), page, size, AlertResponse::from);
     }
 
     /**

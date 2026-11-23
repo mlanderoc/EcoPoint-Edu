@@ -67,12 +67,13 @@ public class ShiftController implements FieldNameMapping {
     /**
      * Shows the shift with the state of each participating source (R-345).
      *
-     * @param shiftId shift id
+     * @param principal user of the session
+     * @param shiftId   shift id
      * @return the shift
      */
     @GetMapping
-    public ShiftResponse get(@PathVariable Long shiftId) {
-        return toResponse(shifts.get(shiftId));
+    public ShiftResponse get(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long shiftId) {
+        return toResponse(shifts.getFor(currentUser.of(principal), shiftId));
     }
 
     /**
@@ -102,12 +103,14 @@ public class ShiftController implements FieldNameMapping {
     /**
      * Shows the population of the shift.
      *
-     * @param shiftId shift id
+     * @param principal user of the session
+     * @param shiftId   shift id
      * @return the population, or 204 if it was not registered yet
      */
     @GetMapping("/population")
-    public ResponseEntity<PopulationDto> population(@PathVariable Long shiftId) {
-        PopulationDto population = PopulationDto.from(shifts.get(shiftId).getPopulation());
+    public ResponseEntity<PopulationDto> population(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                                    @PathVariable Long shiftId) {
+        PopulationDto population = PopulationDto.from(shifts.getFor(currentUser.of(principal), shiftId).getPopulation());
         return population == null ? ResponseEntity.noContent().build() : ResponseEntity.ok(population);
     }
 
@@ -130,14 +133,17 @@ public class ShiftController implements FieldNameMapping {
     /**
      * Lists the bags of the shift, one page at a time (R-103).
      *
-     * @param shiftId shift id
-     * @param page    page, starting at 0
-     * @param size    page size
+     * @param principal user of the session
+     * @param shiftId   shift id
+     * @param page      page, starting at 0
+     * @param size      page size
      * @return one page of bags
      */
     @GetMapping("/bags")
-    public PageResponse<BagResponse> bags(@PathVariable Long shiftId, @RequestParam(defaultValue = "0") int page,
+    public PageResponse<BagResponse> bags(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                          @PathVariable Long shiftId, @RequestParam(defaultValue = "0") int page,
                                           @RequestParam(defaultValue = "50") int size) {
+        shifts.getFor(currentUser.of(principal), shiftId);
         return PageResponse.of(bags.list(shiftId), page, size, bag -> BagResponse.from(shiftId, bag));
     }
 
