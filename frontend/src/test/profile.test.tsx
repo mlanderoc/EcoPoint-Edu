@@ -45,6 +45,7 @@ describe('Mi Perfil (R-350 a R-352, CA-314)', () => {
     expect(screen.getByText('Estudiante universitario')).toBeInTheDocument()
     expect(screen.getByLabelText(`Bolsas: ${before + 3}`)).toBeInTheDocument()
     expect(screen.queryByText(mockUsers[0].email)).toBeNull()
+    expect(screen.queryByText('Institución')).toBeNull()
   })
 
   it('r352_wrongCurrentPasswordIsShownOnItsField', async () => {

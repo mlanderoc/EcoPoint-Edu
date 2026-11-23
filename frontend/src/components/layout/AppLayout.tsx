@@ -43,7 +43,7 @@ export function AppLayout({
   }
 
   return (
-    <div className="shell overflow-x-hidden w-full">
+    <div className="shell overflow-x-clip w-full">
       <Sidebar role={user?.role} user={user} currentPath={currentPath} onNavigate={onNavigate} />
       <div className="shell-main">
         <Header user={user} currentPath={currentPath} onLogout={handleLogout} />

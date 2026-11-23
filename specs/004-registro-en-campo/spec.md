@@ -99,7 +99,7 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 
 ### 5.6 Mi Perfil (todos los roles)
 
-- **R-350** (Debe). Muestra nombre, apellido, correo, rol, institución y cuadrillas del usuario (D13).
+- **R-350** (Debe). Muestra nombre, apellido, correo, rol y cuadrillas del usuario; la institución solo se muestra al docente (D13, D15).
 - **R-351** (Debe). Muestra **sus propios** totales de registros: poblaciones, bolsas, cuarteos y densidades digitados, verificaciones hechas y correcciones que recibieron sus datos. Un estudiante no ve los totales de otros; el docente los ve en la tabla de Usuarios (R-322) (D13).
 - **R-352** (Debe). Permite **cambiar la contraseña**, pidiendo la actual, la nueva y su confirmación (D13).
 - **R-353** (Debe). La ruta `/` es una página pública de bienvenida con acceso a Iniciar sesión; quien ya tiene sesión pasa a Inicio (D15).
@@ -110,7 +110,7 @@ Reglas aplicadas: RN-001 a RN-037, RN-080 a RN-085 y RN-090 (spec 001).
 - **R-358** (Debe). En la lista de estudios, un estudio cerrado no muestra el botón Abrir (D15).
 - **R-359** (Debe). La lista de estudios se filtra por estado: planificados, en ejecución, en depuración, cerrados y cancelados (D15).
 - **R-360** (Debe). Activar y desactivar se hace con un interruptor animado; las tablas de fuentes y usuarios no llevan columna Estado (D15).
-- **R-361** (Debe). El detalle del estudio muestra los integrantes de su cuadrilla, y las cuadrillas se pueden editar respetando RN-090 (D15).
+- **R-361** (Debe). El detalle del estudio muestra los integrantes de su cuadrilla, y las cuadrillas se pueden editar respetando RN-091 (D15).
 - **R-362** (Debe). Registro en campo, Verificación, Indicadores, Alertas, Mi perfil y Administración siguen la distribución del diseño aprobado (D15).
 
 ## 6. Criterios de aceptación

@@ -119,7 +119,9 @@ export function ProfilePage() {
           </div>
           <dl className="data-list m-0">
             <Datum label="Correo" value={user.email} />
-            <Datum label="Institución" value={user.institutionName ?? 'Sin institución'} />
+            {user.role === 'DOCENTE' && (
+              <Datum label="Institución" value={user.institutionName ?? 'Sin institución'} />
+            )}
             <Datum label="Cuadrillas" value={crews.length > 0 ? crews.join(', ') : 'Sin cuadrilla asignada'} />
           </dl>
         </section>
