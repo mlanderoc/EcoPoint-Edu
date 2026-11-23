@@ -129,6 +129,19 @@ class QualityRepositoryIT extends PostgresIntegrationTest {
     }
 
     @Test
+    void ca094_openAlertsOfARecordAreFoundUntilAttended() {
+        Alert alert = alerts.save(new Alert(null, AlertType.CUARTEO_NO_CONFORME, "Cuarteo", 987L, "No conforme", AT));
+
+        assertEquals(1, alerts.findOpenByTarget(AlertType.CUARTEO_NO_CONFORME, "Cuarteo", 987L).size());
+        assertTrue(alerts.findOpenByTarget(AlertType.VALOR_ATIPICO, "Cuarteo", 987L).isEmpty());
+
+        alert.attend(teacher, "Resuelta", AT.plusHours(1));
+        alerts.save(alert);
+
+        assertTrue(alerts.findOpenByTarget(AlertType.CUARTEO_NO_CONFORME, "Cuarteo", 987L).isEmpty());
+    }
+
+    @Test
     void t17_alertsAreListedByTheStudyOfTheirRecord() {
         Long closed = jdbc.queryForObject("SELECT id FROM ESTUDIO WHERE estado = 'CERRADO'", Long.class);
 

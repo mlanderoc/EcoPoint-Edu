@@ -1,6 +1,7 @@
 package com.ecopoint.persistence;
 
 import com.ecopoint.model.Alert;
+import com.ecopoint.model.AlertType;
 
 import java.util.List;
 import java.util.Optional;
@@ -52,4 +53,14 @@ public interface AlertRepository {
      * @return alerts of the study
      */
     List<Alert> findByStudy(Long studyId);
+
+    /**
+     * Lists the pending alerts of a type raised by one record (RN-099).
+     *
+     * @param type       type of alert
+     * @param targetType kind of record, in Spanish
+     * @param targetId   record id
+     * @return pending alerts
+     */
+    List<Alert> findOpenByTarget(AlertType type, String targetType, Long targetId);
 }
