@@ -58,7 +58,7 @@ class IndicatorServiceTest {
     private final ShiftRepository shifts = mock(ShiftRepository.class);
     private final GenerationSourceRepository sources = mock(GenerationSourceRepository.class);
     private final IndicatorService service = new IndicatorService(studies, shifts, sources,
-            mock(InstitutionRepository.class), mock(CorrectionRepository.class), mock(CrewRepository.class));
+            mock(InstitutionRepository.class), mock(CorrectionRepository.class), mock(CrewRepository.class), org.mockito.Mockito.mock(FieldAccess.class));
     private final User teacher = new User(1L, "Ana", "Ríos", "a@unicesar.edu.co", UserRole.DOCENTE, 1L);
     private final List<SamplingShift> studyShifts = new ArrayList<>();
     private long nextId = 1;

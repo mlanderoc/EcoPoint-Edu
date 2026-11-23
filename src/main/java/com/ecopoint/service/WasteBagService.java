@@ -22,6 +22,7 @@ import com.ecopoint.persistence.WasteBagRepository;
 import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.GenerationSourceValidator;
 import com.ecopoint.validation.ShiftValidator;
+import com.ecopoint.validation.VerificationValidator;
 import com.ecopoint.validation.WasteBagValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,7 @@ public class WasteBagService {
     private final InstitutionRepository institutions;
     private final AlertRepository alerts;
     private final FieldAccess fieldAccess;
+    private final QuarteringReconciler reconciler;
     private final Clock clock;
 
     /**
@@ -61,11 +63,13 @@ public class WasteBagService {
      * @param institutions institution repository
      * @param alerts       alert repository
      * @param fieldAccess  who may register in the study (RN-089)
+     * @param reconciler   keeps the quartering consistent with the bags (RN-093)
      * @param clock        clock that dates the records and alerts
      */
     public WasteBagService(WasteBagRepository bags, ShiftRepository shifts, StudyRepository studies,
                            GenerationSourceRepository sources, InstitutionRepository institutions,
-                           AlertRepository alerts, FieldAccess fieldAccess, Clock clock) {
+                           AlertRepository alerts, FieldAccess fieldAccess,
+                           QuarteringReconciler reconciler, Clock clock) {
         this.bags = bags;
         this.shifts = shifts;
         this.studies = studies;
@@ -73,6 +77,7 @@ public class WasteBagService {
         this.institutions = institutions;
         this.alerts = alerts;
         this.fieldAccess = fieldAccess;
+        this.reconciler = reconciler;
         this.clock = clock;
     }
 
@@ -95,6 +100,19 @@ public class WasteBagService {
      */
     public WasteBag get(Long id) {
         return bags.findById(id).orElseThrow(() -> new ResourceNotFoundException("Bolsa", id));
+    }
+
+    /**
+     * Finds a bag of a study the user may see (RN-097).
+     *
+     * @param actor user of the session
+     * @param id    bag id
+     * @return the bag
+     */
+    public WasteBag getFor(User actor, Long id) {
+        WasteBag bag = get(id);
+        fieldAccess.require(actor, study(shift(shiftOf(id))));
+        return bag;
     }
 
     /**
@@ -137,6 +155,7 @@ public class WasteBagService {
         shift.addBag(bag);
         WasteBag saved = bags.save(shiftId, bag);
         raiseAlertIfAtypical(saved);
+        reconciler.reconcile(shift, settingsOf(study), actor, LocalDateTime.now(clock));
         return saved;
     }
 
@@ -165,6 +184,7 @@ public class WasteBagService {
             throw new BusinessRuleException("La bolsa " + bag.getLabelText()
                     + " ya fue verificada: corríjala desde la verificación.");
         }
+        VerificationValidator.validateOwnPendingCorrection(bag, actor);
         boolean wasAtypical = bag.isAtypical();
         bag.setGrossWeight(grossWeight);
         bag.setTare(tare);
@@ -175,6 +195,7 @@ public class WasteBagService {
         if (!wasAtypical) {
             raiseAlertIfAtypical(saved);
         }
+        reconciler.reconcile(shift(shiftId), settingsOf(study), actor, LocalDateTime.now(clock));
         return saved;
     }
 

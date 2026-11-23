@@ -14,6 +14,7 @@ import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.InstitutionRepository;
 import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.validation.AccessPolicy;
+import com.ecopoint.validation.CrewValidator;
 import com.ecopoint.validation.StudyValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +22,13 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Characterization studies: their 8 days, participating sources and status
@@ -76,6 +79,31 @@ public class StudyService {
     }
 
     /**
+     * Lists the studies of an institution the user may see: all for a teacher,
+     * those of his current crew for a student (RN-097).
+     *
+     * @param actor         user of the session
+     * @param institutionId institution id
+     * @return studies
+     */
+    public List<CharacterizationStudy> listFor(User actor, Long institutionId) {
+        return list(institutionId).stream().filter(study -> fieldAccess.allows(actor, study)).toList();
+    }
+
+    /**
+     * Finds a study the user may see (RN-097).
+     *
+     * @param actor user of the session
+     * @param id    study id
+     * @return the study
+     */
+    public CharacterizationStudy getFor(User actor, Long id) {
+        CharacterizationStudy study = get(id);
+        fieldAccess.require(actor, study);
+        return study;
+    }
+
+    /**
      * Lists the studies in execution where the user may register field data:
      * all of them for a teacher, those of his crews for a student (RN-089, R-340).
      *
@@ -85,6 +113,22 @@ public class StudyService {
     public List<CharacterizationStudy> fieldStudies(User actor) {
         return studies.findByStatus(StudyStatus.EN_EJECUCION).stream()
                 .filter(study -> fieldAccess.allows(actor, study))
+                .toList();
+    }
+
+    /**
+     * Lists the studies whose records the user may verify: in execution or
+     * being cleaned, all for a teacher and those of his current crew for a
+     * student (RN-097).
+     *
+     * @param actor user of the session
+     * @return studies, newest first
+     */
+    public List<CharacterizationStudy> verifiableStudies(User actor) {
+        return Stream.of(StudyStatus.EN_EJECUCION, StudyStatus.EN_DEPURACION)
+                .flatMap(status -> studies.findByStatus(status).stream())
+                .filter(study -> fieldAccess.allows(actor, study))
+                .sorted(Comparator.comparing(CharacterizationStudy::getId).reversed())
                 .toList();
     }
 
@@ -147,7 +191,7 @@ public class StudyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Institución", institutionId)));
         CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
         study.assignCrew(crewId);
-        requireCrewExists(crewId);
+        requireFreeCrew(crewId, null);
         study.scheduleDates(dates);
         StudyValidator.validate(study);
         StudyValidator.validateNoOverlap(study, studies.findByInstitution(institutionId));
@@ -192,7 +236,7 @@ public class StudyService {
         AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
         CharacterizationStudy study = get(id);
         study.assignCrew(crewId);
-        requireCrewExists(crewId);
+        requireFreeCrew(crewId, id);
         CharacterizationStudy saved = studies.save(study);
         studies.assignCrewToShiftsWithoutCrew(id, crewId);
         return saved;
@@ -242,6 +286,9 @@ public class StudyService {
         }
         CharacterizationStudy study = get(id);
         if (study.getStatus() == StudyStatus.CERRADO && target == StudyStatus.EN_DEPURACION) {
+            if (study.getCrewId() != null) {
+                requireFreeCrew(study.getCrewId(), id);
+            }
             study.reopen(actor.getId(), reason, LocalDateTime.now(clock));
             return studies.save(study);
         }
@@ -249,6 +296,7 @@ public class StudyService {
             StudyValidator.validateStartExecution(study, activeParticipatingSources(study));
         } else if (target == StudyStatus.CERRADO) {
             StudyValidator.validateClose(study, studies.countPendingRecords(id), studies.countUnresolvedQuarterings(id));
+            StudyValidator.validateNoOpenShifts(studies.countOpenShifts(id));
         }
         study.changeStatus(target);
         return studies.save(study);
@@ -291,10 +339,10 @@ public class StudyService {
                 .count();
     }
 
-    private void requireCrewExists(Long crewId) {
-        if (crews.findById(crewId).isEmpty()) {
-            throw new ResourceNotFoundException("Cuadrilla", crewId);
-        }
+    private void requireFreeCrew(Long crewId, Long studyId) {
+        Crew crew = crews.findById(crewId).orElseThrow(() -> new ResourceNotFoundException("Cuadrilla", crewId));
+        CrewValidator.validateCrewFreeForStudy(crew, studies.findCrewsWithOpenStudiesOtherThan(studyId).get(crewId),
+                studies.findMembersInOpenStudiesOtherThan(studyId));
     }
 
     private CharacterizationStudy editable(Long id) {
@@ -304,6 +352,9 @@ public class StudyService {
         }
         if (study.getStatus().isReadOnly()) {
             throw new BusinessRuleException("El estudio está cerrado: reábralo para hacer cambios.");
+        }
+        if (study.getStatus() != StudyStatus.PLANIFICADO) {
+            throw new BusinessRuleException("Las fechas y las fuentes solo se cambian mientras el estudio está planificado.");
         }
         return study;
     }

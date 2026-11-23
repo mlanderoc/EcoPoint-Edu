@@ -4,6 +4,7 @@ import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.Permission;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
+import com.ecopoint.persistence.CrewRepository;
 import com.ecopoint.persistence.UserActivity;
 import com.ecopoint.persistence.UserActivityRepository;
 import com.ecopoint.persistence.UserRepository;
@@ -32,6 +33,7 @@ public class UserService {
     private final UserRepository users;
     private final PasswordEncoder passwordEncoder;
     private final UserActivityRepository activity;
+    private final CrewRepository crews;
 
     /**
      * Creates the service.
@@ -39,11 +41,14 @@ public class UserService {
      * @param users           user repository
      * @param passwordEncoder password hashing
      * @param activity        totals of records by user
+     * @param crews           crew repository, to protect the responsible teachers (RN-096)
      */
-    public UserService(UserRepository users, PasswordEncoder passwordEncoder, UserActivityRepository activity) {
+    public UserService(UserRepository users, PasswordEncoder passwordEncoder, UserActivityRepository activity,
+                       CrewRepository crews) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.activity = activity;
+        this.crews = crews;
     }
 
     /**
@@ -126,6 +131,9 @@ public class UserService {
     public User update(User actor, Long id, User changes, String newPassword) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
         User user = find(id);
+        AccessPolicy.requireSameInstitution(actor, user);
+        UserValidator.validateRoleChange(actor, user, changes.getRole(),
+                users.findByInstitution(user.getInstitutionId()), crews.findByInstitution(user.getInstitutionId()));
         Set<String> otherEmails = new HashSet<>(users.findEmails());
         otherEmails.removeIf(email -> User.normalizeEmail(email).equals(User.normalizeEmail(user.getEmail())));
         user.setFirstName(changes.getFirstName());
@@ -155,6 +163,7 @@ public class UserService {
     public User deactivate(User actor, Long id) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
         User user = find(id);
+        AccessPolicy.requireSameInstitution(actor, user);
         UserValidator.validateDeactivation(user);
         users.deactivate(id);
         user.deactivate();
@@ -171,6 +180,7 @@ public class UserService {
     public User activate(User actor, Long id) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
         User user = find(id);
+        AccessPolicy.requireSameInstitution(actor, user);
         user.activate();
         return users.save(user);
     }

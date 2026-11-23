@@ -9,6 +9,7 @@ import com.ecopoint.model.User;
 import com.ecopoint.persistence.EvidenceRepository;
 import com.ecopoint.persistence.QuarteringRepository;
 import com.ecopoint.persistence.ShiftRepository;
+import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.WasteBagRepository;
 import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.EvidenceValidator;
@@ -49,6 +50,8 @@ public class EvidenceService {
     private final ShiftRepository shifts;
     private final WasteBagRepository bags;
     private final QuarteringRepository quarterings;
+    private final StudyRepository studies;
+    private final FieldAccess fieldAccess;
     private final Path uploadDir;
     private final Clock clock;
 
@@ -59,16 +62,21 @@ public class EvidenceService {
      * @param shifts      shift repository
      * @param bags        bag repository
      * @param quarterings quartering repository
+     * @param studies     study repository
+     * @param fieldAccess who may work on the records of a study (RN-097)
      * @param uploadDir   folder where the photos are kept, from {@code ECOPOINT_UPLOAD_DIR}
      * @param clock       clock that dates the uploads
      */
     public EvidenceService(EvidenceRepository evidences, ShiftRepository shifts, WasteBagRepository bags,
-                           QuarteringRepository quarterings, @Value("${ecopoint.upload-dir}") String uploadDir,
+                           QuarteringRepository quarterings, StudyRepository studies, FieldAccess fieldAccess,
+                           @Value("${ecopoint.upload-dir}") String uploadDir,
                            Clock clock) {
         this.evidences = evidences;
         this.shifts = shifts;
         this.bags = bags;
         this.quarterings = quarterings;
+        this.studies = studies;
+        this.fieldAccess = fieldAccess;
         this.uploadDir = Path.of(uploadDir).toAbsolutePath().normalize();
         this.clock = clock;
     }
@@ -76,11 +84,14 @@ public class EvidenceService {
     /**
      * Lists the photos of a record.
      *
+     * @param actor    user that asks; must work on the study (RN-097)
      * @param target   kind of record
      * @param targetId record id
      * @return evidences, oldest first
      */
-    public List<Evidence> list(EvidenceTarget target, Long targetId) {
+    public List<Evidence> list(User actor, EvidenceTarget target, Long targetId) {
+        requireRecord(target, targetId);
+        requireStudyAccess(actor, target, targetId);
         return evidences.findByTarget(target, targetId);
     }
 
@@ -102,6 +113,7 @@ public class EvidenceService {
                            long sizeBytes, InputStream content, String description) {
         AccessPolicy.require(actor, permissionFor(target));
         requireRecord(target, targetId);
+        requireStudyAccess(actor, target, targetId);
         String key = target.name().toLowerCase(Locale.ROOT) + "/" + UUID.randomUUID() + extensionOf(originalName);
         Evidence evidence = new Evidence(null, target, targetId, key, mimeType, sizeBytes, description,
                 actor.getId(), LocalDateTime.now(clock));
@@ -119,12 +131,14 @@ public class EvidenceService {
     /**
      * Returns the data and the file of a photo.
      *
-     * @param id evidence id
+     * @param actor user that asks; must work on the study (RN-097)
+     * @param id    evidence id
      * @return the evidence with its file
      * @throws ResourceNotFoundException if the evidence or its file does not exist
      */
-    public EvidenceFile file(Long id) {
+    public EvidenceFile file(User actor, Long id) {
         Evidence evidence = evidences.findById(id).orElseThrow(() -> new ResourceNotFoundException("Evidencia", id));
+        requireStudyAccess(actor, evidence.getTarget(), evidence.getTargetId());
         Path file = resolve(evidence.getFilePath());
         if (!Files.isRegularFile(file)) {
             throw new ResourceNotFoundException("Archivo de la evidencia", id);
@@ -155,6 +169,23 @@ public class EvidenceService {
         if (!exists) {
             throw new ResourceNotFoundException(target.getDisplayName(), targetId);
         }
+    }
+
+    private void requireStudyAccess(User actor, EvidenceTarget target, Long targetId) {
+        if (target == null || targetId == null) {
+            return;
+        }
+        Long shiftId = switch (target) {
+            case SHIFT -> targetId;
+            case BAG -> bags.findShiftId(targetId)
+                    .orElseThrow(() -> new ResourceNotFoundException(target.getDisplayName(), targetId));
+            case QUARTERING -> quarterings.findById(targetId)
+                    .orElseThrow(() -> new ResourceNotFoundException(target.getDisplayName(), targetId)).getShiftId();
+        };
+        Long studyId = shifts.findById(shiftId)
+                .orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId)).getStudyId();
+        fieldAccess.require(actor, studies.findById(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", studyId)));
     }
 
     private Path resolve(String key) {
