@@ -5,6 +5,7 @@ import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 
 import java.time.LocalDateTime;
+import java.util.Objects;
 
 /**
  * Automatic data-quality alert (RN-070 to RN-073): a non-conforming
@@ -20,7 +21,7 @@ public class Alert {
     private final AlertType type;
     private final String targetType;
     private final Long targetId;
-    private final String description;
+    private String description;
     private final LocalDateTime createdAt;
     private boolean attended;
     private Long attendedBy;
@@ -45,6 +46,20 @@ public class Alert {
         this.targetId = targetId;
         this.description = description;
         this.createdAt = createdAt;
+    }
+
+    /**
+     * Updates the explanation of a pending alert when its cause changes (RN-099).
+     *
+     * @param newDescription new explanation in Spanish
+     * @return true if the text changed
+     */
+    public boolean reviseDescription(String newDescription) {
+        if (attended || Objects.equals(description, newDescription)) {
+            return false;
+        }
+        this.description = newDescription;
+        return true;
     }
 
     /**

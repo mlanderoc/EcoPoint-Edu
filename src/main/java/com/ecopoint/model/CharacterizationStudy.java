@@ -227,6 +227,28 @@ public class CharacterizationStudy {
     }
 
     /**
+     * Returns a study in data cleaning to execution so its open shifts can be
+     * completed, recording who did it, why and when (RN-101). The permission of
+     * the user is checked by the caller.
+     *
+     * @param userId identifier of the teacher
+     * @param reason reason for going back
+     * @param at     date and time of the change
+     * @throws BusinessRuleException if the study is not in data cleaning
+     * @throws InvalidDataException  if the reason is missing
+     */
+    public void returnToExecution(Long userId, String reason, LocalDateTime at) {
+        if (status != StudyStatus.EN_DEPURACION) {
+            throw new BusinessRuleException("Solo se puede devolver a ejecución un estudio en depuración.");
+        }
+        if (reason == null || reason.isBlank()) {
+            throw new InvalidDataException("motivo", "Debe indicar el motivo para devolver el estudio a ejecución.");
+        }
+        this.status = StudyStatus.EN_EJECUCION;
+        reopenings.add(new StudyReopening(userId, reason.trim(), at));
+    }
+
+    /**
      * Cancels a study being executed or cleaned and records who did it, why and
      * when (RN-018). Its data is kept. The permission of the user is checked by
      * the caller.

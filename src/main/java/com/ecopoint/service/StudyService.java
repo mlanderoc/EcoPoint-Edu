@@ -191,7 +191,7 @@ public class StudyService {
                 .orElseThrow(() -> new ResourceNotFoundException("Institución", institutionId)));
         CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
         study.assignCrew(crewId);
-        requireFreeCrew(crewId, null);
+        requireFreeCrew(crewId, null, "asignar la cuadrilla");
         study.scheduleDates(dates);
         StudyValidator.validate(study);
         StudyValidator.validateNoOverlap(study, studies.findByInstitution(institutionId));
@@ -236,7 +236,7 @@ public class StudyService {
         AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
         CharacterizationStudy study = get(id);
         study.assignCrew(crewId);
-        requireFreeCrew(crewId, id);
+        requireFreeCrew(crewId, id, "asignar la cuadrilla");
         CharacterizationStudy saved = studies.save(study);
         studies.assignCrewToShiftsWithoutCrew(id, crewId);
         return saved;
@@ -287,9 +287,16 @@ public class StudyService {
         CharacterizationStudy study = get(id);
         if (study.getStatus() == StudyStatus.CERRADO && target == StudyStatus.EN_DEPURACION) {
             if (study.getCrewId() != null) {
-                requireFreeCrew(study.getCrewId(), id);
+                requireFreeCrew(study.getCrewId(), id, "reabrir el estudio");
             }
             study.reopen(actor.getId(), reason, LocalDateTime.now(clock));
+            return studies.save(study);
+        }
+        if (study.getStatus() == StudyStatus.EN_DEPURACION && target == StudyStatus.EN_EJECUCION) {
+            if (study.getCrewId() != null) {
+                requireFreeCrew(study.getCrewId(), id, "devolver el estudio a ejecución");
+            }
+            study.returnToExecution(actor.getId(), reason, LocalDateTime.now(clock));
             return studies.save(study);
         }
         if (target == StudyStatus.EN_EJECUCION) {
@@ -339,10 +346,10 @@ public class StudyService {
                 .count();
     }
 
-    private void requireFreeCrew(Long crewId, Long studyId) {
+    private void requireFreeCrew(Long crewId, Long studyId, String action) {
         Crew crew = crews.findById(crewId).orElseThrow(() -> new ResourceNotFoundException("Cuadrilla", crewId));
         CrewValidator.validateCrewFreeForStudy(crew, studies.findCrewsWithOpenStudiesOtherThan(studyId).get(crewId),
-                studies.findMembersInOpenStudiesOtherThan(studyId));
+                studies.findMembersInOpenStudiesOtherThan(studyId), action);
     }
 
     private CharacterizationStudy editable(Long id) {

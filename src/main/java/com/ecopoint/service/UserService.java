@@ -91,7 +91,9 @@ public class UserService {
      */
     public User get(User actor, Long id) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
-        return find(id);
+        User user = find(id);
+        AccessPolicy.requireSameInstitution(actor, user);
+        return user;
     }
 
     /**

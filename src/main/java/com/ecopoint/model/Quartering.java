@@ -25,6 +25,7 @@ public class Quartering extends VerifiableRecord {
 
     private static final BigDecimal ONE_HUNDRED = new BigDecimal("100");
     private static final int SCALE = 2;
+    private static final int DETAIL_SCALE = 4;
 
     private final Long shiftId;
     private BigDecimal shiftNetWeight;
@@ -141,6 +142,22 @@ public class Quartering extends VerifiableRecord {
             return BigDecimal.ZERO.setScale(SCALE, RoundingMode.HALF_UP);
         }
         return calculateDifferenceKg().multiply(ONE_HUNDRED).divide(sampleWeight, SCALE, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * Returns the difference to show: with 2 decimals, or up to 4 in a
+     * non-conforming quartering, so that 2.0004 % is not read as 2.00 %.
+     *
+     * @return difference in percent to show
+     */
+    public BigDecimal displayDifferencePercent() {
+        BigDecimal rounded = calculateDifferencePercent();
+        if (qualityStatus != QualityStatus.NO_CONFORME || sampleWeight == null || sampleWeight.signum() == 0) {
+            return rounded;
+        }
+        BigDecimal detailed = calculateTotalClassifiedWeight().subtract(sampleWeight).abs().multiply(ONE_HUNDRED)
+                .divide(sampleWeight, DETAIL_SCALE, RoundingMode.HALF_UP);
+        return detailed.compareTo(rounded) == 0 ? rounded : detailed;
     }
 
     /**

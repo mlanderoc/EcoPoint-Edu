@@ -162,6 +162,27 @@ class PeopleAndCatalogServiceTest {
     }
 
     @Test
+    void ca097_teacherCannotReadAUserOfAnotherInstitution() {
+        User outsider = new User(32L, "Ana", "Mora", "ana@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, 2L);
+        when(users.findById(32L)).thenReturn(Optional.of(outsider));
+
+        assertThrows(AccessDeniedException.class, () -> userService.get(teacher, 32L));
+    }
+
+    @Test
+    void ca098_crewIsOnlyReadByItsMembersOrATeacherOfItsInstitution() {
+        Crew crew = new Crew(6L, "Cuadrilla A", teacher);
+        when(crews.findById(6L)).thenReturn(Optional.of(crew));
+        User outsiderTeacher = new User(33L, "Eva", "Luna", "eva@unicesar.edu.co", UserRole.DOCENTE, 2L);
+
+        assertThrows(AccessDeniedException.class, () -> crewService.getFor(student, 6L));
+        assertThrows(AccessDeniedException.class, () -> crewService.getFor(outsiderTeacher, 6L));
+        assertEquals(crew, crewService.getFor(teacher, 6L));
+        crew.addMember(student);
+        assertEquals(crew, crewService.getFor(student, 6L));
+    }
+
+    @Test
     void ca091_teacherCannotRemoveHisOwnRole() {
         User changes = new User(null, "Daniela", "Ríos", "daniela@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
 
