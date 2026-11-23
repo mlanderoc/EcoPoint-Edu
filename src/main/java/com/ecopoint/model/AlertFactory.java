@@ -42,6 +42,25 @@ public final class AlertFactory {
     }
 
     /**
+     * Creates the alert of a quartering whose sample no longer fits the weight
+     * of its shift after a bag changed (RN-093).
+     *
+     * @param quartering non-conforming quartering
+     * @param shiftCode  code of its shift, e.g. "D3-M"
+     * @param shiftNet   current net weight of the shift, in kg
+     * @param at         date and time of the alert
+     * @return the pending alert
+     */
+    public static Alert forSampleOutOfShift(Quartering quartering, String shiftCode, BigDecimal shiftNet,
+                                            LocalDateTime at) {
+        String description = "La submuestra de " + spanish(quartering.getSampleWeight()) + " kg del cuarteo del turno "
+                + shiftCode + " ya no corresponde al peso del turno, que ahora es de " + spanish(shiftNet)
+                + " kg. Corrija la submuestra o anule el cuarteo.";
+        return new Alert(null, AlertType.CUARTEO_NO_CONFORME, quartering.getRecordType(), quartering.getId(),
+                description, at);
+    }
+
+    /**
      * Creates the alert of a bag outside the plausibility limits (RN-071).
      *
      * @param bag atypical bag
