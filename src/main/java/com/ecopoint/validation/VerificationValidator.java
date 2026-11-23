@@ -78,6 +78,23 @@ public final class VerificationValidator {
         }
     }
 
+    /**
+     * Validates that a pending record is corrected outside the verification
+     * only by the person who typed it. Anyone else corrects it from the
+     * verification, which keeps the history (RN-062, RN-063, RN-092).
+     *
+     * @param record pending record
+     * @param user   user that corrects it
+     * @throws BusinessRuleException if the user did not type the record
+     */
+    public static void validateOwnPendingCorrection(VerifiableRecord record, User user) {
+        requireRecord(record);
+        if (!record.getVerification().wasEnteredBy(user.getId())) {
+            throw new BusinessRuleException("Solo quien digitó el registro puede ajustarlo aquí. "
+                    + "Para cambiar el dato de otra persona, corríjalo desde la verificación con su motivo.");
+        }
+    }
+
     private static void requireRecord(VerifiableRecord record) {
         if (record == null) {
             throw new InvalidDataException("registro", "El registro a verificar no puede ser nulo.");

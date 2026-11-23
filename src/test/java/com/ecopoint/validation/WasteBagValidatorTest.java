@@ -92,6 +92,8 @@ class WasteBagValidatorTest {
     @Test
     void ca023_shiftCanCloseWhenTheSourceHasBags() {
         SamplingShift shift = new SamplingShift(1L, 1L, 3, ShiftType.MANANA);
+        shift.registerPopulation(new com.ecopoint.model.ShiftPopulation(null, 300, 12, 6,
+                new com.ecopoint.model.VerificationInfo(11L, java.time.LocalDateTime.of(2026, 3, 4, 8, 0))));
         shift.addBag(bag(1L, "12.40", "0.40", "0.080"));
         shift.markSourceWithoutGeneration(2L);
 

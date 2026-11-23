@@ -2,9 +2,13 @@ package com.ecopoint.validation;
 
 import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
+import com.ecopoint.model.Crew;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
 
+import java.nio.charset.StandardCharsets;
+import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 
@@ -95,6 +99,11 @@ public final class UserValidator {
             throw new InvalidDataException("contrasena", "La contraseña debe tener entre " + MIN_PASSWORD_LENGTH
                     + " y " + MAX_PASSWORD_LENGTH + " caracteres.");
         }
+        if (password.getBytes(StandardCharsets.UTF_8).length > MAX_PASSWORD_LENGTH) {
+            throw new InvalidDataException("contrasena",
+                    "La contraseña es demasiado larga: las tildes, la ñ y los símbolos especiales ocupan más espacio. "
+                            + "Use una más corta.");
+        }
     }
 
     private static void validatePersonName(String value, String field) {
@@ -127,6 +136,41 @@ public final class UserValidator {
         if (user.getRole() == UserRole.DOCENTE) {
             throw new BusinessRuleException("Un docente no se puede desactivar: solo se desactivan estudiantes.");
         }
+    }
+
+    /**
+     * Validates that a teacher loses his role only if it was another teacher's
+     * decision, the institution keeps an active teacher and he is not
+     * responsible for a crew (RN-087, RN-096).
+     *
+     * @param actor            teacher that edits
+     * @param user             user being edited
+     * @param newRole          role requested
+     * @param institutionUsers users of the institution
+     * @param crews            crews of the institution
+     * @throws BusinessRuleException if the teacher cannot lose the role
+     */
+    public static void validateRoleChange(User actor, User user, UserRole newRole, List<User> institutionUsers,
+                                          List<Crew> crews) {
+        if (user.getRole() != UserRole.DOCENTE || newRole == UserRole.DOCENTE) {
+            return;
+        }
+        if (Objects.equals(actor.getId(), user.getId())) {
+            throw new BusinessRuleException("No puede quitarse a usted mismo el rol de docente.");
+        }
+        boolean anotherTeacher = institutionUsers.stream().anyMatch(other -> other.getRole() == UserRole.DOCENTE
+                && other.isActive() && !Objects.equals(other.getId(), user.getId()));
+        if (!anotherTeacher) {
+            throw new BusinessRuleException("La institución debe conservar al menos un docente activo.");
+        }
+        crews.stream()
+                .filter(crew -> crew.getResponsible() != null
+                        && Objects.equals(crew.getResponsible().getId(), user.getId()))
+                .findFirst()
+                .ifPresent(crew -> {
+                    throw new BusinessRuleException(user.getFullName() + " es responsable de la cuadrilla "
+                            + crew.getName() + ": asigne otro docente antes de quitarle el rol.");
+                });
     }
 
     private static void validateEmailFormat(String email) {
