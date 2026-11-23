@@ -9,6 +9,10 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.authentication.InsufficientAuthenticationException;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -49,13 +53,19 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain apiSecurity(HttpSecurity http, JsonAuthenticationEntryPoint entryPoint,
                                            JsonAccessDeniedHandler accessDenied,
-                                           SecurityContextRepository contextRepository) throws Exception {
+                                           SecurityContextRepository contextRepository,
+                                           SessionRegistry sessionRegistry) throws Exception {
         return http
                 .cors(cors -> { })
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
                 .securityContext(context -> context.securityContextRepository(contextRepository))
+                .sessionManagement(sessions -> sessions
+                        .maximumSessions(-1)
+                        .sessionRegistry(sessionRegistry)
+                        .expiredSessionStrategy(event -> entryPoint.commence(event.getRequest(), event.getResponse(),
+                                new InsufficientAuthenticationException("Sesión cerrada"))))
                 .authorizeHttpRequests(routes -> routes
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
@@ -68,6 +78,26 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .build();
+    }
+
+    /**
+     * Registry of the open sessions (R-352).
+     *
+     * @return the registry
+     */
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    /**
+     * Tells the registry when a session ends.
+     *
+     * @return the event publisher
+     */
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     /**
