@@ -12,6 +12,6 @@
 - [x] **E04. Inicio y menú Más.** *(Carlos)* *Verificación:* CA-325, CA-327.
 - [x] **E05. Módulos.** Encabezados, pasos del turno, elección de fuente y tarjetas de estudios. *(Carlos)* *Verificación:* CA-326.
 - [x] **E06. Indicadores.** Selector de estudio y comparación de jornadas. *(Carlos)*
-- [x] **E09. Segunda ronda.** Filtro de estudios, interruptor, sin columna Estado, integrantes de la cuadrilla, edición con estudiantes libres (RN-090) y distribución del diseño en todos los módulos. *(Merlín, Estefanía y Carlos)* *Verificación:* CA-085, CA-328.
+- [x] **E09. Segunda ronda.** Filtro de estudios, interruptor, sin columna Estado, integrantes de la cuadrilla, edición con estudiantes libres (RN-091) y distribución del diseño en todos los módulos. *(Merlín, Estefanía y Carlos)* *Verificación:* CA-085, CA-328.
 - [ ] **E07. Aprobación del equipo** de este plan y de los ajustes a las specs 004 y 006.
 - [ ] **E08. Prueba del equipo con la base de datos real** y revisión de Antigravity.

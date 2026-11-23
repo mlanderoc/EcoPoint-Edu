@@ -177,7 +177,7 @@ export function StudyDetailPage() {
         <CardContent className="flex flex-col gap-3">
           {crewSaved && <AlertBanner variant="success" message="Cuadrilla guardada." onDismiss={() => setCrewSaved(false)} />}
           {study.status === 'PLANIFICADO' || (study.status === 'EN_EJECUCION' && study.crewId === null) ? (
-            <CrewSelect crews={crews} value={study.crewId} currentName={study.crewName}
+            <CrewSelect crews={crews} value={study.crewId} currentName={study.crewName} studyId={study.id}
               onChange={handleChangeCrew} disabled={isSaving} />
           ) : (
             <p className="text-sm" data-testid="study-crew">

@@ -55,6 +55,7 @@ public class QuarteringService {
     private final WasteCategoryRepository categories;
     private final AlertRepository alerts;
     private final FieldAccess fieldAccess;
+    private final QuarteringReconciler reconciler;
     private final Clock clock;
 
     /**
@@ -67,11 +68,13 @@ public class QuarteringService {
      * @param categories   subcategory repository
      * @param alerts       alert repository
      * @param fieldAccess  who may register in the study (RN-089)
+     * @param reconciler   keeps the alert of the quartering consistent (RN-099)
      * @param clock        clock that dates the records and alerts
      */
     public QuarteringService(QuarteringRepository quarterings, ShiftRepository shifts, StudyRepository studies,
                              InstitutionRepository institutions, WasteCategoryRepository categories,
-                             AlertRepository alerts, FieldAccess fieldAccess, Clock clock) {
+                             AlertRepository alerts, FieldAccess fieldAccess, QuarteringReconciler reconciler,
+                             Clock clock) {
         this.quarterings = quarterings;
         this.shifts = shifts;
         this.studies = studies;
@@ -79,6 +82,7 @@ public class QuarteringService {
         this.categories = categories;
         this.alerts = alerts;
         this.fieldAccess = fieldAccess;
+        this.reconciler = reconciler;
         this.clock = clock;
     }
 
@@ -92,6 +96,20 @@ public class QuarteringService {
     public Quartering get(Long shiftId) {
         return quarterings.findByShift(shiftId)
                 .orElseThrow(() -> new ResourceNotFoundException("Cuarteo del turno", shiftId));
+    }
+
+    /**
+     * Finds the quartering of a shift of a study the user may see (RN-097).
+     *
+     * @param actor   user of the session
+     * @param shiftId shift id
+     * @return the quartering
+     */
+    public Quartering getFor(User actor, Long shiftId) {
+        SamplingShift shift = shifts.findById(shiftId).orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
+        fieldAccess.require(actor, studies.findById(shift.getStudyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", shift.getStudyId())));
+        return get(shiftId);
     }
 
     /**
@@ -146,9 +164,17 @@ public class QuarteringService {
     @Transactional
     public Quartering annul(User actor, Long shiftId, String reason) {
         Quartering quartering = get(shiftId);
+        SamplingShift shift = shifts.findById(shiftId).orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
+        CharacterizationStudy study = studies.findById(shift.getStudyId())
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", shift.getStudyId()));
+        fieldAccess.require(actor, study);
+        ShiftValidator.validateStudyNotFinished(study);
         QuarteringValidator.validateAnnul(quartering, actor);
-        quartering.annul(reason, actor.getId(), LocalDateTime.now(clock));
-        return quarterings.save(quartering);
+        LocalDateTime now = LocalDateTime.now(clock);
+        quartering.annul(reason, actor.getId(), now);
+        Quartering saved = quarterings.save(quartering);
+        reconciler.syncAlert(saved, shift.getCode(), actor, now);
+        return saved;
     }
 
     private static QuarteringResult resultOf(ResultInput input, Map<Long, WasteCategory> catalog) {

@@ -7,12 +7,14 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
+import { http, HttpResponse } from 'msw'
 import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/features/auth'
 import { AlertsPage, RecordPage, VerificationPage } from '@/features/quality'
 import { Sidebar } from '@/components/layout'
 import { mockUsers } from '@/mocks/data/seedData'
 import { resetMockState, setActiveUser } from '@/mocks/handlers'
+import { server } from '@/mocks/server'
 import { User } from '@/types'
 
 const teacher = mockUsers[0]
@@ -124,6 +126,48 @@ describe('Record correction and history (T406, CA-404, CA-409, CA-412)', () => {
 
     expect(await screen.findByTestId('correction-history')).toHaveTextContent('18,50 → 19,50')
     expect(screen.getByTestId(`record-quartering-${quartering.id}`)).toHaveTextContent('Conforme')
+  })
+
+  it('ca088_forgottenSubcategoryIsAddedFromTheCorrection', async () => {
+    resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    const quartering = await createQuartering(50, 30, 15)
+    const user = userEvent.setup()
+    renderAs(teacher, `/calidad/registro/quartering/${quartering.id}`)
+
+    const category = await screen.findByLabelText('Agregar subcategoría olvidada')
+    await user.selectOptions(category, 'Papel higiénico y servilletas')
+    await user.type(screen.getByLabelText('Peso a agregar (kg)'), '5')
+    await user.type(screen.getByLabelText('Motivo de la corrección'), 'Faltó esta subcategoría')
+    await user.click(screen.getByRole('button', { name: 'Guardar corrección' }))
+
+    expect(await screen.findByTestId('correction-history')).toHaveTextContent('Sin registrar → 5')
+    expect(screen.getByTestId(`record-quartering-${quartering.id}`)).toHaveTextContent('Conforme')
+  })
+
+  it('ca092_studyOfAnotherInstitutionAppearsInVerification', async () => {
+    resetMockState('DOCENTE')
+    const other = { id: 9, institutionId: 2, status: 'EN_DEPURACION', startDate: '2026-04-06', endDate: '2026-04-15',
+      days: [], participatingSourceIds: [], pendingRecords: 1 }
+    server.use(
+      http.get('/api/v1/institutions', () => HttpResponse.json([
+        { id: 1, name: 'I.E. Prudencia Daza', address: 'A', active: true },
+        { id: 2, name: 'Universidad Popular', address: 'B', active: true },
+      ])),
+      http.get('/api/v1/studies/verifiable', () => HttpResponse.json([other, { ...other, id: 2, institutionId: 1 }])),
+    )
+    renderAs(teacher, '/calidad/verificacion')
+
+    expect(await screen.findByRole('option', { name: /Estudio N\.º 9.*Universidad Popular/ }, { timeout: 4000 }))
+      .toBeInTheDocument()
+  })
+
+  it('ca093_studentOnlySeesTheStudiesOfHisCrew', async () => {
+    resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    server.use(http.get('/api/v1/studies/verifiable', () => HttpResponse.json([])))
+    renderAs(student, '/calidad/verificacion')
+
+    expect(await screen.findByText('No tienes estudios en ejecución ni en depuración para verificar.')).toBeInTheDocument()
+    expect(screen.queryByTestId('shift-progress')).toBeNull()
   })
 })
 

@@ -114,13 +114,15 @@ public class VerificationController implements FieldNameMapping {
     /**
      * Shows the correction history of a record (RN-063).
      *
+     * @param principal  user of the session
      * @param recordType population, bag, quartering or density
      * @param recordId   record id
      * @return corrections, oldest first
      */
     @GetMapping("/api/v1/records/{recordType}/{recordId}/history")
-    public List<CorrectionResponse> history(@PathVariable String recordType, @PathVariable Long recordId) {
-        return verifications.history(RecordKind.fromPath(recordType), recordId).stream()
+    public List<CorrectionResponse> history(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                            @PathVariable String recordType, @PathVariable Long recordId) {
+        return verifications.history(currentUser.of(principal), RecordKind.fromPath(recordType), recordId).stream()
                 .map(CorrectionResponse::from)
                 .toList();
     }
@@ -141,23 +143,29 @@ public class VerificationController implements FieldNameMapping {
     /**
      * Lists the verifiable records of a shift with their values (spec 005, R-420, R-421).
      *
-     * @param shiftId shift id
+     * @param principal user of the session
+     * @param shiftId   shift id
      * @return population, bags, quartering and density of the shift
      */
     @GetMapping("/api/v1/shifts/{shiftId}/records")
-    public List<VerifiableRecordResponse> shiftRecords(@PathVariable Long shiftId) {
-        return verifications.shiftRecords(shiftId).stream().map(VerifiableRecordResponse::from).toList();
+    public List<VerifiableRecordResponse> shiftRecords(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                                       @PathVariable Long shiftId) {
+        return verifications.shiftRecords(currentUser.of(principal), shiftId).stream()
+                .map(VerifiableRecordResponse::from).toList();
     }
 
     /**
      * Shows one verifiable record with its values and shift (spec 005, R-430).
      *
+     * @param principal  user of the session
      * @param recordType population, bag, quartering or density
      * @param recordId   record id
      * @return the record
      */
     @GetMapping("/api/v1/records/{recordType}/{recordId}")
-    public VerifiableRecordResponse record(@PathVariable String recordType, @PathVariable Long recordId) {
-        return VerifiableRecordResponse.from(verifications.record(RecordKind.fromPath(recordType), recordId));
+    public VerifiableRecordResponse record(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                           @PathVariable String recordType, @PathVariable Long recordId) {
+        return VerifiableRecordResponse.from(verifications.record(currentUser.of(principal),
+                RecordKind.fromPath(recordType), recordId));
     }
 }

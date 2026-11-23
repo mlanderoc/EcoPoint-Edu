@@ -41,6 +41,7 @@ import java.util.stream.Stream;
 @Service
 public class IndicatorService {
 
+    private final FieldAccess fieldAccess;
     private final StudyRepository studies;
     private final ShiftRepository shifts;
     private final GenerationSourceRepository sources;
@@ -57,10 +58,13 @@ public class IndicatorService {
      * @param institutions institution repository
      * @param corrections  correction history repository
      * @param crews        crew repository
+     * @param fieldAccess who may read the study (RN-097)
      */
     public IndicatorService(StudyRepository studies, ShiftRepository shifts, GenerationSourceRepository sources,
                             InstitutionRepository institutions, CorrectionRepository corrections,
-                            CrewRepository crews) {
+                            CrewRepository crews,
+                            FieldAccess fieldAccess) {
+        this.fieldAccess = fieldAccess;
         this.studies = studies;
         this.shifts = shifts;
         this.sources = sources;
@@ -81,6 +85,7 @@ public class IndicatorService {
     public StudyIndicators calculate(User actor, Long studyId) {
         AccessPolicy.require(actor, Permission.VIEW_INDICATORS);
         CharacterizationStudy study = findStudy(studyId);
+        fieldAccess.require(actor, study);
         return IndicatorCalculator.calculate(study, shifts.findByStudy(studyId), sourcesOf(study));
     }
 
@@ -96,6 +101,7 @@ public class IndicatorService {
     public StudyReport report(User actor, Long studyId) {
         AccessPolicy.require(actor, Permission.VIEW_INDICATORS);
         CharacterizationStudy study = findStudy(studyId);
+        fieldAccess.require(actor, study);
         List<SamplingShift> studyShifts = shifts.findByStudy(studyId);
         String institutionName = institutions.findById(study.getInstitutionId()).map(Institution::getName).orElse("");
         List<Correction> history = studyShifts.stream().flatMap(IndicatorService::recordsOf)

@@ -1,5 +1,6 @@
 package com.ecopoint.service;
 
+import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.AlertFactory;
@@ -18,6 +19,7 @@ import com.ecopoint.model.User;
 import com.ecopoint.model.VerifiableRecord;
 import com.ecopoint.model.VerificationStatus;
 import com.ecopoint.model.WasteBag;
+import com.ecopoint.model.WasteCategory;
 import com.ecopoint.persistence.AlertRepository;
 import com.ecopoint.persistence.CorrectionRepository;
 import com.ecopoint.persistence.DensityRepository;
@@ -28,6 +30,7 @@ import com.ecopoint.persistence.ShiftRepository;
 import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.VerificationRepository;
 import com.ecopoint.persistence.WasteBagRepository;
+import com.ecopoint.persistence.WasteCategoryRepository;
 import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.DensityValidator;
 import com.ecopoint.validation.QuarteringValidator;
@@ -54,7 +57,7 @@ import java.util.stream.Collectors;
  * <p>Fields that can be corrected: population {@code students}, {@code teachers},
  * {@code staff}; bag {@code grossWeight}, {@code tare}, {@code volume}; density
  * {@code containerVolume}, {@code netWeight}; quartering {@code sampleWeight} and
- * {@code result:<subcategory id>} (re-weighing, RN-052).</p>
+ * {@code result:<subcategory id>} (re-weighing, RN-052, or a forgotten subcategory, RN-094).</p>
  *
  * @author EstefaniaMarquez
  * @version 1.0
@@ -71,6 +74,9 @@ public class VerificationService {
     private final DensityRepository densities;
     private final InstitutionRepository institutions;
     private final AlertRepository alerts;
+    private final WasteCategoryRepository categories;
+    private final QuarteringReconciler reconciler;
+    private final FieldAccess fieldAccess;
     private final Clock clock;
 
     /**
@@ -85,12 +91,17 @@ public class VerificationService {
      * @param densities     density repository
      * @param institutions  institution repository
      * @param alerts        alert repository
+     * @param categories    subcategory catalog
+     * @param reconciler    keeps the quartering consistent with the bags (RN-093)
+     * @param fieldAccess   who may work on the records of a study (RN-097)
      * @param clock         clock that dates verifications and corrections
      */
     public VerificationService(VerificationRepository verifications, CorrectionRepository corrections,
                                ShiftRepository shifts, StudyRepository studies, WasteBagRepository bags,
                                QuarteringRepository quarterings, DensityRepository densities,
-                               InstitutionRepository institutions, AlertRepository alerts, Clock clock) {
+                               InstitutionRepository institutions, AlertRepository alerts,
+                               WasteCategoryRepository categories, QuarteringReconciler reconciler,
+                               FieldAccess fieldAccess, Clock clock) {
         this.verifications = verifications;
         this.corrections = corrections;
         this.shifts = shifts;
@@ -100,6 +111,9 @@ public class VerificationService {
         this.densities = densities;
         this.institutions = institutions;
         this.alerts = alerts;
+        this.categories = categories;
+        this.reconciler = reconciler;
+        this.fieldAccess = fieldAccess;
         this.clock = clock;
     }
 
@@ -113,6 +127,7 @@ public class VerificationService {
      */
     public List<PendingRecord> pending(User actor, Long studyId, Long shiftId) {
         AccessPolicy.require(actor, Permission.VERIFY_RECORDS);
+        requireStudyAccess(actor, studyId);
         return verifications.findPendingByStudy(studyId).stream()
                 .filter(pending -> shiftId == null || Objects.equals(pending.shiftId(), shiftId))
                 .toList();
@@ -127,9 +142,7 @@ public class VerificationService {
      */
     public VerificationSummary summary(User actor, Long studyId) {
         AccessPolicy.require(actor, Permission.VERIFY_RECORDS);
-        if (studies.findById(studyId).isEmpty()) {
-            throw new ResourceNotFoundException("Estudio", studyId);
-        }
+        requireStudyAccess(actor, studyId);
         List<VerificationSummary.ShiftProgress> progress = shifts.findByStudy(studyId).stream()
                 .map(VerificationService::progressOf)
                 .toList();
@@ -146,11 +159,13 @@ public class VerificationService {
      * Lists the verifiable records of a shift: population, bags, quartering and
      * density (R-420, R-421).
      *
+     * @param actor   user that asks; must work on the study (RN-097)
      * @param shiftId shift id
      * @return records with their kind, in that order
      */
-    public List<RecordView> shiftRecords(Long shiftId) {
+    public List<RecordView> shiftRecords(User actor, Long shiftId) {
         SamplingShift shift = shifts.findById(shiftId).orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId));
+        requireStudyAccess(actor, shift.getStudyId());
         List<RecordView> records = new ArrayList<>();
         if (shift.getPopulation() != null) {
             records.add(new RecordView(RecordKind.POPULATION, shift.getPopulation(), shift));
@@ -168,12 +183,14 @@ public class VerificationService {
     /**
      * Finds one verifiable record with its shift, e.g. to open it from an alert (R-430).
      *
+     * @param actor    user that asks; must work on the study (RN-097)
      * @param kind     kind of record
      * @param recordId record id
      * @return the record with its kind and shift
      */
-    public RecordView record(RecordKind kind, Long recordId) {
+    public RecordView record(User actor, RecordKind kind, Long recordId) {
         Located located = locate(kind, recordId);
+        fieldAccess.require(actor, located.study());
         return new RecordView(kind, located.record(), located.shift());
     }
 
@@ -218,11 +235,13 @@ public class VerificationService {
     /**
      * Returns the correction history of a record (RN-063).
      *
+     * @param actor    user that asks; must work on the study (RN-097)
      * @param kind     kind of record
      * @param recordId record id
      * @return corrections, oldest first
      */
-    public List<Correction> history(RecordKind kind, Long recordId) {
+    public List<Correction> history(User actor, RecordKind kind, Long recordId) {
+        fieldAccess.require(actor, locate(kind, recordId).study());
         return corrections.findByRecord(kind.getRecordType(), recordId);
     }
 
@@ -238,6 +257,7 @@ public class VerificationService {
     @Transactional
     public VerifiableRecord verify(User actor, RecordKind kind, Long recordId) {
         Located located = locate(kind, recordId);
+        fieldAccess.require(actor, located.study());
         VerificationValidator.validateStudyAllowsVerification(located.study());
         VerificationValidator.validateVerifier(located.record(), actor);
         located.record().getVerification().markVerified(actor.getId(), LocalDateTime.now(clock));
@@ -261,6 +281,7 @@ public class VerificationService {
     public VerifiableRecord correct(User actor, RecordKind kind, Long recordId, Map<String, BigDecimal> newValues,
                                     String reason) {
         Located located = locate(kind, recordId);
+        fieldAccess.require(actor, located.study());
         VerificationValidator.validateStudyAllowsVerification(located.study());
         VerificationValidator.validateCorrection(located.record(), actor, reason);
         LocalDateTime now = LocalDateTime.now(clock);
@@ -270,7 +291,7 @@ public class VerificationService {
         if (changes.isEmpty()) {
             throw new InvalidDataException("valores", "No hay cambios que corregir: los valores son iguales.");
         }
-        revalidateAndSave(located, now);
+        revalidateAndSave(located, actor, now);
         located.record().getVerification().markCorrected(actor.getId(), now);
         verifications.updateVerification(located.record());
         changes.forEach(corrections::save);
@@ -332,8 +353,8 @@ public class VerificationService {
         }
     }
 
-    private static void applyQuartering(Quartering quartering, String field, BigDecimal value,
-                                        List<Correction> changes, String reason, User actor, LocalDateTime now) {
+    private void applyQuartering(Quartering quartering, String field, BigDecimal value,
+                                 List<Correction> changes, String reason, User actor, LocalDateTime now) {
         if ("sampleWeight".equals(field)) {
             change(changes, quartering, field, quartering.getSampleWeight(), value, quartering::setSampleWeight,
                     reason, actor, now);
@@ -346,9 +367,29 @@ public class VerificationService {
         QuarteringResult result = quartering.getResults().stream()
                 .filter(found -> Objects.equals(found.getCategoryId(), categoryId))
                 .findFirst()
-                .orElseThrow(() -> new InvalidDataException(field,
-                        "El cuarteo no tiene resultado para la subcategoría " + categoryId + "."));
+                .orElse(null);
+        if (result == null) {
+            addForgottenResult(quartering, categoryId, field, value, changes, reason, actor, now);
+            return;
+        }
         change(changes, quartering, field, result.getWeight(), value, result::setWeight, reason, actor, now);
+    }
+
+    private void addForgottenResult(Quartering quartering, Long categoryId, String field, BigDecimal value,
+                                    List<Correction> changes, String reason, User actor, LocalDateTime now) {
+        if (value.signum() <= 0) {
+            throw new InvalidDataException(field, "El peso de la subcategoría agregada debe ser mayor que cero.");
+        }
+        WasteCategory category = categories.findAllAsMap().get(categoryId);
+        if (category == null || !category.isActive()) {
+            throw new BusinessRuleException("La subcategoría " + categoryId + " no existe o está inactiva.");
+        }
+        QuarteringResult added = QuarteringResult.of(category, value);
+        if (added.isHazardousWithWeight()) {
+            AccessPolicy.require(actor, Permission.REGISTER_HAZARDOUS_WASTE);
+        }
+        quartering.addResult(added);
+        changes.add(Correction.of(quartering, field, null, plain(value), reason, actor.getId(), now));
     }
 
     private static <T> void change(List<Correction> changes, VerifiableRecord record, String field, T oldValue,
@@ -360,24 +401,24 @@ public class VerificationService {
         setter.accept(newValue);
     }
 
-    private void revalidateAndSave(Located located, LocalDateTime now) {
+    private void revalidateAndSave(Located located, User actor, LocalDateTime now) {
         VerifiableRecord target = located.record();
         if (target instanceof ShiftPopulation population) {
             ShiftValidator.validatePopulation(population);
             shifts.save(located.shift());
         } else if (target instanceof WasteBag bag) {
-            saveBag(located, bag, now);
+            saveBag(located, bag, actor, now);
         } else if (target instanceof DensityMeasurement density) {
             DensityValidator.validate(density);
             densities.save(density);
         } else if (target instanceof Quartering quartering) {
-            saveQuartering(located, quartering, now);
+            saveQuartering(located, quartering, actor, now);
         } else {
             throw new InvalidDataException("registro", "Tipo de registro desconocido.");
         }
     }
 
-    private void saveBag(Located located, WasteBag bag, LocalDateTime now) {
+    private void saveBag(Located located, WasteBag bag, User actor, LocalDateTime now) {
         WasteBagValidator.validate(bag, null);
         boolean wasAtypical = bag.isAtypical();
         bag.setAtypical(WasteBagValidator.isAtypical(bag, settingsOf(located.study())));
@@ -385,18 +426,22 @@ public class VerificationService {
         if (bag.isAtypical() && !wasAtypical) {
             alerts.save(AlertFactory.forAtypicalBag(bag, now));
         }
+        reconciler.reconcile(located.shift(), settingsOf(located.study()), actor, now);
     }
 
-    private void saveQuartering(Located located, Quartering quartering, LocalDateTime now) {
+    private void saveQuartering(Located located, Quartering quartering, User actor, LocalDateTime now) {
         CharacterizationSettings settings = settingsOf(located.study());
+        quartering.updateShiftNetWeight(located.shift().calculateTotalNetWeight());
         QuarteringValidator.validate(quartering, settings);
-        QualityStatus before = quartering.getQualityStatus();
         quartering.calculateCompositionPercentages();
         quartering.evaluateQuality(settings.qualityTolerancePercent());
         quarterings.save(quartering);
-        if (quartering.getQualityStatus() == QualityStatus.NO_CONFORME && before != QualityStatus.NO_CONFORME) {
-            alerts.save(AlertFactory.forNonConformingQuartering(quartering, located.shift().getCode(), now));
-        }
+        reconciler.syncAlert(quartering, located.shift().getCode(), actor, now);
+    }
+
+    private void requireStudyAccess(User actor, Long studyId) {
+        fieldAccess.require(actor, studies.findById(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", studyId)));
     }
 
     private Located locate(RecordKind kind, Long recordId) {

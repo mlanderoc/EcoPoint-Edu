@@ -59,7 +59,7 @@ public class JdbcQuarteringRepository implements QuarteringRepository {
                         + "CAST(:estado AS estado_verificacion), :digitadoPor, :digitadoEn, :verificadoPor, :verificadoEn) "
                         + "RETURNING id", params, Long.class));
             } else {
-                jdbc.update("UPDATE CUARTEO SET peso_submuestra = :submuestra, estado_calidad = CAST(:calidad AS estado_calidad), "
+                jdbc.update("UPDATE CUARTEO SET peso_neto_turno = :netoTurno, peso_submuestra = :submuestra, estado_calidad = CAST(:calidad AS estado_calidad), "
                         + "motivo_anulacion = :motivo, anulado_por = :anuladoPor, anulado_en = :anuladoEn, "
                         + "estado_verificacion = CAST(:estado AS estado_verificacion), verificado_por = :verificadoPor, "
                         + "verificado_en = :verificadoEn WHERE id = :id", params.addValue("id", quartering.getId()));

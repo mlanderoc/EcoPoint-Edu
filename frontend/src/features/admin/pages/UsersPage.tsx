@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react'
 import { AlertBanner, Button, Card, CardContent, Input, Modal, Select, StatusToggleButton } from '@/components/ui'
+import { useAuth } from '@/features/auth/hooks/useAuth'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
 import { UserRole, UserRow } from '@/types'
@@ -22,8 +23,8 @@ export const USERS_PAGE_SIZE = 20
 const SEARCH_DELAY_MS = 300
 
 const ROLE_OPTIONS: { value: UserRole; label: string }[] = [
-  { value: 'DOCENTE', label: 'Docente Responsable' },
   { value: 'ESTUDIANTE_UNIVERSITARIO', label: 'Estudiante Universitario' },
+  { value: 'DOCENTE', label: 'Docente Responsable' },
 ]
 
 const ROLE_FILTER = [
@@ -39,7 +40,10 @@ const STATE_FILTER = [
 ]
 
 export function UsersPage() {
+  const { user: sessionUser } = useAuth()
   const [rows, setRows] = useState<UserRow[]>([])
+  const [demoting, setDemoting] = useState<UserRow | null>(null)
+  const [isDemoting, setIsDemoting] = useState(false)
   const [totalItems, setTotalItems] = useState(0)
   const [pageNumber, setPageNumber] = useState(0)
   const [roleFilter, setRoleFilter] = useState<UserRole | ''>('')
@@ -52,7 +56,7 @@ export function UsersPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<UserRole>('DOCENTE')
+  const [role, setRole] = useState<UserRole>('ESTUDIANTE_UNIVERSITARIO')
   const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
@@ -98,7 +102,7 @@ export function UsersPage() {
     setFirstName('')
     setLastName('')
     setEmail('')
-    setRole('DOCENTE')
+    setRole('ESTUDIANTE_UNIVERSITARIO')
     setPassword('')
     setEmailError(null)
     setPasswordError(null)
@@ -125,6 +129,21 @@ export function UsersPage() {
       setGeneralError(err instanceof Error ? err.message : 'No se pudo cambiar el estado del usuario.')
     } finally {
       setTogglingId(null)
+    }
+  }
+
+  const handleDemote = async () => {
+    if (!demoting) return
+    try {
+      setIsDemoting(true)
+      setGeneralError(null)
+      const updated = await adminService.changeUserRole(demoting, 'ESTUDIANTE_UNIVERSITARIO')
+      setRows((previous) => previous.map((item) => (item.id === updated.id ? { ...item, role: updated.role } : item)))
+    } catch (err: unknown) {
+      setGeneralError(err instanceof Error ? err.message : 'No se pudo cambiar el rol del usuario.')
+    } finally {
+      setIsDemoting(false)
+      setDemoting(null)
     }
   }
 
@@ -255,7 +274,15 @@ export function UsersPage() {
                       </td>
                       <td className="py-3 px-2 text-right">
                         {isTeacher ? (
-                          <span className="text-xs text-[var(--color-text-muted)]">—</span>
+                          u.id === sessionUser?.id ? (
+                            <span className="text-xs text-[var(--color-text-muted)]">—</span>
+                          ) : (
+                            <Button variant="outline" size="sm" className="min-h-[44px]"
+                              aria-label={`Pasar a estudiante a ${u.firstName} ${u.lastName}`}
+                              onClick={() => setDemoting(u)}>
+                              Pasar a estudiante
+                            </Button>
+                          )
                         ) : (
                           <StatusToggleButton active={u.active} itemName={`${u.firstName} ${u.lastName}`}
                             onToggle={() => handleToggle(u)} disabled={togglingId === u.id} />
@@ -312,6 +339,13 @@ export function UsersPage() {
             </Button>
           </div>
         </form>
+      </Modal>
+      <Modal open={demoting !== null} onClose={() => setDemoting(null)} title="Pasar a estudiante"
+        description={`${demoting?.firstName ?? ''} ${demoting?.lastName ?? ''} dejará de ser docente. No se puede si es responsable de una cuadrilla o si es el único docente activo.`}>
+        <div className="flex justify-end gap-3 mt-2">
+          <Button variant="outline" className="min-h-[48px]" disabled={isDemoting} onClick={() => setDemoting(null)}>Cancelar</Button>
+          <Button className="min-h-[48px]" isLoading={isDemoting} disabled={isDemoting} onClick={handleDemote}>Confirmar</Button>
+        </div>
       </Modal>
       {discardDialog}
     </div>

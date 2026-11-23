@@ -17,9 +17,27 @@ export const studyService = {
   list: (institutionId?: number): Promise<CharacterizationStudy[]> =>
     apiClient.get<CharacterizationStudy[]>('/api/v1/studies', { params: { institutionId } }),
 
+  /** Studies of every institution the user can see, newest first (D16). */
+  visible: async (institutionIds: number[]): Promise<CharacterizationStudy[]> => {
+    const results = await Promise.allSettled([
+      studyService.list(),
+      studyService.fieldStudies(),
+      ...institutionIds.map((id) => studyService.list(id)),
+    ])
+    if (results.every((result) => result.status === 'rejected')) {
+      throw new Error('No se pudieron cargar los estudios.')
+    }
+    const loaded = results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
+    return [...new Map(loaded.map((study) => [study.id, study])).values()].sort((a, b) => b.id - a.id)
+  },
+
   /** Studies in execution where the user may register: all for a teacher, his crews' for a student (R-340). */
   fieldStudies: (): Promise<CharacterizationStudy[]> =>
     apiClient.get<CharacterizationStudy[]>('/api/v1/studies/field'),
+
+  /** Studies whose records the user may verify: all for a teacher, his current crew's for a student (RN-097). */
+  verifiable: (): Promise<CharacterizationStudy[]> =>
+    apiClient.get<CharacterizationStudy[]>('/api/v1/studies/verifiable'),
 
   get: (id: number): Promise<CharacterizationStudy> =>
     apiClient.get<CharacterizationStudy>(`/api/v1/studies/${id}`),

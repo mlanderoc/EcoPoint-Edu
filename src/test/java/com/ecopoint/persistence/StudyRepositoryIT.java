@@ -76,6 +76,9 @@ class StudyRepositoryIT extends PostgresIntegrationTest {
 
         assertEquals(java.util.Map.of(busy.getId(), open.getId()), repository.findMembersInOpenStudies(null));
         assertTrue(repository.findMembersInOpenStudies(withStudy.getId()).isEmpty());
+        assertEquals(java.util.Map.of(busy.getId(), open.getId()), repository.findMembersInOpenStudiesOtherThan(null));
+        assertTrue(repository.findMembersInOpenStudiesOtherThan(open.getId()).isEmpty());
+        assertEquals(List.of(open.getId()), repository.findStudyIdsOfMember(busy.getId()));
     }
 
     @Test

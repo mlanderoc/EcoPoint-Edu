@@ -96,6 +96,25 @@ public final class QuarteringValidator {
     }
 
     /**
+     * Indicates whether the sample still fits the net weight of the shift
+     * (RN-051, RN-093).
+     *
+     * @param quartering quartering with the current net weight of the shift
+     * @param settings   sample range of the institution
+     * @return true if the sample is valid for that weight
+     */
+    public static boolean sampleFitsShift(Quartering quartering, CharacterizationSettings settings) {
+        BigDecimal sample = quartering.getSampleWeight();
+        BigDecimal shiftNet = quartering.getShiftNetWeight();
+        if (sample == null || shiftNet == null || shiftNet.signum() <= 0 || sample.compareTo(shiftNet) > 0) {
+            return false;
+        }
+        return shiftNet.compareTo(settings.minSampleWeight()) < 0
+                ? quartering.isFullSample()
+                : settings.isSampleWeightInRange(sample);
+    }
+
+    /**
      * Validates that every result refers to an active subcategory of the
      * catalog and that no subcategory appears twice (RN-055).
      *

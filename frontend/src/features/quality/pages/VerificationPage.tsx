@@ -9,6 +9,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AlertBanner, Button, Select } from '@/components/ui'
+import { useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { studyService } from '@/features/study/services/studyService'
 import { studyTitle } from '@/features/study/utils/studyStatus'
@@ -36,6 +37,7 @@ const key = (record: VerifiableRecord) => `${record.recordType}-${record.recordI
 export function VerificationPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { institutions } = useInstitutions(false)
   const [studies, setStudies] = useState<CharacterizationStudy[]>([])
   const [studyId, setStudyId] = useState<number | null>(null)
   const [summary, setSummary] = useState<VerificationSummary | null>(null)
@@ -48,9 +50,8 @@ export function VerificationPage() {
   const [isWorking, setIsWorking] = useState(false)
 
   useEffect(() => {
-    studyService.list()
-      .then((all) => {
-        const open = all.filter((study) => study.status === 'EN_EJECUCION' || study.status === 'EN_DEPURACION')
+    studyService.verifiable()
+      .then((open) => {
         setStudies(open)
         setStudyId(open[0]?.id ?? null)
       })
@@ -122,13 +123,16 @@ export function VerificationPage() {
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
       {studies.length === 0 && !error && (
-        <AlertBanner variant="info" message="No hay estudios en ejecución ni en depuración para verificar." />
+        <AlertBanner variant="info" message="No tienes estudios en ejecución ni en depuración para verificar." />
       )}
       {studies.length > 1 && (
         <div className="sm:max-w-md">
           <Select id="verification-study" label="Estudio" value={String(studyId ?? '')}
             onChange={(event) => { setStudyId(Number(event.target.value)); setShiftId(null) }}
-            options={studies.map((study) => ({ value: String(study.id), label: studyTitle(study) }))} />
+            options={studies.map((study) => {
+              const name = institutions.find((item) => item.id === study.institutionId)?.name
+              return { value: String(study.id), label: name ? `${studyTitle(study)} · ${name}` : studyTitle(study) }
+            })} />
         </div>
       )}
 

@@ -99,6 +99,19 @@ public class ShiftService {
     }
 
     /**
+     * Finds a shift of a study the user may see (RN-097).
+     *
+     * @param actor user of the session
+     * @param id    shift id
+     * @return the shift
+     */
+    public SamplingShift getFor(User actor, Long id) {
+        SamplingShift shift = get(id);
+        fieldAccess.require(actor, study(shift.getStudyId()));
+        return shift;
+    }
+
+    /**
      * Summarizes, for each participating source, its bags and its state in the shift (R-345).
      *
      * @param shift shift to summarize
@@ -141,6 +154,7 @@ public class ShiftService {
     public SamplingShift close(User actor, Long shiftId) {
         AccessPolicy.require(actor, Permission.MANAGE_SHIFTS);
         SamplingShift shift = get(shiftId);
+        ShiftValidator.validateStudyNotFinished(study(shift.getStudyId()));
         Map<Long, String> codes = new LinkedHashMap<>();
         participatingSources(study(shift.getStudyId())).forEach((id, source) -> codes.put(id, source.getCode()));
         ShiftValidator.validateCanClose(shift, codes);

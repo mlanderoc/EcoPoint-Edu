@@ -11,7 +11,7 @@
 
 ## 1. Resumen
 
-Lleva al frontend los tres diseños revisados por el equipo: bienvenida, inicio de sesión y panel con sus módulos. El backend solo cambia para la regla de estudiantes libres (RN-090) y su consulta `GET /crews/busy-members`; la base de datos no cambia.
+Lleva al frontend los tres diseños revisados por el equipo: bienvenida, inicio de sesión y panel con sus módulos. Las correcciones de reglas del backend están en D16, rama `fix/observaciones-pruebas`.
 
 | # | Cambio | Reglas |
 | --- | --- | --- |
@@ -24,7 +24,7 @@ Lleva al frontend los tres diseños revisados por el equipo: bienvenida, inicio 
 | 7 | Indicadores: selector de estudio siempre visible y comparación de jornadas en lugar de Calidad del dato | R-520, R-525, R-526 |
 | 8 | Filtro de estudios por estado | R-359, CA-328 |
 | 9 | Interruptor animado y sin columna Estado en fuentes y usuarios | R-360 |
-| 10 | Integrantes en el detalle del estudio y edición de cuadrillas solo con estudiantes libres | R-361, RN-090, CA-085 |
+| 10 | Integrantes en el detalle del estudio y edición de cuadrillas solo con estudiantes libres | R-361, RN-091, CA-085 |
 | 11 | Distribución del diseño en todos los módulos | R-362 |
 
 ## 2. Decisiones

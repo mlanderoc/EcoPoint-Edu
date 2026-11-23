@@ -1,7 +1,7 @@
 package com.ecopoint.dto;
 
 /**
- * Student that cannot join a crew because of another open study (RN-090).
+ * Student that cannot join a crew because of another open study (RN-091).
  *
  * @param userId  id of the student
  * @param studyId id of his open study

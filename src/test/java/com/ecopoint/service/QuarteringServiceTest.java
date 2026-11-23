@@ -45,6 +45,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -84,6 +85,7 @@ class QuarteringServiceTest {
         Clock clock = Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC);
         FieldAccess fieldAccess = mock(FieldAccess.class);
         service = new QuarteringService(quarterings, shifts, studies, institutions, categories, alerts, fieldAccess,
+                new QuarteringReconciler(quarterings, alerts),
                 clock);
         densityService = new DensityService(densities, shifts, studies, fieldAccess, clock);
 
@@ -158,6 +160,19 @@ class QuarteringServiceTest {
         register(student, "50.00", "30.00", "19.50");
 
         assertThrows(BusinessRuleException.class, () -> register(student, "50.00", "30.00", "19.50"));
+    }
+
+    @Test
+    void ca094_annullingClosesItsOpenAlert() {
+        Quartering nonConforming = register(student, "50.00", "30.00", "17.00");
+        when(quarterings.findByShift(30L)).thenReturn(Optional.of(nonConforming));
+        Alert open = new Alert(5L, AlertType.CUARTEO_NO_CONFORME, "Cuarteo", nonConforming.getId(), "No conforme", NOW);
+        when(alerts.findOpenByTarget(any(), any(), any())).thenReturn(List.of(open));
+
+        service.annul(teacher, 30L, "La báscula estaba descalibrada");
+
+        assertTrue(open.isAttended());
+        assertTrue(open.getAttendNote().contains("anulado"));
     }
 
     @Test

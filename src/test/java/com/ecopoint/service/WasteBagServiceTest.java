@@ -20,6 +20,7 @@ import com.ecopoint.model.WasteBag;
 import com.ecopoint.persistence.AlertRepository;
 import com.ecopoint.persistence.GenerationSourceRepository;
 import com.ecopoint.persistence.InstitutionRepository;
+import com.ecopoint.persistence.QuarteringRepository;
 import com.ecopoint.persistence.ShiftRepository;
 import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.WasteBagRepository;
@@ -62,6 +63,7 @@ class WasteBagServiceTest {
     private WasteBagRepository bags;
     private ShiftRepository shifts;
     private AlertRepository alerts;
+    private QuarteringRepository quarterings;
     private WasteBagService service;
     private SamplingShift shift;
     private final User student = new User(11L, "Laura", "Pérez", "l@unicesar.edu.co",
@@ -73,10 +75,12 @@ class WasteBagServiceTest {
         bags = mock(WasteBagRepository.class);
         shifts = mock(ShiftRepository.class);
         alerts = mock(AlertRepository.class);
+        quarterings = mock(QuarteringRepository.class);
         StudyRepository studies = mock(StudyRepository.class);
         GenerationSourceRepository sources = mock(GenerationSourceRepository.class);
         InstitutionRepository institutions = mock(InstitutionRepository.class);
         service = new WasteBagService(bags, shifts, studies, sources, institutions, alerts, mock(FieldAccess.class),
+                new QuarteringReconciler(quarterings, alerts),
                 Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
 
         List<LocalDate> dates = new ArrayList<>();
@@ -188,6 +192,19 @@ class WasteBagServiceTest {
 
         assertThrows(BusinessRuleException.class, () -> service.correctPending(student, 50L,
                 new BigDecimal("13.40"), new BigDecimal("0.40"), new BigDecimal("0.080")));
+    }
+
+    @Test
+    void ca086_anotherPersonCannotChangeAPendingBagWithoutHistory() {
+        withPopulation();
+        WasteBag bag = register("12.40", "0.40", "0.080");
+        when(bags.findById(50L)).thenReturn(Optional.of(bag));
+        when(bags.findShiftId(50L)).thenReturn(Optional.of(30L));
+        User other = new User(12L, "Mario", "Gómez", "m@unicesar.edu.co", UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
+
+        assertThrows(BusinessRuleException.class, () -> service.correctPending(other, 50L,
+                new BigDecimal("13.40"), new BigDecimal("0.40"), new BigDecimal("0.080")));
+        assertEquals(0, new BigDecimal("12.40").compareTo(bag.getGrossWeight()));
     }
 
     private void withPopulation() {

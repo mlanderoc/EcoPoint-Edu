@@ -27,25 +27,15 @@ export function IndicatorsDashboard() {
   const { indicators, isLoading, error } = useIndicators(studyId)
 
   useEffect(() => {
-    const requests = [
-      studyService.list(),
-      studyService.fieldStudies(),
-      ...institutions.map((institution) => studyService.list(institution.id)),
-    ]
-    Promise.allSettled(requests).then((results) => {
-      const loaded = results.flatMap((result) => (result.status === 'fulfilled' ? result.value : []))
-      if (results.every((result) => result.status === 'rejected')) {
-        setListError('No se pudieron cargar los estudios.')
-        return
-      }
-      setListError(null)
-      // A planned study has no data yet, and a cancelled one has no baseline (D13, A20).
-      const unique = [...new Map(loaded.map((study) => [study.id, study])).values()]
-        .filter((study) => study.status !== 'PLANIFICADO' && study.status !== 'CANCELADO')
-        .sort((a, b) => b.id - a.id)
-      setStudies(unique)
-      setStudyId((current) => current ?? unique[0]?.id ?? null)
-    })
+    studyService.visible(institutions.map((institution) => institution.id))
+      .then((loaded) => {
+        setListError(null)
+        // A planned study has no data yet, and a cancelled one has no baseline (D13, A20).
+        const withData = loaded.filter((study) => study.status !== 'PLANIFICADO' && study.status !== 'CANCELADO')
+        setStudies(withData)
+        setStudyId((current) => current ?? withData[0]?.id ?? null)
+      })
+      .catch(() => setListError('No se pudieron cargar los estudios.'))
   }, [institutions])
 
   const institutionName = (id: number) => institutions.find((item) => item.id === id)?.name

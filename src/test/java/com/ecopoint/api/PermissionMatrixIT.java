@@ -65,8 +65,10 @@ class PermissionMatrixIT extends PostgresIntegrationTest {
 
     @Test
     void ca203_manageStudiesOnlyForTheTeacher() throws Exception {
-        teacher.json(post("/api/v1/studies"), studyIn(2027)).andExpect(status().isCreated());
-        student.json(post("/api/v1/studies"), studyIn(2028))
+        Long freeCrew = jdbc.queryForObject("INSERT INTO CUADRILLA (nombre, id_responsable) "
+                + "SELECT 'Cuadrilla libre', id_responsable FROM CUADRILLA LIMIT 1 RETURNING id", Long.class);
+        teacher.json(post("/api/v1/studies"), studyIn(2027, freeCrew)).andExpect(status().isCreated());
+        student.json(post("/api/v1/studies"), studyIn(2028, freeCrew))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.errorCode").value("ERR_FORBIDDEN"));
     }
@@ -166,13 +168,13 @@ class PermissionMatrixIT extends PostgresIntegrationTest {
                 + "{\"categoryId\":" + hazardous + ",\"weight\":0.40}]}";
     }
 
-    private static String studyIn(int year) {
+    private static String studyIn(int year, Long crewId) {
         StringBuilder days = new StringBuilder();
         for (int day = 1; day <= 8; day++) {
             days.append(day == 1 ? "" : ",")
                     .append("{\"dayNumber\":").append(day).append(",\"date\":\"").append(year)
                     .append("-02-").append(String.format("%02d", day + 1)).append("\"}");
         }
-        return "{\"crewId\":1,\"days\":[" + days + "]}";
+        return "{\"crewId\":" + crewId + ",\"days\":[" + days + "]}";
     }
 }

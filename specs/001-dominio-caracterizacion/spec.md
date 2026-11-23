@@ -172,7 +172,16 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 
 - **RN-088** (Debe). Todo estudio tiene **una cuadrilla**, que se elige al crearlo. Solo se cambia mientras el estudio está PLANIFICADO. Un estudio EN_EJECUCION que quedó sin cuadrilla puede recibirla una vez, y sus turnos sin cuadrilla pasan a ser de ella. Los turnos del estudio los trabaja esa cuadrilla (D14).
 - **RN-089** (Debe). Un ESTUDIANTE_UNIVERSITARIO solo registra población, bolsas, marcas de "sin generación", cuarteos y densidades en los estudios cuya cuadrilla integra. Un DOCENTE registra en cualquier estudio (D14).
-- **RN-090** (Debe, propuesta D15). Solo se agrega a una cuadrilla un estudiante **libre**: que no integre otra cuadrilla con un estudio PLANIFICADO, EN_EJECUCION o EN_DEPURACION. Los integrantes que ya están en la cuadrilla se conservan al editarla.
+- **RN-091** (Debe, propuesta D16). Solo se agrega a una cuadrilla un estudiante **libre**: que no integre otra cuadrilla con un estudio PLANIFICADO, EN_EJECUCION o EN_DEPURACION. Los integrantes que ya están en la cuadrilla se conservan al editarla.
+- **RN-092** (Debe, propuesta D16). Una bolsa PENDIENTE solo la ajusta fuera de la verificación quien la digitó. Cualquier otra persona la corrige desde la verificación, con motivo e historial.
+- **RN-093** (Debe, propuesta D16). Si cambia el peso de las bolsas de un turno, su cuarteo se vuelve a evaluar. Si la submuestra ya no cabe en el peso del turno, queda NO_CONFORME con su alerta.
+- **RN-094** (Debe, propuesta D16). Al corregir un cuarteo se puede agregar una subcategoría olvidada, activa y con peso mayor que cero, con motivo e historial.
+- **RN-095** (Debe, propuesta D16). Las fechas y fuentes solo cambian en un estudio PLANIFICADO. Un turno solo se cierra con población registrada y con fuentes participantes.
+- **RN-096** (Debe, propuesta D16). Un docente solo edita, activa o desactiva usuarios de su institución. Otro docente puede quitarle el rol a un DOCENTE si queda otro docente activo y no es responsable de una cuadrilla; nadie se lo quita a sí mismo.
+- **RN-097** (Debe, propuesta D16). Un ESTUDIANTE_UNIVERSITARIO solo lee, verifica, corrige y anula datos, indicadores, reportes, alertas y evidencias de los estudios de su **cuadrilla actual**. Si sale de la cuadrilla, deja de tener acceso a ese estudio; lo que digitó se conserva con su nombre y lo verifican los demás integrantes o un DOCENTE, que puede hacerlo en cualquier estudio.
+- **RN-098** (Debe, propuesta D16). Una cuadrilla tiene un solo estudio abierto. No toma ni reabre un estudio si ella o alguno de sus integrantes ya está en otro estudio PLANIFICADO, EN_EJECUCION o EN_DEPURACION.
+- **RN-099** (Debe, propuesta D16). Un cuarteo tiene como máximo una alerta abierta. Se cierra sola, con una nota, cuando el cuarteo queda conforme o se anula.
+- **RN-100** (Debe, propuesta D16). Un estudio no se cierra con turnos abiertos. En un estudio CERRADO o CANCELADO no se cierran turnos ni se anulan cuarteos.
 
 - **RN-090** (Debería). Se pueden adjuntar evidencias (foto de la balanza, de la bolsa o de la planilla en papel) a una bolsa, un cuarteo o un turno. Formatos JPG o PNG, máximo 5 MB cada una.
 
@@ -249,6 +258,18 @@ Todos se verifican con pruebas unitarias del dominio, sin base de datos.
 - **CA-083.** Dado un estudio PLANIFICADO con la Cuadrilla 1, cuando el docente la cambia por la Cuadrilla 2, entonces se acepta; dado un estudio EN_EJECUCION con cuadrilla, se rechaza; dado uno EN_EJECUCION sin cuadrilla, se acepta una vez (RN-088).
 - **CA-084.** Dado un estudiante que no integra la cuadrilla de un estudio en ejecución, cuando intenta registrar una bolsa en uno de sus turnos, entonces se rechaza por permisos; un integrante de esa cuadrilla sí la registra (RN-089).
 - **CA-085.** Dado un estudiante en otra cuadrilla con un estudio abierto, cuando se intenta agregar a una cuadrilla, entonces se rechaza indicando su estudio; un integrante actual se conserva al editar (RN-090).
+- **CA-086.** Dada una bolsa PENDIENTE digitada por otra persona, cuando se intenta ajustar fuera de la verificación, entonces se rechaza (RN-092).
+- **CA-087.** Dado un cuarteo CONFORME, cuando una corrección deja el turno con menos peso que la submuestra, entonces queda NO_CONFORME con alerta (RN-093).
+- **CA-088.** Dado un cuarteo sin una subcategoría, cuando se agrega con motivo, entonces se recalcula y queda en el historial (RN-094).
+- **CA-089.** Dado un estudio en ejecución, cuando se cambian fechas o fuentes, entonces se rechaza; un turno sin población o sin fuentes no se cierra (RN-095).
+- **CA-091.** Dado un docente, cuando se intenta cambiarlo a estudiante o editar un usuario de otra institución, entonces se rechaza (RN-096).
+- **CA-093.** Dado un estudiante que no integra la cuadrilla de un estudio, cuando intenta ver, verificar o corregir sus registros, entonces se rechaza y el estudio no le aparece en Verificación (RN-097).
+- **CA-094.** Dado un cuarteo no conforme con alerta, cuando sigue no conforme no se crea otra; cuando queda conforme o se anula, la alerta se cierra (RN-099).
+- **CA-095.** Dada una cuadrilla con un integrante en otro estudio abierto, cuando se asigna a un estudio, entonces se rechaza indicando quién y en qué estudio (RN-098).
+- **CA-096.** Un usuario nuevo trae Estudiante por defecto. Otro docente puede devolver a estudiante a un docente, salvo que sea responsable de una cuadrilla o el único docente activo (RN-096).
+- **CA-097.** Un docente no activa ni desactiva usuarios de otra institución (RN-096).
+- **CA-098.** Dado un estudiante que no integra la cuadrilla de un estudio, cuando consulta sus datos, indicadores o reportes, entonces se rechaza y el estudio no aparece en sus listas (RN-097).
+- **CA-099.** Un estudio con turnos abiertos no se cierra, y un turno de un estudio cerrado o cancelado no se puede cerrar (RN-100).
 - **CA-090.** Todo rechazo de las reglas anteriores lanza una excepción de la jerarquía `EcoPointException` con un mensaje en español que explica qué falló: dato con formato o rango inválido → `InvalidDataException`; regla de negocio violada → `BusinessRuleException`; registro inexistente → `ResourceNotFoundException`.
 
 ## 6. Fuera de alcance

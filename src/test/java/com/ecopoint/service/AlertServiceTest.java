@@ -9,6 +9,7 @@ import com.ecopoint.model.AlertType;
 import com.ecopoint.model.User;
 import com.ecopoint.model.UserRole;
 import com.ecopoint.persistence.AlertRepository;
+import com.ecopoint.persistence.StudyRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -35,16 +36,20 @@ class AlertServiceTest {
     private static final LocalDateTime NOW = LocalDateTime.of(2026, 11, 12, 15, 0);
 
     private AlertRepository alerts;
+    private StudyRepository studies;
     private AlertService service;
     private Alert atypical;
     private Alert quartering;
+    private final User teacher = new User(10L, "Daniela", "Arias", "d@unicesar.edu.co", UserRole.DOCENTE, 1L);
     private final User student = new User(11L, "Laura", "Pérez", "l@unicesar.edu.co",
             UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
 
     @BeforeEach
     void setUp() {
         alerts = mock(AlertRepository.class);
-        service = new AlertService(alerts, Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
+        studies = mock(StudyRepository.class);
+        when(studies.findStudyIdsOfMember(11L)).thenReturn(List.of(7L));
+        service = new AlertService(alerts, studies, Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
         atypical = new Alert(1L, AlertType.VALOR_ATIPICO, "Bolsa", 50L, "Valor atípico", NOW.minusHours(2));
         quartering = new Alert(2L, AlertType.CUARTEO_NO_CONFORME, "Cuarteo", 40L, "No conforme", NOW.minusHours(1));
         when(alerts.findAll()).thenReturn(List.of(quartering, atypical));
@@ -55,10 +60,19 @@ class AlertServiceTest {
 
     @Test
     void rn070_alertsAreFilteredByStudyTypeAndAttention() {
-        assertEquals(List.of(atypical), service.list(7L, null, null));
-        assertEquals(List.of(quartering), service.list(null, AlertType.CUARTEO_NO_CONFORME, null));
-        assertEquals(2, service.list(null, null, false).size());
-        assertTrue(service.list(null, null, true).isEmpty());
+        assertEquals(List.of(atypical), service.list(teacher, 7L, null, null));
+        assertEquals(List.of(quartering), service.list(teacher, null, AlertType.CUARTEO_NO_CONFORME, null));
+        assertEquals(2, service.list(teacher, null, null, false).size());
+        assertTrue(service.list(teacher, null, null, true).isEmpty());
+    }
+
+    @Test
+    void ca093_studentOnlySeesAndAttendsAlertsOfHisCrewStudies() {
+        when(alerts.findById(2L)).thenReturn(Optional.of(quartering));
+
+        assertEquals(List.of(atypical), service.list(student, null, null, null));
+        assertTrue(service.list(student, 8L, null, null).isEmpty());
+        assertThrows(AccessDeniedException.class, () -> service.attend(student, 2L, "Revisado."));
     }
 
     @Test

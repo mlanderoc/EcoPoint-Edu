@@ -3,6 +3,7 @@ package com.ecopoint.controller;
 import com.ecopoint.dto.BusyMemberResponse;
 import com.ecopoint.dto.CrewRequest;
 import com.ecopoint.dto.CrewResponse;
+import com.ecopoint.dto.UnavailableCrewResponse;
 import com.ecopoint.security.EcoPointUserDetails;
 import com.ecopoint.service.CrewService;
 import org.springframework.http.HttpStatus;
@@ -64,7 +65,7 @@ public class CrewController implements FieldNameMapping {
 
     /**
      * Lists the students that cannot join a crew because they have another
-     * open study (RN-090).
+     * open study (RN-091).
      *
      * @param principal user of the session
      * @param crewId    crew being edited; empty for a new crew
@@ -75,6 +76,20 @@ public class CrewController implements FieldNameMapping {
                                                 @RequestParam(required = false) Long crewId) {
         return crews.busyMembers(currentUser.of(principal), crewId).entrySet().stream()
                 .map(entry -> new BusyMemberResponse(entry.getKey(), entry.getValue())).toList();
+    }
+
+    /**
+     * Lists the crews that cannot take a study right now (RN-098).
+     *
+     * @param principal user of the session
+     * @param studyId   study being edited; empty for a new one
+     * @return unavailable crews with the study that holds them
+     */
+    @GetMapping("/unavailable")
+    public List<UnavailableCrewResponse> unavailable(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                                     @RequestParam(required = false) Long studyId) {
+        return crews.unavailableCrews(currentUser.of(principal), studyId).entrySet().stream()
+                .map(entry -> new UnavailableCrewResponse(entry.getKey(), entry.getValue())).toList();
     }
 
     /**

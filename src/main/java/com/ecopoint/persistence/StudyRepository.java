@@ -53,12 +53,45 @@ public interface StudyRepository {
 
     /**
      * Finds the users that belong to a crew with a study not yet finished:
-     * planned, running or being cleaned (RN-090).
+     * planned, running or being cleaned (RN-091).
      *
      * @param excludedCrewId crew left out of the search; null to look at all
      * @return id of each busy user with the id of his study
      */
     Map<Long, Long> findMembersInOpenStudies(Long excludedCrewId);
+
+    /**
+     * Finds the users that belong to the crew of an unfinished study other
+     * than the given one (RN-098).
+     *
+     * @param studyId study left out of the search; null to look at all
+     * @return id of each busy user with the id of his study
+     */
+    Map<Long, Long> findMembersInOpenStudiesOtherThan(Long studyId);
+
+    /**
+     * Lists the studies of the crews a user belongs to now (RN-097).
+     *
+     * @param userId user id
+     * @return study ids
+     */
+    List<Long> findStudyIdsOfMember(Long userId);
+
+    /**
+     * Finds the crews with an unfinished study other than the given one (RN-098).
+     *
+     * @param studyId study left out of the search; null to look at all
+     * @return id of each crew with the id of its open study
+     */
+    Map<Long, Long> findCrewsWithOpenStudiesOtherThan(Long studyId);
+
+    /**
+     * Counts the shifts of a study still open (RN-100).
+     *
+     * @param studyId study id
+     * @return open shifts
+     */
+    int countOpenShifts(Long studyId);
 
     /**
      * Gives a crew to the shifts of the study that have none (RN-088).

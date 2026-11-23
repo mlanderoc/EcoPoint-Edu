@@ -111,8 +111,19 @@ class ShiftValidatorTest {
     }
 
     @Test
+    void ca089_shiftWithoutPopulationOrSourcesCannotClose() {
+        SamplingShift shift = openShift();
+        shift.markSourceWithoutGeneration(1L);
+
+        assertThrows(BusinessRuleException.class, () -> ShiftValidator.validateCanClose(shift, Map.of(1L, "AU1")));
+        assertThrows(BusinessRuleException.class, () -> ShiftValidator.validateCanClose(shift, Map.of()));
+    }
+
+    @Test
     void ca023_shiftCanCloseWhenEverySourceIsCovered() {
         SamplingShift shift = openShift();
+        shift.registerPopulation(new com.ecopoint.model.ShiftPopulation(null, 300, 12, 6,
+                new com.ecopoint.model.VerificationInfo(11L, java.time.LocalDateTime.of(2026, 3, 4, 8, 0))));
         shift.markSourceWithoutGeneration(1L);
         shift.markSourceWithoutGeneration(2L);
 

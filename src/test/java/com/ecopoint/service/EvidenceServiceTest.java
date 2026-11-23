@@ -12,7 +12,11 @@ import com.ecopoint.model.VerificationInfo;
 import com.ecopoint.model.WasteBag;
 import com.ecopoint.persistence.EvidenceRepository;
 import com.ecopoint.persistence.QuarteringRepository;
+import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.SamplingShift;
+import com.ecopoint.model.ShiftType;
 import com.ecopoint.persistence.ShiftRepository;
+import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.WasteBagRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -52,6 +56,7 @@ class EvidenceServiceTest {
 
     private EvidenceRepository evidences;
     private EvidenceService service;
+    private FieldAccess fieldAccess;
     private final User student = new User(11L, "Laura", "Pérez", "l@unicesar.edu.co",
             UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
 
@@ -59,7 +64,13 @@ class EvidenceServiceTest {
     void setUp() {
         evidences = mock(EvidenceRepository.class);
         WasteBagRepository bags = mock(WasteBagRepository.class);
-        service = new EvidenceService(evidences, mock(ShiftRepository.class), bags, mock(QuarteringRepository.class),
+        ShiftRepository shifts = mock(ShiftRepository.class);
+        StudyRepository studies = mock(StudyRepository.class);
+        fieldAccess = mock(FieldAccess.class);
+        when(bags.findShiftId(50L)).thenReturn(Optional.of(30L));
+        when(shifts.findById(30L)).thenReturn(Optional.of(new SamplingShift(30L, 7L, 3, ShiftType.MANANA)));
+        when(studies.findById(7L)).thenReturn(Optional.of(mock(CharacterizationStudy.class)));
+        service = new EvidenceService(evidences, shifts, bags, mock(QuarteringRepository.class), studies, fieldAccess,
                 folder.toString(), Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
         when(bags.findById(50L)).thenReturn(Optional.of(new WasteBag(50L, 1L, "AU", new BigDecimal("12.40"),
                 new BigDecimal("0.40"), new BigDecimal("0.080"), new VerificationInfo(11L, NOW))));
@@ -80,7 +91,7 @@ class EvidenceServiceTest {
         assertArrayEquals(PHOTO, Files.readAllBytes(folder.resolve(saved.getFilePath())));
 
         when(evidences.findById(9L)).thenReturn(Optional.of(saved));
-        assertEquals(folder.resolve(saved.getFilePath()).toAbsolutePath().normalize(), service.file(9L).path());
+        assertEquals(folder.resolve(saved.getFilePath()).toAbsolutePath().normalize(), service.file(student, 9L).path());
     }
 
     @Test
@@ -97,6 +108,14 @@ class EvidenceServiceTest {
         try (var files = Files.walk(folder)) {
             assertFalse(files.anyMatch(Files::isRegularFile));
         }
+    }
+
+    @Test
+    void ca093_studentOutsideTheCrewCannotUploadNorSeePhotos() {
+        doThrow(new AccessDeniedException("Fuera de la cuadrilla")).when(fieldAccess).require(any(), any());
+
+        assertThrows(AccessDeniedException.class, () -> upload("balanza.jpg", "image/jpeg", PHOTO.length));
+        assertThrows(AccessDeniedException.class, () -> service.list(student, EvidenceTarget.BAG, 50L));
     }
 
     @Test
@@ -119,7 +138,7 @@ class EvidenceServiceTest {
         when(evidences.findById(8L)).thenReturn(Optional.of(new Evidence(8L, EvidenceTarget.BAG, 50L,
                 "bag/borrada.jpg", "image/jpeg", 10, null, 11L, NOW)));
 
-        assertThrows(ResourceNotFoundException.class, () -> service.file(8L));
+        assertThrows(ResourceNotFoundException.class, () -> service.file(student, 8L));
     }
 
     private Evidence upload(String name, String mimeType, long size) {

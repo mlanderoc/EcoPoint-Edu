@@ -1,7 +1,7 @@
 /**
  * Crews administration page: create and edit crews. A student can only be
  * added if he has no other open study (Spec 004, T313 / R-323 / RN-085;
- * RN-090, D15).
+ * RN-091, D15).
  *
  * @author craulgomez
  */

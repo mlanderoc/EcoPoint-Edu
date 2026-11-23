@@ -86,24 +86,28 @@ public class EvidenceController implements FieldNameMapping {
     /**
      * Lists the photos of a record.
      *
+     * @param principal  user of the session
      * @param targetType SHIFT, BAG or QUARTERING
      * @param targetId   record id
      * @return evidences
      */
     @GetMapping
-    public List<EvidenceResponse> list(@RequestParam EvidenceTarget targetType, @RequestParam Long targetId) {
-        return evidences.list(targetType, targetId).stream().map(EvidenceResponse::from).toList();
+    public List<EvidenceResponse> list(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                       @RequestParam EvidenceTarget targetType, @RequestParam Long targetId) {
+        return evidences.list(currentUser.of(principal), targetType, targetId).stream().map(EvidenceResponse::from).toList();
     }
 
     /**
      * Downloads the file of a photo.
      *
-     * @param id evidence id
+     * @param principal user of the session
+     * @param id        evidence id
      * @return the image
      */
     @GetMapping("/{id}/file")
-    public ResponseEntity<Resource> file(@PathVariable Long id) {
-        EvidenceFile stored = evidences.file(id);
+    public ResponseEntity<Resource> file(@AuthenticationPrincipal EcoPointUserDetails principal,
+                                         @PathVariable Long id) {
+        EvidenceFile stored = evidences.file(currentUser.of(principal), id);
         return ResponseEntity.ok()
                 .contentType(MediaType.parseMediaType(stored.evidence().getMimeType()))
                 .body(new FileSystemResource(stored.path()));

@@ -145,6 +145,19 @@ public final class StudyValidator {
         }
     }
 
+    /**
+     * Validates that the study has no shift left open before closing it (RN-100).
+     *
+     * @param openShifts shifts of the study still open
+     * @throws BusinessRuleException if a shift is open
+     */
+    public static void validateNoOpenShifts(int openShifts) {
+        if (openShifts > 0) {
+            throw new BusinessRuleException("No se puede cerrar el estudio: "
+                    + (openShifts == 1 ? "queda 1 turno abierto." : "quedan " + openShifts + " turnos abiertos."));
+        }
+    }
+
     private static void requireTransition(CharacterizationStudy study, StudyStatus target) {
         if (!study.getStatus().canTransitionTo(target)) {
             throw new BusinessRuleException("El estudio no puede pasar de " + study.getStatus().getDisplayName()

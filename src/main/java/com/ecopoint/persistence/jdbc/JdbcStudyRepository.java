@@ -122,6 +122,51 @@ public class JdbcStudyRepository implements StudyRepository {
     }
 
     @Override
+    public Map<Long, Long> findMembersInOpenStudiesOtherThan(Long studyId) {
+        return DataAccessTranslator.execute("buscar los integrantes de otros estudios abiertos", () -> {
+            Map<Long, Long> busy = new LinkedHashMap<>();
+            jdbc.queryForList("SELECT i.id_usuario, MIN(e.id) AS id_estudio FROM CUADRILLA_INTEGRANTE i "
+                            + "JOIN ESTUDIO e ON e.id_cuadrilla = i.id_cuadrilla "
+                            + "WHERE e.estado IN ('PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION') "
+                            + "AND (CAST(:estudio AS BIGINT) IS NULL OR e.id <> :estudio) "
+                            + "GROUP BY i.id_usuario",
+                    new MapSqlParameterSource().addValue("estudio", studyId, Types.BIGINT))
+                    .forEach(row -> busy.put(((Number) row.get("id_usuario")).longValue(),
+                            ((Number) row.get("id_estudio")).longValue()));
+            return busy;
+        });
+    }
+
+    @Override
+    public Map<Long, Long> findCrewsWithOpenStudiesOtherThan(Long studyId) {
+        return DataAccessTranslator.execute("buscar las cuadrillas con otro estudio abierto", () -> {
+            Map<Long, Long> open = new LinkedHashMap<>();
+            jdbc.queryForList("SELECT id_cuadrilla, MIN(id) AS id_estudio FROM ESTUDIO "
+                            + "WHERE id_cuadrilla IS NOT NULL "
+                            + "AND estado IN ('PLANIFICADO', 'EN_EJECUCION', 'EN_DEPURACION') "
+                            + "AND (CAST(:estudio AS BIGINT) IS NULL OR id <> :estudio) GROUP BY id_cuadrilla",
+                    new MapSqlParameterSource().addValue("estudio", studyId, Types.BIGINT))
+                    .forEach(row -> open.put(((Number) row.get("id_cuadrilla")).longValue(),
+                            ((Number) row.get("id_estudio")).longValue()));
+            return open;
+        });
+    }
+
+    @Override
+    public int countOpenShifts(Long studyId) {
+        return count("contar los turnos abiertos del estudio " + studyId,
+                "SELECT COUNT(*) FROM TURNO WHERE id_estudio = :estudio AND estado = 'ABIERTO'", studyId);
+    }
+
+    @Override
+    public List<Long> findStudyIdsOfMember(Long userId) {
+        return DataAccessTranslator.execute("listar los estudios de las cuadrillas del usuario " + userId,
+                () -> jdbc.queryForList("SELECT e.id FROM ESTUDIO e JOIN CUADRILLA_INTEGRANTE i "
+                                + "ON i.id_cuadrilla = e.id_cuadrilla WHERE i.id_usuario = :usuario ORDER BY e.id",
+                        new MapSqlParameterSource("usuario", userId), Long.class));
+    }
+
+    @Override
     public void assignCrewToShiftsWithoutCrew(Long studyId, Long crewId) {
         DataAccessTranslator.execute("asignar la cuadrilla a los turnos del estudio " + studyId,
                 () -> jdbc.update("UPDATE TURNO SET id_cuadrilla = :cuadrilla "

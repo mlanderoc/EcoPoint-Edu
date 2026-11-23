@@ -13,8 +13,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -36,7 +38,7 @@ public class CrewService {
      *
      * @param crews crew repository
      * @param users   user repository
-     * @param studies study repository, to know who has an open study (RN-090)
+     * @param studies study repository, to know who has an open study (RN-091)
      */
     public CrewService(CrewRepository crews, UserRepository users, StudyRepository studies) {
         this.crews = crews;
@@ -46,7 +48,7 @@ public class CrewService {
 
     /**
      * Lists the users that cannot join a crew because they have another open
-     * study (RN-090).
+     * study (RN-091).
      *
      * @param actor  teacher that asks
      * @param crewId crew being edited; null for a new crew
@@ -65,6 +67,32 @@ public class CrewService {
      */
     public List<Crew> list(User actor) {
         return crews.findByInstitution(actor.getInstitutionId());
+    }
+
+    /**
+     * Lists the crews that cannot take a study because they, or one of their
+     * members, are in another open study (RN-098).
+     *
+     * @param actor   teacher that asks
+     * @param studyId study being edited; null for a new one
+     * @return id of each unavailable crew with the id of the study that holds it
+     */
+    public Map<Long, Long> unavailableCrews(User actor, Long studyId) {
+        AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
+        Map<Long, Long> ofCrews = studies.findCrewsWithOpenStudiesOtherThan(studyId);
+        Map<Long, Long> ofMembers = studies.findMembersInOpenStudiesOtherThan(studyId);
+        Map<Long, Long> unavailable = new LinkedHashMap<>();
+        for (Crew crew : list(actor)) {
+            Long holder = ofCrews.get(crew.getId());
+            if (holder == null) {
+                holder = crew.getMembers().stream().map(member -> ofMembers.get(member.getId()))
+                        .filter(Objects::nonNull).findFirst().orElse(null);
+            }
+            if (holder != null) {
+                unavailable.put(crew.getId(), holder);
+            }
+        }
+        return unavailable;
     }
 
     /**

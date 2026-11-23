@@ -27,7 +27,7 @@ public class Quartering extends VerifiableRecord {
     private static final int SCALE = 2;
 
     private final Long shiftId;
-    private final BigDecimal shiftNetWeight;
+    private BigDecimal shiftNetWeight;
     private BigDecimal sampleWeight;
     private final List<QuarteringResult> results;
     private QualityStatus qualityStatus;
@@ -164,6 +164,25 @@ public class Quartering extends VerifiableRecord {
         boolean withinTolerance = calculateDifferenceKg().multiply(ONE_HUNDRED).compareTo(allowedKg) <= 0;
         this.qualityStatus = withinTolerance ? QualityStatus.CONFORME : QualityStatus.NO_CONFORME;
         return qualityStatus;
+    }
+
+    /**
+     * Marks the quartering as non-conforming because its sample no longer fits
+     * the weight of the shift (RN-093). An annulled quartering keeps its status.
+     */
+    public void markNonConforming() {
+        if (qualityStatus != QualityStatus.ANULADO) {
+            this.qualityStatus = QualityStatus.NO_CONFORME;
+        }
+    }
+
+    /**
+     * Updates the net weight of the shift after one of its bags changed (RN-093).
+     *
+     * @param shiftNetWeight current net weight of the shift, in kg
+     */
+    public void updateShiftNetWeight(BigDecimal shiftNetWeight) {
+        this.shiftNetWeight = shiftNetWeight;
     }
 
     /**

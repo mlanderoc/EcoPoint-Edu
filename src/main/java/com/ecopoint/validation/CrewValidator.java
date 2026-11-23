@@ -7,6 +7,7 @@ import com.ecopoint.model.User;
 
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Stateless validator for field crews (RN-085), applying GRASP Pure
@@ -58,7 +59,47 @@ public final class CrewValidator {
     }
 
     /**
-     * Checks that the members added to a crew have no other open study (RN-090).
+     * Checks that no member of a crew has another open study before the crew
+     * is assigned to a study (RN-098).
+     *
+     * @param crew        crew being assigned
+     * @param busyMembers id of each busy user with the id of his other study
+     * @throws BusinessRuleException naming the members that are busy
+     */
+    public static void validateMembersFreeForStudy(Crew crew, Map<Long, Long> busyMembers) {
+        requireMembersFree(crew, busyMembers);
+    }
+
+    /**
+     * Checks that a crew has no other open study and that none of its members
+     * has one, before it takes a study (RN-098).
+     *
+     * @param crew        crew being assigned
+     * @param openStudy   other open study of the crew, or null
+     * @param busyMembers id of each busy user with the id of his other study
+     * @throws BusinessRuleException if the crew or a member is busy
+     */
+    public static void validateCrewFreeForStudy(Crew crew, Long openStudy, Map<Long, Long> busyMembers) {
+        if (openStudy != null) {
+            throw new BusinessRuleException("La cuadrilla " + crew.getName() + " ya tiene abierto el Estudio N.º "
+                    + openStudy + ".");
+        }
+        requireMembersFree(crew, busyMembers);
+    }
+
+    private static void requireMembersFree(Crew crew, Map<Long, Long> busyMembers) {
+        String busy = crew.getMembers().stream()
+                .filter(member -> busyMembers.containsKey(member.getId()))
+                .map(member -> member.getFullName() + " (Estudio N.º " + busyMembers.get(member.getId()) + ")")
+                .collect(Collectors.joining(", "));
+        if (!busy.isEmpty()) {
+            throw new BusinessRuleException("No se puede asignar la cuadrilla " + crew.getName()
+                    + ": estos integrantes ya están en otro estudio abierto: " + busy + ".");
+        }
+    }
+
+    /**
+     * Checks that the members added to a crew have no other open study (RN-091).
      *
      * @param crew         crew with its members
      * @param addedMembers ids of the members being added

@@ -99,7 +99,7 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 | `institutions/{id}/map` | Ver el plano: GeoJSON de fuentes con sus indicadores | 007 |
 | `waste-categories` | Listar grupos y subcategorías (filtro por estado); crear (activa o inactiva), editar, activar y desactivar (docente) | 004, 005 |
 | `users` | Listar con filtros (rol, estado, texto) y paginación, ver, crear, editar; activar y desactivar estudiantes; ver totales de registros | 004 |
-| `crews` | Listar, crear, editar integrantes; `GET /crews/busy-members` lista los estudiantes con otro estudio abierto (RN-090, D15) | 004 |
+| `crews` | Listar, crear, editar integrantes; `GET /crews/busy-members` y `GET /crews/unavailable` indican estudiantes y cuadrillas ocupados (RN-091, RN-098); `GET /studies/verifiable` lista los estudios que el usuario puede verificar (RN-097) | 004 |
 | `studies` | Listar, ver, crear (con su cuadrilla), editar, cambiar estado, cancelar (con motivo), eliminar si está planificado | 004, 006 |
 | `studies/field` | Estudios en ejecución para el registro en campo: todos para el docente; para el estudiante, los de su cuadrilla (RN-089, D14) | 004 |
 | `studies/{id}/crew` | Cambiar la cuadrilla de un estudio planificado (RN-088, D14) | 004 |
