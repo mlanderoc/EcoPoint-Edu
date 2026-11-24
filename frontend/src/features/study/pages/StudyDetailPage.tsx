@@ -20,7 +20,7 @@ import { studyService } from '../services/studyService'
 import { formatDate } from '../utils/samplingDays'
 import { NEXT_STEP, STATUS_LABELS, canCancel, canDelete, studyTitle } from '../utils/studyStatus'
 
-type Dialog = 'status' | 'cancel' | 'delete' | null
+type Dialog = 'status' | 'return' | 'cancel' | 'delete' | null
 
 function slotLabel(slot: ShiftSlot | undefined): string {
   if (!slot || slot.status === null) return 'Sin abrir'
@@ -109,6 +109,10 @@ export function StudyDetailPage() {
     setStudy(await studyService.changeStatus(study.id, step.target, step.needsReason ? reason : undefined))
   }, 'No se pudo cambiar el estado del estudio.')
 
+  const handleReturn = () => run(async () => {
+    setStudy(await studyService.changeStatus(study.id, 'EN_EJECUCION', reason.trim()))
+  }, 'No se pudo devolver el estudio a ejecución.')
+
   const handleCancel = () => run(async () => {
     setStudy(await studyService.cancel(study.id, reason.trim()))
   }, 'No se pudo cancelar el estudio.')
@@ -143,6 +147,11 @@ export function StudyDetailPage() {
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          {study.status === 'EN_DEPURACION' && (
+            <Button variant="outline" className="min-h-[48px]" onClick={() => setDialog('return')}>
+              Devolver a ejecución
+            </Button>
+          )}
           {canCancel(study.status) && (
             <Button variant="outline" className="min-h-[48px] text-[var(--color-danger)]"
               onClick={() => setDialog('cancel')}>
@@ -276,6 +285,21 @@ export function StudyDetailPage() {
           </div>
         </Modal>
       )}
+
+      <Modal open={dialog === 'return'} onClose={closeDialog} title="Devolver a ejecución"
+        description="El estudio vuelve a ejecución para completar los turnos pendientes. El motivo queda registrado con su nombre y la fecha.">
+        <div className="flex flex-col gap-4 mt-2">
+          <Input id="return-reason" label="Motivo" value={reason} onChange={(event) => setReason(event.target.value)}
+            disabled={isSaving} required />
+          <div className="flex justify-end gap-3">
+            <Button variant="outline" className="min-h-[48px]" onClick={closeDialog} disabled={isSaving}>Volver</Button>
+            <Button className="min-h-[48px]" onClick={handleReturn} isLoading={isSaving}
+              disabled={isSaving || !reason.trim()}>
+              Confirmar
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal open={dialog === 'cancel'} onClose={closeDialog} title="Cancelar estudio"
         description="La cancelación es definitiva: el estudio deja de aparecer en Registro en campo y en Indicadores, y sus fechas quedan libres para otro estudio. Los datos se conservan.">

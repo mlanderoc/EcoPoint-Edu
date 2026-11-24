@@ -63,7 +63,7 @@ public record QuarteringResponse(Long id, Long shiftId, BigDecimal shiftNetWeigh
                 Decimals.show(quartering.getShiftNetWeight()), quartering.getSampleWeight(),
                 Decimals.show(quartering.calculateTotalClassifiedWeight()),
                 Decimals.show(quartering.calculateDifferenceKg()),
-                Decimals.show(quartering.calculateDifferencePercent()), quartering.getQualityStatus(), results,
+                quartering.displayDifferencePercent(), quartering.getQualityStatus(), results,
                 quartering.calculateGroupComposition(), quartering.getAnnulReason(), quartering.getAnnulledBy(),
                 quartering.getAnnulledAt(), VerificationDto.from(quartering.getVerification()));
     }

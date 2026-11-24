@@ -1,5 +1,6 @@
 package com.ecopoint.service;
 
+import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.AccessDeniedException;
 import com.ecopoint.exceptions.InvalidDataException;
 import com.ecopoint.exceptions.PersistenceException;
@@ -15,6 +16,7 @@ import com.ecopoint.persistence.QuarteringRepository;
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.SamplingShift;
 import com.ecopoint.model.ShiftType;
+import com.ecopoint.model.StudyStatus;
 import com.ecopoint.persistence.ShiftRepository;
 import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.WasteBagRepository;
@@ -57,6 +59,7 @@ class EvidenceServiceTest {
     private EvidenceRepository evidences;
     private EvidenceService service;
     private FieldAccess fieldAccess;
+    private CharacterizationStudy study;
     private final User student = new User(11L, "Laura", "Pérez", "l@unicesar.edu.co",
             UserRole.ESTUDIANTE_UNIVERSITARIO, 1L);
 
@@ -69,7 +72,9 @@ class EvidenceServiceTest {
         fieldAccess = mock(FieldAccess.class);
         when(bags.findShiftId(50L)).thenReturn(Optional.of(30L));
         when(shifts.findById(30L)).thenReturn(Optional.of(new SamplingShift(30L, 7L, 3, ShiftType.MANANA)));
-        when(studies.findById(7L)).thenReturn(Optional.of(mock(CharacterizationStudy.class)));
+        study = mock(CharacterizationStudy.class);
+        when(study.getStatus()).thenReturn(StudyStatus.EN_EJECUCION);
+        when(studies.findById(7L)).thenReturn(Optional.of(study));
         service = new EvidenceService(evidences, shifts, bags, mock(QuarteringRepository.class), studies, fieldAccess,
                 folder.toString(), Clock.fixed(NOW.toInstant(ZoneOffset.UTC), ZoneOffset.UTC));
         when(bags.findById(50L)).thenReturn(Optional.of(new WasteBag(50L, 1L, "AU", new BigDecimal("12.40"),
@@ -116,6 +121,15 @@ class EvidenceServiceTest {
 
         assertThrows(AccessDeniedException.class, () -> upload("balanza.jpg", "image/jpeg", PHOTO.length));
         assertThrows(AccessDeniedException.class, () -> service.list(student, EvidenceTarget.BAG, 50L));
+    }
+
+    @Test
+    void rn102_finishedStudyDoesNotReceivePhotos() {
+        when(study.getStatus()).thenReturn(StudyStatus.CERRADO);
+        assertThrows(BusinessRuleException.class, () -> upload("balanza.jpg", "image/jpeg", PHOTO.length));
+
+        when(study.getStatus()).thenReturn(StudyStatus.CANCELADO);
+        assertThrows(BusinessRuleException.class, () -> upload("balanza.jpg", "image/jpeg", PHOTO.length));
     }
 
     @Test

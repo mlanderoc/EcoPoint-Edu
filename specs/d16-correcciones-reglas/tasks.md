@@ -12,4 +12,5 @@
 - [x] **C04. Servicios.** Permisos por cuadrilla y orquestación de las correcciones. *(Estefanía; alertas, Carlos)*
 - [x] **C05. API.** Rutas con usuario de sesión y estudios o cuadrillas disponibles. *(Carlos)*
 - [x] **C06. Pantallas.** Verificación, Indicadores, corrección de cuarteo, usuarios y cuadrillas ocupadas. *(Carlos)*
+- [x] **C08. Segunda ronda.** RN-101 a RN-103 y ajustes de cuarteo, alertas, indicadores, PDF, sesiones, permisos y pantallas. *(Merlín, Estefanía y Carlos)*
 - [ ] **C07. Aprobación del equipo** y revisión de Antigravity.

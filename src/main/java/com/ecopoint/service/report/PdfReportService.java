@@ -1,5 +1,6 @@
 package com.ecopoint.service.report;
 
+import com.ecopoint.model.CharacterizationSettings;
 import com.ecopoint.exceptions.PersistenceException;
 import com.ecopoint.model.User;
 import com.ecopoint.service.IndicatorService;
@@ -67,9 +68,9 @@ public class PdfReportService {
     private static final String METHODOLOGY = "El estudio sigue el protocolo de caracterización participativa: "
             + "8 días de muestreo con turnos de mañana y tarde. Los residuos del día 1 se acumularon antes del "
             + "estudio, por eso se pesan pero no entran en los cálculos (n = 7 días). Cada bolsa se pesa por fuente "
-            + "de generación; la composición se obtiene por cuarteo de una submuestra de 45 a 55 kg "
+            + "de generación; la composición se obtiene por cuarteo de una submuestra de %s a %s kg "
             + "(NMX-AA-015) y la densidad con un recipiente de volumen conocido (NMX-AA-019). Un cuarteo es "
-            + "conforme si la suma clasificada difiere de la submuestra en 2 % o menos. Cada dato lo verifica una "
+            + "conforme si la suma clasificada difiere de la submuestra en %s %% o menos. Cada dato lo verifica una "
             + "persona distinta de quien lo digitó.";
 
     private final IndicatorService indicators;
@@ -127,7 +128,7 @@ public class PdfReportService {
             document.open();
             cover(document, report, generatedAt.toLocalDate());
             document.newPage();
-            methodology(document);
+            methodology(document, report.settings());
             baseline(document, report.indicators());
             composition(document, report.indicators().composition());
             sources(document, report.indicators());
@@ -169,9 +170,14 @@ public class PdfReportService {
         document.add(data);
     }
 
-    private static void methodology(Document document) throws DocumentException {
+    private static String plain(BigDecimal value) {
+        return value.stripTrailingZeros().toPlainString().replace('.', ',');
+    }
+
+    private static void methodology(Document document, CharacterizationSettings settings) throws DocumentException {
         document.add(heading(SECTIONS.get(0)));
-        Paragraph paragraph = new Paragraph(METHODOLOGY, BODY);
+        Paragraph paragraph = new Paragraph(METHODOLOGY.formatted(plain(settings.minSampleWeight()),
+                plain(settings.maxSampleWeight()), plain(settings.qualityTolerancePercent())), BODY);
         paragraph.setAlignment(Element.ALIGN_JUSTIFIED);
         paragraph.setLeading(14);
         document.add(paragraph);

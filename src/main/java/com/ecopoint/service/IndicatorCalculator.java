@@ -1,6 +1,7 @@
 package com.ecopoint.service;
 
 import com.ecopoint.model.CharacterizationStudy;
+import com.ecopoint.model.DensityMeasurement;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.QualityStatus;
 import com.ecopoint.model.Quartering;
@@ -134,7 +135,15 @@ public final class IndicatorCalculator {
 
     private static BigDecimal averageDensity(List<SamplingShift> shifts) {
         return average(shifts.stream().filter(SamplingShift::hasDensity)
-                .map(shift -> shift.getDensity().getDensity()).filter(Objects::nonNull).toList());
+                .map(shift -> exactDensity(shift.getDensity())).filter(Objects::nonNull).toList());
+    }
+
+    private static BigDecimal exactDensity(DensityMeasurement density) {
+        if (density.getNetWeight() == null || density.getContainerVolume() == null
+                || density.getContainerVolume().signum() <= 0) {
+            return null;
+        }
+        return density.getNetWeight().divide(density.getContainerVolume(), PRECISION);
     }
 
     /**
@@ -146,7 +155,7 @@ public final class IndicatorCalculator {
      */
     static StudyIndicators.Composition composition(List<SamplingShift> shifts, int expectedShifts) {
         List<Quartering> valid = shifts.stream().filter(SamplingShift::hasQuartering).map(SamplingShift::getQuartering)
-                .filter(quartering -> quartering.getQualityStatus() != QualityStatus.ANULADO).toList();
+                .filter(quartering -> quartering.getQualityStatus() == QualityStatus.CONFORME).toList();
         List<QuarteringResult> results = valid.stream().flatMap(quartering -> quartering.getResults().stream()).toList();
         BigDecimal total = sum(results.stream().map(QuarteringResult::getWeight));
 

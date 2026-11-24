@@ -123,6 +123,25 @@ describe('Study lifecycle (T316, R-332, CA-309)', () => {
     expect(screen.getByRole('button', { name: 'Cerrar estudio' })).toBeInTheDocument()
   })
 
+  it('rn101_studyInDataCleaningCanReturnToExecutionWithAReason', async () => {
+    resetMockState('DOCENTE')
+    const user = userEvent.setup()
+    server.use(
+      http.get('/api/v1/studies/:id', () => HttpResponse.json({
+        id: 2, institutionId: 1, status: 'EN_DEPURACION', startDate: '2026-03-02', endDate: '2026-03-11',
+        days: [], participatingSourceIds: [], pendingRecords: 0,
+      }))
+    )
+    renderAt('/estudios/2')
+
+    await user.click(await screen.findByRole('button', { name: 'Devolver a ejecución' }))
+    const confirm = await screen.findByRole('button', { name: 'Confirmar' })
+    expect(confirm).toBeDisabled()
+
+    await user.type(screen.getByLabelText('Motivo'), 'Falta completar un turno')
+    expect(confirm).toBeEnabled()
+  })
+
   it('rn017_reopeningAClosedStudyAsksForAReason', async () => {
     resetMockState('DOCENTE')
     const user = userEvent.setup()

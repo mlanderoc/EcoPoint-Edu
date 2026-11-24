@@ -65,7 +65,7 @@ public class JdbcAlertRepository implements AlertRepository {
                             + ":observacion) RETURNING id", params, Long.class)));
         } else {
             DataAccessTranslator.execute("guardar la atención de la alerta " + alert.getId(),
-                    () -> jdbc.update("UPDATE ALERTA SET atendida = :atendida, atendida_por = :atendidaPor, "
+                    () -> jdbc.update("UPDATE ALERTA SET descripcion = :descripcion, atendida = :atendida, atendida_por = :atendidaPor, "
                             + "atendida_en = :atendidaEn, observacion_atencion = :observacion WHERE id = :id",
                             params.addValue("id", alert.getId())));
         }

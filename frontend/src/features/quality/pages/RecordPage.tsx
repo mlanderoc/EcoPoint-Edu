@@ -111,7 +111,7 @@ export function RecordPage() {
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       <RecordCard record={record}>
         <p className="text-xs text-slate-500">
-          Digitado por el usuario {record.verification.enteredBy ?? '—'}
+          Digitado por {record.enteredByName ?? (record.verification.enteredBy ? `el usuario ${record.verification.enteredBy}` : '—')}
           {record.verification.enteredAt ? ` el ${new Date(record.verification.enteredAt).toLocaleString('es-CO')}` : ''}
         </p>
       </RecordCard>
@@ -160,7 +160,7 @@ export function RecordPage() {
                 return (
                   <li key={index} className="border-b border-slate-100 pb-2">
                     <strong>{label}</strong>: {entry.oldValue === null ? 'Sin registrar' : formatValue(Number(entry.oldValue))} → {formatValue(Number(entry.newValue))}
-                    <br />Motivo: {entry.reason} · usuario {entry.userId} · {new Date(entry.at).toLocaleString('es-CO')}
+                    <br />Motivo: {entry.reason} · {entry.userName ?? `usuario ${entry.userId}`} · {new Date(entry.at).toLocaleString('es-CO')}
                   </li>
                 )
               })}

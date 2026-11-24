@@ -25,7 +25,7 @@ import { qualityService } from '../services/qualityService'
 import { settingsOfStudy } from '@/features/study/services/studySettings'
 import { CompositionChart } from '../components/CompositionChart'
 import {
-  DEFAULT_QUARTERING_SETTINGS, checkQuality, formatKg, proposedFullSample, sampleError,
+  DEFAULT_QUARTERING_SETTINGS, checkQuality, formatKg, formatPercent, proposedFullSample, sampleError,
 } from '../utils/quarteringMath'
 
 const GROUPS: WasteGroup[] = ['BLANCO', 'VERDE', 'NEGRO', 'SIN_COLOR']
@@ -59,16 +59,21 @@ export function QuarteringPage() {
       .then(([loadedShift, loadedQuartering, loadedCategories]) => {
         setShift(loadedShift)
         setQuartering(loadedQuartering)
-        settingsOfStudy(loadedShift.studyId)
-          .then((found) => { if (found) setSettings(found) })
-          .catch(() => undefined)
         setCategories(loadedCategories.filter((category) => category.active))
-        const full = proposedFullSample(loadedShift.totalNetWeight)
-        if (full !== null) {
-          const proposed = String(full).replace('.', ',')
-          setSample(proposed)
-          setProposedSample(proposed)
+        const propose = (limits: typeof DEFAULT_QUARTERING_SETTINGS) => {
+          const full = proposedFullSample(loadedShift.totalNetWeight, limits)
+          if (full !== null) {
+            const proposed = String(full).replace('.', ',')
+            setSample(proposed)
+            setProposedSample(proposed)
+          }
         }
+        settingsOfStudy(loadedShift.studyId)
+          .then((found) => {
+            if (found) setSettings(found)
+            propose(found ?? DEFAULT_QUARTERING_SETTINGS)
+          })
+          .catch(() => propose(DEFAULT_QUARTERING_SETTINGS))
       })
       .catch((err) => setError(err instanceof ApiError ? err.message : 'No se pudo cargar el cuarteo.'))
   }, [shiftId])
@@ -127,7 +132,7 @@ export function QuarteringPage() {
         {error && <AlertBanner variant="danger" message={error} />}
         {nonConforming && (
           <AlertBanner variant="danger" title="Cuarteo no conforme: repesar"
-            message={`La diferencia es ${formatKg(quartering.differenceKg)} kg (${formatKg(quartering.differencePercent)} %), más del ${formatKg(settings.qualityTolerancePercent, 0)} %. Corrija los pesos desde la verificación o anule el cuarteo con su motivo.`} />
+            message={`La diferencia es ${formatKg(quartering.differenceKg)} kg (${formatPercent(quartering.differencePercent)} %), más del ${formatKg(settings.qualityTolerancePercent, 0)} %. Corrija los pesos desde la verificación o anule el cuarteo con su motivo.`} />
         )}
         {quartering.qualityStatus === 'ANULADO' && (
           <AlertBanner variant="info" title="Cuarteo anulado" message={`Motivo: ${quartering.annulReason}`} />
@@ -183,7 +188,7 @@ export function QuarteringPage() {
       {shift.status !== 'ABIERTO' && (
         <AlertBanner variant="warning" message="El turno está cerrado: no se puede registrar el cuarteo." />
       )}
-      {proposedFullSample(shift.totalNetWeight) !== null && (
+      {proposedFullSample(shift.totalNetWeight, settings) !== null && (
         <AlertBanner variant="info" title="Muestra completa"
           message={`El turno generó ${formatKg(shift.totalNetWeight)} kg, menos que la submuestra mínima: se clasifica todo.`} />
       )}
@@ -201,7 +206,7 @@ export function QuarteringPage() {
               <div><p className="m-0 text-xs text-slate-500">Submuestra</p><strong>{formatKg(sampleValue ?? 0)} kg</strong></div>
               <div>
                 <p className="m-0 text-xs text-slate-500">Diferencia</p>
-                <strong>{formatKg(check.differenceKg)} kg ({formatKg(check.differencePercent)} %)</strong>
+                <strong>{formatKg(check.differenceKg)} kg ({formatPercent(check.differencePercent)} %)</strong>
               </div>
             </div>
             <p className={cn('m-0 text-center font-bold', conforming ? 'text-emerald-700' : 'text-red-700')}>

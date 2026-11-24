@@ -13,20 +13,22 @@ import java.time.LocalDateTime;
  * @param reason   reason written by the user
  * @param userId   user that corrected it
  * @param at       when it was corrected
+ * @param userName name of the user that corrected it, or null
  * @author craulgomez
  * @version 1.0
  */
 public record CorrectionResponse(String field, String oldValue, String newValue, String reason, Long userId,
-                                 LocalDateTime at) {
+                                 LocalDateTime at, String userName) {
 
     /**
      * Copies a correction of the domain.
      *
      * @param correction domain correction
+     * @param userName   name of the user that corrected it, or null
      * @return the response
      */
-    public static CorrectionResponse from(Correction correction) {
+    public static CorrectionResponse from(Correction correction, String userName) {
         return new CorrectionResponse(correction.field(), correction.oldValue(), correction.newValue(),
-                correction.reason(), correction.userId(), correction.at());
+                correction.reason(), correction.userId(), correction.at(), userName);
     }
 }

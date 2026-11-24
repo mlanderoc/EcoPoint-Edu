@@ -23,12 +23,13 @@ import java.util.List;
  * @param title        short title, e.g. "Bolsa AU-D3-M"
  * @param fields       typed and calculated values; the editable ones are the fields the correction accepts
  * @param verification double-entry data
+ * @param enteredByName name of the user that typed it, or null
  * @author craulgomez
  * @version 1.0
  */
 public record VerifiableRecordResponse(String recordType, String recordName, Long recordId, Long shiftId,
                                        String shiftCode, String title, List<RecordField> fields,
-                                       VerificationDto verification) {
+                                       VerificationDto verification, String enteredByName) {
 
     /**
      * One value of the record.
@@ -44,15 +45,16 @@ public record VerifiableRecordResponse(String recordType, String recordName, Lon
     /**
      * Copies a record found by the verification service.
      *
-     * @param view record with its kind and shift
+     * @param view          record with its kind and shift
+     * @param enteredByName name of the user that typed it, or null
      * @return the response
      */
-    public static VerifiableRecordResponse from(RecordView view) {
+    public static VerifiableRecordResponse from(RecordView view, String enteredByName) {
         VerifiableRecord record = view.record();
         SamplingShift shift = view.shift();
         return new VerifiableRecordResponse(view.kind().getPath(), record.getRecordType(), record.getId(),
                 shift.getId(), shift.getCode(), titleOf(record, shift), fieldsOf(record),
-                VerificationDto.from(record.getVerification()));
+                VerificationDto.from(record.getVerification()), enteredByName);
     }
 
     private static String titleOf(VerifiableRecord record, SamplingShift shift) {
@@ -82,7 +84,7 @@ public record VerifiableRecordResponse(String recordType, String recordName, Lon
             quartering.getResults().forEach(result -> fields.add(new RecordField("result:" + result.getCategoryId(),
                     result.getCategoryName() + " (kg)", result.getWeight(), true)));
             fields.add(new RecordField("differencePercent", "Diferencia (%)",
-                    Decimals.show(quartering.calculateDifferencePercent()), false));
+                    quartering.displayDifferencePercent(), false));
             fields.add(new RecordField("qualityStatus", "Control del 2 %",
                     quartering.getQualityStatus() == null ? null : quartering.getQualityStatus().getDisplayName(), false));
         } else if (record instanceof DensityMeasurement density) {

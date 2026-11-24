@@ -57,7 +57,8 @@ public class JdbcVerificationRepository implements VerificationRepository {
     public List<PendingRecord> findPendingByStudy(Long studyId) {
         return DataAccessTranslator.execute("listar los registros pendientes del estudio " + studyId,
                 () -> jdbc.query("SELECT tipo_registro, id_registro, id_turno FROM V_REGISTROS_PENDIENTES "
-                                + "WHERE id_estudio = :estudio ORDER BY id_turno, tipo_registro, id_registro",
+                                + "WHERE id_estudio = :estudio AND NOT (tipo_registro = 'Cuarteo' AND id_registro IN (SELECT id FROM CUARTEO WHERE estado_calidad = 'ANULADO')) "
+                                + "ORDER BY id_turno, tipo_registro, id_registro",
                         new MapSqlParameterSource("estudio", studyId),
                         (rs, row) -> new PendingRecord(rs.getString("tipo_registro"), rs.getLong("id_registro"),
                                 rs.getLong("id_turno"))));

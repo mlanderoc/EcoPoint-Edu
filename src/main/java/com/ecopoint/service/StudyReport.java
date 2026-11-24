@@ -1,5 +1,6 @@
 package com.ecopoint.service;
 
+import com.ecopoint.model.CharacterizationSettings;
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Correction;
 import com.ecopoint.model.SamplingShift;
@@ -16,9 +17,11 @@ import java.util.List;
  * @param indicators      indicators with full precision
  * @param corrections     correction history of the study records
  * @param crews           names of the crews that worked the shifts (R-530)
+ * @param settings        sampling limits of the institution
  * @author EstefaniaMarquez
  * @version 1.1
  */
 public record StudyReport(CharacterizationStudy study, String institutionName, List<SamplingShift> shifts,
-                          StudyIndicators indicators, List<Correction> corrections, List<String> crews) {
+                          StudyIndicators indicators, List<Correction> corrections, List<String> crews,
+                          CharacterizationSettings settings) {
 }

@@ -2,6 +2,7 @@ package com.ecopoint.service;
 
 import com.ecopoint.exceptions.BusinessRuleException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
+import com.ecopoint.model.CharacterizationSettings;
 import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Correction;
 import com.ecopoint.model.Crew;
@@ -103,7 +104,10 @@ public class IndicatorService {
         CharacterizationStudy study = findStudy(studyId);
         fieldAccess.require(actor, study);
         List<SamplingShift> studyShifts = shifts.findByStudy(studyId);
-        String institutionName = institutions.findById(study.getInstitutionId()).map(Institution::getName).orElse("");
+        Optional<Institution> institution = institutions.findById(study.getInstitutionId());
+        String institutionName = institution.map(Institution::getName).orElse("");
+        CharacterizationSettings settings = institution.map(Institution::getSettings)
+                .orElseGet(CharacterizationSettings::defaults);
         List<Correction> history = studyShifts.stream().flatMap(IndicatorService::recordsOf)
                 .flatMap(record -> corrections.findByRecord(record.getRecordType(), record.getId()).stream())
                 .sorted(Comparator.comparing(Correction::at))
@@ -111,7 +115,7 @@ public class IndicatorService {
         List<String> crewNames = studyShifts.stream().map(SamplingShift::getCrewId).filter(Objects::nonNull)
                 .distinct().map(crews::findById).flatMap(Optional::stream).map(Crew::getName).sorted().toList();
         return new StudyReport(study, institutionName, studyShifts,
-                IndicatorCalculator.calculate(study, studyShifts, sourcesOf(study)), history, crewNames);
+                IndicatorCalculator.calculate(study, studyShifts, sourcesOf(study)), history, crewNames, settings);
     }
 
     /**

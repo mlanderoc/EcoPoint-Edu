@@ -182,6 +182,9 @@ Esta spec es la base de las demás: las specs 002 a 007 citan sus reglas (RN-xxx
 - **RN-098** (Debe, propuesta D16). Una cuadrilla tiene un solo estudio abierto. No toma ni reabre un estudio si ella o alguno de sus integrantes ya está en otro estudio PLANIFICADO, EN_EJECUCION o EN_DEPURACION.
 - **RN-099** (Debe, propuesta D16). Un cuarteo tiene como máximo una alerta abierta. Se cierra sola, con una nota, cuando el cuarteo queda conforme o se anula.
 - **RN-100** (Debe, propuesta D16). Un estudio no se cierra con turnos abiertos. En un estudio CERRADO o CANCELADO no se cierran turnos ni se anulan cuarteos.
+- **RN-101** (Debe, propuesta D16). Un DOCENTE puede devolver un estudio EN_DEPURACION a EN_EJECUCION, con motivo obligatorio, para completar turnos abiertos. Queda registrado quién, cuándo y por qué.
+- **RN-102** (Debe, propuesta D16). Un estudio CERRADO o CANCELADO no recibe evidencias nuevas.
+- **RN-103** (Debe, propuesta D16). La composición solo usa cuarteos CONFORMES. Un cuarteo anulado no cuenta como registro pendiente para cerrar el estudio.
 
 - **RN-090** (Debería). Se pueden adjuntar evidencias (foto de la balanza, de la bolsa o de la planilla en papel) a una bolsa, un cuarteo o un turno. Formatos JPG o PNG, máximo 5 MB cada una.
 

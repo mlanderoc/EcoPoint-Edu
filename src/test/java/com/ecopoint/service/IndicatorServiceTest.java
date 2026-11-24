@@ -117,8 +117,18 @@ class IndicatorServiceTest {
     void ca503_annulledQuarteringExcludedFromComposition() {
         quartering(studyShifts.get(2), "50", "10", "25", "15");
         Quartering annulled = quartering(studyShifts.get(3), "50", "30", "1", "1");
-        annulled.evaluateQuality(new BigDecimal("2"));
         annulled.annul("Se perdió la submuestra", 1L, NOW);
+
+        StudyIndicators indicators = service.calculate(teacher, 7L);
+
+        assertEquals("20.00", groupShare(indicators, WasteGroup.BLANCO));
+        assertEquals(1, indicators.composition().shiftsWithQuartering());
+    }
+
+    @Test
+    void rn103_nonConformingQuarteringExcludedFromComposition() {
+        quartering(studyShifts.get(2), "50", "10", "25", "15");
+        quartering(studyShifts.get(3), "50", "30", "1", "1");
 
         StudyIndicators indicators = service.calculate(teacher, 7L);
 
@@ -198,6 +208,7 @@ class IndicatorServiceTest {
         quartering.addResult(new QuarteringResult(1L, "Papel", WasteGroup.BLANCO, new BigDecimal(white)));
         quartering.addResult(new QuarteringResult(4L, "Restos de comida", WasteGroup.VERDE, new BigDecimal(green)));
         quartering.addResult(new QuarteringResult(6L, "Sanitarios", WasteGroup.NEGRO, new BigDecimal(black)));
+        quartering.evaluateQuality(new BigDecimal("2"));
         shift.registerQuartering(quartering);
         return quartering;
     }

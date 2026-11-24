@@ -8,6 +8,8 @@ import com.ecopoint.dto.VerificationSummaryResponse;
 import com.ecopoint.model.VerifiableRecord;
 import com.ecopoint.security.EcoPointUserDetails;
 import com.ecopoint.service.RecordKind;
+import com.ecopoint.service.RecordView;
+import com.ecopoint.service.UserDirectory;
 import com.ecopoint.service.VerificationService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,16 +42,20 @@ public class VerificationController implements FieldNameMapping {
 
     private final VerificationService verifications;
     private final CurrentUser currentUser;
+    private final UserDirectory directory;
 
     /**
      * Creates the controller.
      *
      * @param verifications verification service
      * @param currentUser   user of the session
+     * @param directory     names of the users
      */
-    public VerificationController(VerificationService verifications, CurrentUser currentUser) {
+    public VerificationController(VerificationService verifications, CurrentUser currentUser,
+                                  UserDirectory directory) {
         this.verifications = verifications;
         this.currentUser = currentUser;
+        this.directory = directory;
     }
 
     @Override
@@ -123,7 +129,7 @@ public class VerificationController implements FieldNameMapping {
     public List<CorrectionResponse> history(@AuthenticationPrincipal EcoPointUserDetails principal,
                                             @PathVariable String recordType, @PathVariable Long recordId) {
         return verifications.history(currentUser.of(principal), RecordKind.fromPath(recordType), recordId).stream()
-                .map(CorrectionResponse::from)
+                .map(correction -> CorrectionResponse.from(correction, directory.nameOf(correction.userId())))
                 .toList();
     }
 
@@ -151,7 +157,7 @@ public class VerificationController implements FieldNameMapping {
     public List<VerifiableRecordResponse> shiftRecords(@AuthenticationPrincipal EcoPointUserDetails principal,
                                                        @PathVariable Long shiftId) {
         return verifications.shiftRecords(currentUser.of(principal), shiftId).stream()
-                .map(VerifiableRecordResponse::from).toList();
+                .map(this::toResponse).toList();
     }
 
     /**
@@ -165,7 +171,10 @@ public class VerificationController implements FieldNameMapping {
     @GetMapping("/api/v1/records/{recordType}/{recordId}")
     public VerifiableRecordResponse record(@AuthenticationPrincipal EcoPointUserDetails principal,
                                            @PathVariable String recordType, @PathVariable Long recordId) {
-        return VerifiableRecordResponse.from(verifications.record(currentUser.of(principal),
-                RecordKind.fromPath(recordType), recordId));
+        return toResponse(verifications.record(currentUser.of(principal), RecordKind.fromPath(recordType), recordId));
+    }
+
+    private VerifiableRecordResponse toResponse(RecordView view) {
+        return VerifiableRecordResponse.from(view, directory.nameOf(view.record().getVerification().getEnteredBy()));
     }
 }

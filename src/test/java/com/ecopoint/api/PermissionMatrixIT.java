@@ -64,6 +64,18 @@ class PermissionMatrixIT extends PostgresIntegrationTest {
     }
 
     @Test
+    void r352_changingThePasswordClosesTheOtherSessions() throws Exception {
+        ApiClient otherSession = ApiClient.loggedIn(mvc, STUDENT, PASSWORD);
+
+        student.json(post("/api/v1/auth/me/password"),
+                "{\"currentPassword\":\"" + PASSWORD + "\",\"newPassword\":\"OtraClave2027\"}")
+                .andExpect(status().isNoContent());
+
+        otherSession.perform(get("/api/v1/auth/me")).andExpect(status().isUnauthorized());
+        student.perform(get("/api/v1/auth/me")).andExpect(status().isOk());
+    }
+
+    @Test
     void ca203_manageStudiesOnlyForTheTeacher() throws Exception {
         Long freeCrew = jdbc.queryForObject("INSERT INTO CUADRILLA (nombre, id_responsable) "
                 + "SELECT 'Cuadrilla libre', id_responsable FROM CUADRILLA LIMIT 1 RETURNING id", Long.class);

@@ -35,7 +35,7 @@ public final class AlertFactory {
             throw new BusinessRuleException("Solo un cuarteo no conforme genera esta alerta.");
         }
         String description = "Cuarteo no conforme en el turno " + shiftCode + ": la diferencia entre la "
-                + "submuestra y lo clasificado es de " + spanish(quartering.calculateDifferencePercent())
+                + "submuestra y lo clasificado es de " + spanish(quartering.displayDifferencePercent())
                 + " % (" + spanish(quartering.calculateDifferenceKg()) + " kg). Vuelva a pesar.";
         return new Alert(null, AlertType.CUARTEO_NO_CONFORME, quartering.getRecordType(), quartering.getId(),
                 description, at);

@@ -272,6 +272,7 @@ export interface VerifiableRecord {
   title: string
   fields: RecordField[]
   verification: Verification
+  enteredByName?: string | null
 }
 
 export interface ShiftVerificationProgress {
@@ -301,6 +302,7 @@ export interface CorrectionEntry {
   newValue: string | null
   reason: string
   userId: number
+  userName?: string | null
   at: string
 }
 
@@ -313,6 +315,7 @@ export interface Alert {
   createdAt: string
   attended: boolean
   attendedBy: number | null
+  attendedByName?: string | null
   attendedAt: string | null
   note: string | null
 }

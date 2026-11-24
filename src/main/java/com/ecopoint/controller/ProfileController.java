@@ -3,7 +3,9 @@ package com.ecopoint.controller;
 import com.ecopoint.dto.PasswordChangeRequest;
 import com.ecopoint.dto.ProfileResponse;
 import com.ecopoint.security.EcoPointUserDetails;
+import com.ecopoint.security.SessionControl;
 import com.ecopoint.service.ProfileService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,16 +33,19 @@ public class ProfileController implements FieldNameMapping {
 
     private final ProfileService profiles;
     private final CurrentUser currentUser;
+    private final SessionControl sessions;
 
     /**
      * Creates the controller.
      *
      * @param profiles    profile service
      * @param currentUser user of the session
+     * @param sessions    registry of the open sessions
      */
-    public ProfileController(ProfileService profiles, CurrentUser currentUser) {
+    public ProfileController(ProfileService profiles, CurrentUser currentUser, SessionControl sessions) {
         this.profiles = profiles;
         this.currentUser = currentUser;
+        this.sessions = sessions;
     }
 
     @Override
@@ -65,11 +70,13 @@ public class ProfileController implements FieldNameMapping {
      *
      * @param principal user of the session
      * @param request   current and new password
+     * @param http      current request, whose session stays open
      */
     @PostMapping("/password")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void changePassword(@AuthenticationPrincipal EcoPointUserDetails principal,
-                               @RequestBody PasswordChangeRequest request) {
+                               @RequestBody PasswordChangeRequest request, HttpServletRequest http) {
         profiles.changePassword(currentUser.of(principal), request.currentPassword(), request.newPassword());
+        sessions.closeOtherSessions(principal, http.getSession().getId());
     }
 }

@@ -187,6 +187,20 @@ class StudyServiceTest {
     }
 
     @Test
+    void rn101_studyInDataCleaningReturnsToExecutionWithAReason() {
+        stored(StudyStatus.EN_DEPURACION);
+
+        assertThrows(InvalidDataException.class, () -> service.changeStatus(teacher, 7L, StudyStatus.EN_EJECUCION, " "));
+        assertThrows(AccessDeniedException.class,
+                () -> service.changeStatus(student, 7L, StudyStatus.EN_EJECUCION, "Falta un turno"));
+
+        CharacterizationStudy back = service.changeStatus(teacher, 7L, StudyStatus.EN_EJECUCION, "Falta un turno");
+
+        assertEquals(StudyStatus.EN_EJECUCION, back.getStatus());
+        assertEquals("Falta un turno", back.getReopenings().get(0).reason());
+    }
+
+    @Test
     void ca203_studentCannotCreateAStudy() {
         assertThrows(AccessDeniedException.class, () -> service.create(student, INSTITUTION, CREW, eightDays(MONDAY)));
         verify(studies, never()).save(any());

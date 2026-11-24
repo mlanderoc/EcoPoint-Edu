@@ -50,6 +50,7 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -175,14 +176,48 @@ class VerificationServiceTest {
         when(alerts.findOpenByTarget(any(), any(), any())).thenReturn(List.of(open));
 
         service.correct(checker, RecordKind.QUARTERING, 70L, Map.of("result:1", new BigDecimal("9.50")), "Repesado");
-        verify(alerts, never()).save(any());
         assertEquals(QualityStatus.NO_CONFORME, quartering.getQualityStatus());
+        assertFalse(open.isAttended());
+        assertTrue(open.getDescription().contains("20,8333"));
+        verify(alerts, times(1)).save(any());
 
         service.correct(checker, RecordKind.QUARTERING, 70L, Map.of("result:1", new BigDecimal("12.00")), "Repesado");
 
         assertEquals(QualityStatus.CONFORME, quartering.getQualityStatus());
         assertTrue(open.isAttended());
-        verify(alerts).save(open);
+        verify(alerts, times(2)).save(open);
+    }
+
+    @Test
+    void rn093_heavierShiftUpdatesTheWeightOfTheQuartering() {
+        Quartering quartering = quarteringOf("12.00", "12.00");
+
+        service.correct(checker, RecordKind.BAG, 50L, Map.of("grossWeight", new BigDecimal("70.40")), "Dato del papel");
+
+        assertEquals(0, new BigDecimal("70.00").compareTo(quartering.getShiftNetWeight()));
+        assertFalse(quartering.isFullSample());
+        assertEquals(QualityStatus.NO_CONFORME, quartering.getQualityStatus());
+    }
+
+    @Test
+    void rn099_attendedAlertIsNotRaisedAgainWhileItStaysNonConforming() {
+        Quartering quartering = quarteringOf("12.00", "9.00");
+        when(alerts.findOpenByTarget(any(), any(), any())).thenReturn(List.of());
+
+        service.correct(checker, RecordKind.QUARTERING, 70L, Map.of("result:1", new BigDecimal("9.50")), "Repesado");
+
+        assertEquals(QualityStatus.NO_CONFORME, quartering.getQualityStatus());
+        verify(alerts, never()).save(any());
+    }
+
+    @Test
+    void rn052_annulledQuarteringIsNotCountedAsPending() {
+        Quartering quartering = quarteringOf("12.00", "9.00");
+        when(shifts.findByStudy(7L)).thenReturn(List.of(shift));
+        int pendingBefore = service.summary(checker, 7L).pending();
+        quartering.annul("Muestra perdida", 12L, NOW);
+
+        assertEquals(pendingBefore - 1, service.summary(checker, 7L).pending());
     }
 
     @Test

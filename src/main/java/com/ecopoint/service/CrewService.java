@@ -1,5 +1,6 @@
 package com.ecopoint.service;
 
+import com.ecopoint.exceptions.AccessDeniedException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
 import com.ecopoint.model.Crew;
 import com.ecopoint.model.Permission;
@@ -103,6 +104,26 @@ public class CrewService {
      */
     public Crew get(Long id) {
         return crews.findById(id).orElseThrow(() -> new ResourceNotFoundException("Cuadrilla", id));
+    }
+
+    /**
+     * Finds a crew the user may see: a teacher of its institution or one of
+     * its members (RN-097).
+     *
+     * @param actor user that asks
+     * @param id    crew id
+     * @return the crew
+     */
+    public Crew getFor(User actor, Long id) {
+        Crew crew = get(id);
+        if (!AccessPolicy.can(actor, Permission.MANAGE_ADMINISTRATION)) {
+            if (!crew.isMember(actor)) {
+                throw new AccessDeniedException("Solo los integrantes de la cuadrilla pueden verla.");
+            }
+        } else if (crew.getResponsible() != null) {
+            AccessPolicy.requireSameInstitution(actor, crew.getResponsible());
+        }
+        return crew;
     }
 
     /**

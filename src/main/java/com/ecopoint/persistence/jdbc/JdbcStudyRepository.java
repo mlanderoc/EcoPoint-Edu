@@ -211,7 +211,8 @@ public class JdbcStudyRepository implements StudyRepository {
     @Override
     public int countPendingRecords(Long studyId) {
         return count("contar los registros pendientes del estudio " + studyId,
-                "SELECT COUNT(*) FROM V_REGISTROS_PENDIENTES WHERE id_estudio = :estudio", studyId);
+                "SELECT COUNT(*) FROM V_REGISTROS_PENDIENTES WHERE id_estudio = :estudio "
+                        + "AND NOT (tipo_registro = 'Cuarteo' AND id_registro IN (SELECT id FROM CUARTEO WHERE estado_calidad = 'ANULADO'))", studyId);
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Authenticated user kept in the session. It wraps the domain {@link User}; the
@@ -58,5 +59,16 @@ public class EcoPointUserDetails implements UserDetails {
     @Override
     public boolean isEnabled() {
         return user.isActive();
+    }
+
+    @Override
+    public boolean equals(Object other) {
+        return other instanceof EcoPointUserDetails details
+                && Objects.equals(user.getId(), details.user.getId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hashCode(user.getId());
     }
 }

@@ -2,6 +2,7 @@ package com.ecopoint.service;
 
 import com.ecopoint.exceptions.PersistenceException;
 import com.ecopoint.exceptions.ResourceNotFoundException;
+import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Evidence;
 import com.ecopoint.model.EvidenceTarget;
 import com.ecopoint.model.Permission;
@@ -13,6 +14,7 @@ import com.ecopoint.persistence.StudyRepository;
 import com.ecopoint.persistence.WasteBagRepository;
 import com.ecopoint.validation.AccessPolicy;
 import com.ecopoint.validation.EvidenceValidator;
+import com.ecopoint.validation.ShiftValidator;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -113,7 +115,10 @@ public class EvidenceService {
                            long sizeBytes, InputStream content, String description) {
         AccessPolicy.require(actor, permissionFor(target));
         requireRecord(target, targetId);
-        requireStudyAccess(actor, target, targetId);
+        CharacterizationStudy study = requireStudyAccess(actor, target, targetId);
+        if (study != null) {
+            ShiftValidator.validateStudyNotFinished(study);
+        }
         String key = target.name().toLowerCase(Locale.ROOT) + "/" + UUID.randomUUID() + extensionOf(originalName);
         Evidence evidence = new Evidence(null, target, targetId, key, mimeType, sizeBytes, description,
                 actor.getId(), LocalDateTime.now(clock));
@@ -171,9 +176,9 @@ public class EvidenceService {
         }
     }
 
-    private void requireStudyAccess(User actor, EvidenceTarget target, Long targetId) {
+    private CharacterizationStudy requireStudyAccess(User actor, EvidenceTarget target, Long targetId) {
         if (target == null || targetId == null) {
-            return;
+            return null;
         }
         Long shiftId = switch (target) {
             case SHIFT -> targetId;
@@ -184,8 +189,10 @@ public class EvidenceService {
         };
         Long studyId = shifts.findById(shiftId)
                 .orElseThrow(() -> new ResourceNotFoundException("Turno", shiftId)).getStudyId();
-        fieldAccess.require(actor, studies.findById(studyId)
-                .orElseThrow(() -> new ResourceNotFoundException("Estudio", studyId)));
+        CharacterizationStudy study = studies.findById(studyId)
+                .orElseThrow(() -> new ResourceNotFoundException("Estudio", studyId));
+        fieldAccess.require(actor, study);
+        return study;
     }
 
     private Path resolve(String key) {

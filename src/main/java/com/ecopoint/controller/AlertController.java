@@ -3,9 +3,11 @@ package com.ecopoint.controller;
 import com.ecopoint.dto.AlertResponse;
 import com.ecopoint.dto.PageResponse;
 import com.ecopoint.dto.ReasonRequest;
+import com.ecopoint.model.Alert;
 import com.ecopoint.model.AlertType;
 import com.ecopoint.security.EcoPointUserDetails;
 import com.ecopoint.service.AlertService;
+import com.ecopoint.service.UserDirectory;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,16 +33,19 @@ public class AlertController implements FieldNameMapping {
 
     private final AlertService alerts;
     private final CurrentUser currentUser;
+    private final UserDirectory directory;
 
     /**
      * Creates the controller.
      *
      * @param alerts      alert service
      * @param currentUser user of the session
+     * @param directory   names of the users
      */
-    public AlertController(AlertService alerts, CurrentUser currentUser) {
+    public AlertController(AlertService alerts, CurrentUser currentUser, UserDirectory directory) {
         this.alerts = alerts;
         this.currentUser = currentUser;
+        this.directory = directory;
     }
 
     @Override
@@ -66,7 +71,7 @@ public class AlertController implements FieldNameMapping {
                                             @RequestParam(required = false) Boolean attended,
                                             @RequestParam(defaultValue = "0") int page,
                                             @RequestParam(defaultValue = "50") int size) {
-        return PageResponse.of(alerts.list(currentUser.of(principal), studyId, type, attended), page, size, AlertResponse::from);
+        return PageResponse.of(alerts.list(currentUser.of(principal), studyId, type, attended), page, size, this::toResponse);
     }
 
     /**
@@ -80,6 +85,10 @@ public class AlertController implements FieldNameMapping {
     @PostMapping("/{id}/attend")
     public AlertResponse attend(@AuthenticationPrincipal EcoPointUserDetails principal, @PathVariable Long id,
                                 @RequestBody ReasonRequest request) {
-        return AlertResponse.from(alerts.attend(currentUser.of(principal), id, request.reason()));
+        return toResponse(alerts.attend(currentUser.of(principal), id, request.reason()));
+    }
+
+    private AlertResponse toResponse(Alert alert) {
+        return AlertResponse.from(alert, directory.nameOf(alert.getAttendedBy()));
     }
 }
