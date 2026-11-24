@@ -244,7 +244,7 @@ export function UsersPage() {
                 <tr>
                   <th className="py-3 px-2">Usuario</th>
                   <th className="py-3 px-2 hidden sm:table-cell">Rol</th>
-                  <th className="py-3 px-2 hidden md:table-cell text-right">Registros</th>
+                  <th className="py-3 px-2 hidden md:table-cell num">Registros</th>
                   <th className="py-3 px-2 text-right"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
@@ -268,7 +268,7 @@ export function UsersPage() {
                           {isTeacher ? 'Docente' : 'Estudiante'}
                         </span>
                       </td>
-                      <td className="py-3 px-2 hidden md:table-cell text-right tabular-nums"
+                      <td className="py-3 px-2 hidden md:table-cell num"
                         title={`${u.activity.bags} bolsas · ${u.activity.verifications} verificaciones`}>
                         {u.activity.typedRecords}
                       </td>
