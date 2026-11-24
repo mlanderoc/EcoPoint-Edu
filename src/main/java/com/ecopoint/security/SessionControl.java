@@ -46,4 +46,14 @@ public class SessionControl {
                 .filter(session -> !session.getSessionId().equals(currentSessionId))
                 .forEach(SessionInformation::expireNow);
     }
+
+    /**
+     * Expires every session of the user, after the password was changed with a
+     * recovery link (spec D18, RP-07).
+     *
+     * @param principal user whose sessions are closed
+     */
+    public void closeAllSessions(EcoPointUserDetails principal) {
+        registry.getAllSessions(principal, false).forEach(SessionInformation::expireNow);
+    }
 }

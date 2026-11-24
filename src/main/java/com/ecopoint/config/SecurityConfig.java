@@ -69,6 +69,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(routes -> routes
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request",
+                                "/api/v1/auth/password-reset/confirm").permitAll()
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/error").permitAll()
                         .anyRequest().authenticated())
                 .exceptionHandling(errors -> errors
