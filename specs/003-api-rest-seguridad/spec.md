@@ -143,7 +143,7 @@ Catálogo mínimo. El detalle de cada JSON va en `plan.md`.
 ## 7. Fuera de alcance
 
 - Pantallas: specs 004 a 007.
-- Recuperación de contraseña por correo y acceso con cuentas externas (Google, Microsoft).
+- Acceso con cuentas externas (Google, Microsoft). La recuperación de contraseña por correo pasó a la spec D18.
 - Uso sin conexión a internet (ver pregunta P3).
 
 ## 8. Preguntas abiertas

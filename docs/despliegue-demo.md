@@ -33,6 +33,17 @@ Variables de entorno:
 | `ECOPOINT_DB_USER` | Usuario de Neon |
 | `ECOPOINT_DB_PASSWORD` | Contraseña de Neon |
 | `ECOPOINT_FRONTEND_ORIGIN` | Dirección pública del frontend |
+| `ECOPOINT_MAIL_API_KEY` | Clave de la API de Brevo, para recuperar contraseñas (D18) |
+| `ECOPOINT_MAIL_FROM` | Correo remitente verificado en Brevo (D18) |
+
+### Correo para recuperar contraseñas (D18)
+
+1. Crea una cuenta gratuita en Brevo y verifica el Gmail del equipo en **Senders**.
+2. En **SMTP & API → API Keys**, genera una clave y pégala solo en `ECOPOINT_MAIL_API_KEY` de Render.
+3. En Neon, ejecuta una vez `sql/006_recuperar_contrasena.sql` en el **SQL Editor**.
+4. Crea en la aplicación un usuario con el correo real de un integrante y prueba "¿Olvidaste tu contraseña?". Si el correo no llega, revisa spam.
+
+Sin estas dos variables, la web no envía correos. En un computador local, el enlace aparece en la consola del backend.
 
 ## 3. Publicar el frontend
 
