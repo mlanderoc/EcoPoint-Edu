@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **PENDIENTE DE APROBACIÓN** del equipo |
+| Estado | **Aprobada** por Estefanía en el PR #28. Revisión de Antigravity pendiente |
 | Spec | [spec.md](spec.md) |
 | Plan | [plan.md](plan.md) |
 | Rama | `feature/d17-despliegue-demo` |
@@ -10,16 +10,16 @@
 ## Antes de implementar
 
 - [ ] **T00. Aprobación del equipo** de spec, plan y tareas, y revisión de Antigravity.
-- [ ] **T01. Fusionar** el PR de `fix/observaciones-pruebas` en `develop` y actualizar esta rama.
+- [x] **T01. Fusionar** el PR de `fix/observaciones-pruebas` en `develop` y actualizar esta rama.
 
 ## Preparación del proyecto
 
 - [ ] **T02. Docker.** Crear `Dockerfile` y `.dockerignore`, y comprobar que el backend inicia con PostgreSQL local (RD-06). *(Merlín)*
-- [ ] **T03. Perfil de producción.** Crear `application-prod.properties` con cookies seguras, proxy y pool pequeño (RD-05). *(Merlín)*
+- [x] **T03. Perfil de producción.** Crear `application-prod.properties` con cookies seguras, proxy y pool pequeño (RD-05). *(Merlín)*
 - [ ] **T04. Render.** Crear `render.yaml` con los servicios, el reenvío de `/api` y la ruta de React (RD-01). *(Merlín)*
-- [ ] **T05. Datos de la demostración.** Crear `sql/preparar-demo-web.sh`, que cambia las contraseñas sin guardarlas en archivos (RD-02, RD-03, RD-04). *(Merlín)*
-- [ ] **T06. Documentación.** Crear `docs/despliegue-demo.md`, con publicación, comprobación, plan B y apagado (RD-07). *(Merlín)*
-- [ ] **T07. Verificación local.** Pasar backend y frontend completos, y revisar que no haya secretos (CD-07, CD-08).
+- [x] **T05. Datos de la demostración.** Crear `sql/preparar-demo-web.sh`, que cambia las contraseñas sin guardarlas en archivos (RD-02, RD-03, RD-04). *(Merlín)*
+- [x] **T06. Documentación.** Crear `docs/despliegue-demo.md`, con publicación, comprobación, plan B y apagado (RD-07). *(Merlín)*
+- [x] **T07. Verificación local.** Pasar backend y frontend completos, y revisar que no haya secretos (CD-07, CD-08).
 
 ## Publicación
 
