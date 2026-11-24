@@ -21,6 +21,7 @@ Esta carpeta contiene las especificaciones del sistema **EcoPoint Edu: caracteri
 | [D15](d15-personalizacion-diseno/plan.md) | Personalización del diseño: bienvenida, inicio de sesión, panel e Inicio (plan y tareas; los cambios están en las specs 004 y 006) | RF-01 a RF-05, RF-12 | D14 | Claude | Claude | Antigravity | **Pendiente de aprobación** |
 | [D16](d16-correcciones-reglas/plan.md) | Correcciones de reglas: doble registro, cuarteo, permisos por cuadrilla, estudios terminados, roles y contraseñas (los cambios están en las specs 001 y 003) | RF-01 a RF-13 | D14 | Claude | Claude | Antigravity | **Pendiente de aprobación** |
 | [D17](d17-despliegue-demo/spec.md) | Despliegue de demostración en la web con datos ficticios (Render y Neon, planes gratuitos) | RD-01 a RD-07 | D16 | Claude | Claude | Antigravity | **Aprobada** (PR #28) |
+| [D18](d18-recuperar-contrasena/spec.md) | Recuperar contraseña por correo con enlace de un solo uso (Brevo) | RP-01 a RP-11 | 003, D17 | Claude | Claude | Antigravity | **Propuesta** |
 
 El reparto sigue la sección 8 del plan de reestructuración. La 007 puede avanzar en paralelo con la 004–006.
 
@@ -77,6 +78,7 @@ Decisiones D1–D9 del plan de reestructuración, confirmadas el 11 nov 2026:
 | D15 | **Personalización del diseño** (propuesta del 21 nov 2026, pendiente de aprobación): página de bienvenida, inicio de sesión con la UPC y Eco saludando, menú verde, pantalla Inicio con el recorrido de turnos, pasos del turno y comparación de jornadas en Indicadores en lugar de Calidad del dato. Afecta las specs 004 y 006. |
 | D16 | **Correcciones de reglas** (propuesta del 22 nov 2026, pendiente de aprobación): RN-091 a RN-100. Protege el doble registro, mantiene coherente el cuarteo, limita al estudiante a su cuadrilla actual, protege estudios terminados, roles y contraseñas. |
 | D17 | **Despliegue de demostración** (aprobada en el PR #28 el 23 nov 2026): publica la aplicación con datos ficticios en Render y Neon, en planes gratuitos, para la sustentación. No es todavía el uso real. |
+| D18 | **Recuperar contraseña por correo** (propuesta del 24 nov 2026, pendiente de aprobación): enlace de un solo uso que vence en 30 minutos, enviado con Brevo. Saca la recuperación de "Fuera de alcance" de la spec 003. |
 
 ### Diferencias con el Requerimiento Técnico oficial (registro de riesgo)
 
