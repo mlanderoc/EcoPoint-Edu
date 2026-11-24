@@ -6,7 +6,15 @@
  */
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom'
-import { AuthProvider, RequireAuth, RequireRole, LoginPage, useAuth } from '@/features/auth'
+import {
+  AuthProvider,
+  ForgotPasswordPage,
+  RequireAuth,
+  RequireRole,
+  LoginPage,
+  ResetPasswordPage,
+  useAuth,
+} from '@/features/auth'
 import { AppLayout } from '@/components/layout'
 import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/features/field'
 import { InstitutionsPage, SourcesPage, UsersPage, CrewsPage, CategoriesPage } from '@/features/admin'
@@ -83,6 +91,8 @@ export function AppRoutes() {
     <Routes>
       {/* Public Login Route */}
       <Route path="/login" element={<LoginRoute />} />
+      <Route path="/recuperar-contrasena" element={<ForgotPasswordPage />} />
+      <Route path="/restablecer-contrasena" element={<ResetPasswordPage />} />
 
       {/* Protected Routes requiring authenticated session */}
       <Route element={<RequireAuth />}>

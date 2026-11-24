@@ -45,6 +45,8 @@ import { mockIndicators } from './data/indicatorsData'
 
 /** Demo password of every seed user (sql/002_seed.sql). */
 const DEMO_PASSWORD = 'EcoPoint2026'
+/** Code of the recovery link accepted by the simulated API (spec D18). */
+export const MOCK_RESET_TOKEN = 'enlace-de-prueba'
 const NEXT_STATUS: Record<StudyStatus, StudyStatus | null> = {
   PLANIFICADO: 'EN_EJECUCION',
   EN_EJECUCION: 'EN_DEPURACION',
@@ -194,6 +196,22 @@ export const handlers = [
     }
     activeUser = found
     return HttpResponse.json(withSession(found))
+  }),
+
+  // --- PASSWORD RECOVERY (spec D18) ---
+  http.post('/api/v1/auth/password-reset/request', () => new HttpResponse(null, { status: 204 })),
+
+  http.post('/api/v1/auth/password-reset/confirm', async ({ request }) => {
+    const path = '/api/v1/auth/password-reset/confirm'
+    const body = (await request.json()) as { token?: string; newPassword?: string }
+    if (body.token !== MOCK_RESET_TOKEN) {
+      return apiError(400, 'ERR_INVALID_DATA', 'El enlace no es válido o ya venció. Solicita uno nuevo.', path)
+    }
+    if (!body.newPassword || body.newPassword.length < 8) {
+      return apiError(400, 'ERR_INVALID_DATA', 'La contraseña debe tener entre 8 y 72 caracteres.', path,
+        [{ field: 'newPassword', message: 'La contraseña debe tener entre 8 y 72 caracteres.' }])
+    }
+    return new HttpResponse(null, { status: 204 })
   }),
 
   http.post('/api/v1/auth/logout', () => {

@@ -30,4 +30,19 @@ export const authService = {
   getMe: async (): Promise<User> => {
     return apiClient.get<User>('/api/v1/auth/me')
   },
+
+  /**
+   * Asks for a link to create a new password (spec D18, RP-01). The answer is
+   * the same whether the email has an account or not.
+   */
+  requestPasswordReset: async (email: string): Promise<void> => {
+    return apiClient.post<void>('/api/v1/auth/password-reset/request', { email })
+  },
+
+  /**
+   * Saves the new password with the code of the link (spec D18, RP-06).
+   */
+  confirmPasswordReset: async (token: string, newPassword: string): Promise<void> => {
+    return apiClient.post<void>('/api/v1/auth/password-reset/confirm', { token, newPassword })
+  },
 }
