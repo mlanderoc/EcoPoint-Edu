@@ -13,7 +13,7 @@
 
 ```text
 1. Login → "¿Olvidaste tu contraseña?" → escribe su correo
-2. POST /api/v1/auth/password-reset/request   → 202 siempre
+2. POST /api/v1/auth/password-reset/request   → 204 siempre
 3. Backend: si la cuenta existe, está activa y no pasó el límite,
    crea el código, guarda su hash y envía el correo por Brevo
 4. Correo → <frontend>/restablecer-contrasena?token=...

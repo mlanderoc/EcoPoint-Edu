@@ -94,6 +94,8 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 3px solid
 .lg-password input { padding-right: 56px; }
 .lg-eye { position: absolute; right: 3px; top: 30px; width: 44px; height: 44px; display: grid; place-items: center; border-radius: 10px; color: var(--muted); }
 .lg-eye:hover { background: #eef3e6; color: var(--brand-dark); }
+.lg-link { align-self: center; display: inline-flex; align-items: center; min-height: 44px; padding: 0 8px; color: var(--brand-dark); font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.lg-link:hover { color: var(--forest); }
 
 /* Application shell */
 .shell { min-height: 100vh; display: grid; grid-template-columns: 248px minmax(0, 1fr); background: var(--ground); color: var(--ink); }
