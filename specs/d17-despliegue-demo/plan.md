@@ -2,7 +2,7 @@
 
 | Campo | Valor |
 | --- | --- |
-| Estado | **PENDIENTE DE APROBACIÓN** del equipo |
+| Estado | **Aprobada** por Estefanía en el PR #28. Revisión de Antigravity pendiente |
 | Spec | [spec.md](spec.md) |
 | Redacta / implementa | Claude |
 | Revisa | Antigravity y equipo (pendiente) |
