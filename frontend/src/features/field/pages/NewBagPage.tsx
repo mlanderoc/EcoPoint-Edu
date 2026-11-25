@@ -92,6 +92,7 @@ export function NewBagPage() {
         sourceId: sourceId as number, grossWeight: grossValue as number, tare: tareValue as number,
         volume: volumeValue as number,
       }))
+      fieldService.getShift(shiftId).then(setShift).catch(() => undefined)
     } catch (err) {
       setError(err instanceof ApiError ? (err.getFieldError('tare') ?? err.message) : 'No se pudo guardar la bolsa.')
     } finally {

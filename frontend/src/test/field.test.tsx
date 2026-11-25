@@ -137,6 +137,17 @@ describe('Bag weighing (T319 to T321, R-343, R-344, CA-304, CA-305, CA-310)', ()
     expect(screen.getByLabelText('Peso bruto (kg)')).toHaveValue('')
   })
 
+  it('ca304_savedBagShowsInTheSourcesWithoutReloading', async () => {
+    resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    const user = await fillBag('12,40', '0,40', '0,080')
+    expect(screen.getByRole('button', { name: /AU Aulas de Clase/i })).toHaveTextContent('Pendiente')
+
+    await user.click(screen.getByRole('button', { name: 'Guardar bolsa' }))
+    await user.click(await screen.findByRole('button', { name: 'Siguiente bolsa' }))
+
+    expect(await screen.findByRole('button', { name: /AU Aulas de Clase/i })).toHaveTextContent('12,00 kg')
+  })
+
   it('ca305_tareGreaterThanGrossDisplaysRedError', async () => {
     resetMockState('ESTUDIANTE_UNIVERSITARIO')
     await fillBag('3,20', '3,50', '0,080')
