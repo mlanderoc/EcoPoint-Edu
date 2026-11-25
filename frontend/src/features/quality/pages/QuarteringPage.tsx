@@ -88,6 +88,11 @@ export function QuarteringPage() {
   const sampleMessage = shift ? sampleError(sampleValue, shift.totalNetWeight, settings) : null
   const hasWeights = weightValues.some((value) => value !== null && value > 0)
 
+  /** Brings the shift's steps and totals up to date after saving, without reloading the page. */
+  const refreshShift = () => {
+    fieldService.getShift(shiftId).then(setShift).catch(() => undefined)
+  }
+
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
     if (sampleMessage || !hasWeights || sampleValue === null) return
@@ -98,6 +103,7 @@ export function QuarteringPage() {
         .map((category, index) => ({ categoryId: category.id, weight: weightValues[index] }))
         .filter((item): item is { categoryId: number; weight: number } => item.weight !== null && item.weight > 0)
       setQuartering(await qualityService.registerQuartering(shiftId, sampleValue, results))
+      refreshShift()
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar el cuarteo.')
     } finally {
@@ -109,6 +115,7 @@ export function QuarteringPage() {
     setError(null)
     try {
       setQuartering(await qualityService.annulQuartering(shiftId, reason))
+      refreshShift()
       setIsAnnulling(false)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo anular el cuarteo.')

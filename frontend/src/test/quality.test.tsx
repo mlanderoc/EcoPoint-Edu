@@ -121,6 +121,30 @@ describe('Quartering screen (T403)', () => {
     expect(groups).toHaveTextContent('30,00 %')
     expect(groups).toHaveTextContent('0,00 %')
   })
+
+  it('ca406_savedQuarteringMarksItsStepWithoutReloading', async () => {
+    resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    let registered = false
+    server.use(
+      http.get('/api/v1/shifts/:shiftId', () => HttpResponse.json({
+        id: 14, studyId: 2, dayNumber: 3, type: 'MANANA', code: 'D3-M', status: 'ABIERTO', crewId: 1,
+        population: { id: 1, students: 450, teachers: 18, staff: 8, total: 476, verification: null },
+        bagCount: 10, totalNetWeight: 120, sourcesWithoutGeneration: [], hasQuartering: registered,
+        hasDensity: false, sources: [],
+      })),
+      http.post('/api/v1/shifts/:shiftId/quartering', () => { registered = true })
+    )
+    const user = userEvent.setup()
+    renderAt('/campo/turno/14/cuarteo')
+
+    await user.type(await screen.findByLabelText('Peso de la submuestra (kg)'), '50')
+    await user.type(screen.getByLabelText('Papel de archivo (kg)'), '30')
+    await user.type(screen.getByLabelText('Restos de comida (kg)'), '20')
+    await user.click(screen.getByRole('button', { name: 'Guardar cuarteo' }))
+
+    const steps = await screen.findByRole('navigation', { name: 'Pasos del turno' })
+    expect(await within(steps).findByText('Registrado')).toBeInTheDocument()
+  })
 })
 
 describe('Density screen (T404)', () => {
@@ -135,5 +159,7 @@ describe('Density screen (T404)', () => {
 
     await user.click(screen.getByRole('button', { name: 'Guardar densidad' }))
     expect(await screen.findByTestId('saved-density')).toHaveTextContent('150,00 kg/m³')
+    const steps = screen.getByRole('navigation', { name: 'Pasos del turno' })
+    expect(await within(steps).findByText('Registrada')).toBeInTheDocument()
   })
 })

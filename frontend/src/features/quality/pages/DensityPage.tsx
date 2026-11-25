@@ -53,6 +53,7 @@ export function DensityPage() {
     try {
       setIsSaving(true)
       setSaved(await qualityService.registerDensity(shiftId, volumeValue, weightValue))
+      fieldService.getShift(shiftId).then(setShift).catch(() => undefined)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'No se pudo guardar la densidad.')
     } finally {
