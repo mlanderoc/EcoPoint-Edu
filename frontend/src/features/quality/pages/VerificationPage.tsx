@@ -17,6 +17,7 @@ import { ApiError } from '@/services/apiClient'
 import { CharacterizationStudy, RecordType, VerifiableRecord, VerificationStatus, VerificationSummary } from '@/types'
 import { RecordCard } from '../components/RecordCard'
 import { verificationService } from '../services/verificationService'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const TYPE_OPTIONS = [
   { value: '', label: 'Todos los tipos' },
@@ -53,7 +54,7 @@ export function VerificationPage() {
     studyService.verifiable()
       .then((open) => {
         setStudies(open)
-        setStudyId(open[0]?.id ?? null)
+        setStudyId(open.length === 1 ? open[0].id : null)
       })
       .catch(() => setError('No se pudieron cargar los estudios.'))
   }, [])
@@ -120,14 +121,19 @@ export function VerificationPage() {
           <p className="m-0 mt-1">Compara la planilla en papel con lo digitado.</p>
         </div>
       </div>
+      <RokkoTip tip="verification" />
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
       {studies.length === 0 && !error && (
         <AlertBanner variant="info" message="No tienes estudios en ejecución ni en depuración para verificar." />
       )}
+      {studies.length > 1 && studyId === null && (
+        <AlertBanner variant="info" title="Escoja un estudio" message="Elija el estudio cuyos registros va a verificar." />
+      )}
       {studies.length > 1 && (
         <div className="sm:max-w-md">
           <Select id="verification-study" label="Estudio" value={String(studyId ?? '')}
+            placeholder="Escoja un estudio"
             onChange={(event) => { setStudyId(Number(event.target.value)); setShiftId(null) }}
             options={studies.map((study) => {
               const name = institutions.find((item) => item.id === study.institutionId)?.name

@@ -119,4 +119,26 @@ public abstract class PostgresIntegrationTest {
         String value = System.getenv(name);
         return value == null || value.isBlank() ? defaultValue : value;
     }
+
+    /**
+     * Leaves a study ready to open a shift in order: closes the open shifts and
+     * adds the previous shift, closed, when the seed does not have it.
+     *
+     * @param studyId study id
+     * @param day     day of the shift about to open
+     * @param type    MANANA or TARDE
+     */
+    protected void readyToOpen(long studyId, int day, String type) {
+        jdbc.update("UPDATE TURNO SET estado = 'CERRADO', cerrado_en = now() WHERE id_estudio = ? AND estado = 'ABIERTO'",
+                studyId);
+        if (day == 1 && "MANANA".equals(type)) {
+            return;
+        }
+        int previousDay = "TARDE".equals(type) ? day : day - 1;
+        String previousType = "TARDE".equals(type) ? "MANANA" : "TARDE";
+        jdbc.update("INSERT INTO TURNO (id_estudio, numero_dia, tipo, estado, id_cuadrilla, cerrado_en) "
+                + "SELECT ?, ?, ?::tipo_turno, 'CERRADO', 1, now() WHERE NOT EXISTS (SELECT 1 FROM TURNO "
+                + "WHERE id_estudio = ? AND numero_dia = ? AND tipo = ?::tipo_turno)",
+                studyId, previousDay, previousType, studyId, previousDay, previousType);
+    }
 }

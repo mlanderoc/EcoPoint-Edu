@@ -77,7 +77,7 @@ class WasteBagValidatorTest {
 
     @Test
     void ca033_heavyBagIsAcceptedButMarkedAtypical() {
-        WasteBag heavy = bag(1L, "70.50", "0.50", "0.300");
+        WasteBag heavy = bag(1L, "55.50", "0.50", "0.300");
 
         assertDoesNotThrow(() -> WasteBagValidator.validate(heavy, SOURCES));
         assertTrue(WasteBagValidator.isAtypical(heavy, SETTINGS));
@@ -98,5 +98,26 @@ class WasteBagValidatorTest {
         shift.markSourceWithoutGeneration(2L);
 
         assertDoesNotThrow(() -> ShiftValidator.validateCanClose(shift, Map.of(1L, "AU", 2L, "BA")));
+    }
+
+    @Test
+    void rev1_bagValuesOutsideTheirLogicalRangeAreRejected() {
+        assertThrows(InvalidDataException.class, () -> WasteBagValidator.validate(bag(1L, "60.50", "0.40", "0.200"), SOURCES));
+        assertThrows(InvalidDataException.class, () -> WasteBagValidator.validate(bag(1L, "12.40", "5.50", "0.080"), SOURCES));
+        assertThrows(InvalidDataException.class, () -> WasteBagValidator.validate(bag(1L, "12.40", "0.40", "0.004"), SOURCES));
+        assertThrows(InvalidDataException.class, () -> WasteBagValidator.validate(bag(1L, "12.40", "0.40", "0.350"), SOURCES));
+    }
+
+    @Test
+    void rev1_bagWithAnAbsurdDensityIsRejected() {
+        InvalidDataException error = assertThrows(InvalidDataException.class,
+                () -> WasteBagValidator.validate(bag(1L, "0.50", "0.40", "0.300"), SOURCES));
+        assertTrue(error.getMessage().endsWith(
+                "La densidad de la bolsa debe estar entre 10 y 1500 kg/m³: revise el peso y el volumen."));
+    }
+
+    @Test
+    void rev1_valuesOnTheLimitsAreAccepted() {
+        assertDoesNotThrow(() -> WasteBagValidator.validate(bag(1L, "60.00", "5.00", "0.300"), SOURCES));
     }
 }

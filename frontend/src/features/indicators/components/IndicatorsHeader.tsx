@@ -50,6 +50,7 @@ export function IndicatorsHeader({ studies, studyId, onStudyChange, indicators, 
       {studies.length > 0 && (
         <div className="sm:max-w-2xl">
           <Select id="indicators-study" label="Ver los indicadores de" value={String(studyId ?? '')}
+            placeholder="Escoja un estudio"
             onChange={(event) => onStudyChange(Number(event.target.value))}
             options={studies.map((study) => ({ value: String(study.id), label: optionLabel(study) }))} />
         </div>

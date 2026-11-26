@@ -28,6 +28,7 @@ import { GenerationSource, SourceType } from '@/types'
 import { cn } from '@/utils/cn'
 import { adminService } from '../services/adminService'
 import { InstitutionSelect, useInstitutionParam, useInstitutions } from '../components/InstitutionSelect'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const SOURCE_TYPES: { value: SourceType; label: string }[] = [
   { value: 'AULAS', label: 'Aulas' },
@@ -46,17 +47,16 @@ export function SourcesPage() {
   const [sources, setSources] = useState<GenerationSource[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [code, setCode] = useState('')
   const [name, setName] = useState('')
-  const [type, setType] = useState<SourceType>('AULAS')
+  const [type, setType] = useState<SourceType | ''>('')
   const [active, setActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [filter, setFilter] = useActiveFilter()
-  const [institutionId, setInstitutionId] = useInstitutionParam()
   const { institutions } = useInstitutions(false)
-  const { confirmLeave, discardDialog } = useUnsavedChanges(isModalOpen && !isSaving && (code + name) !== '')
+  const [institutionId, setInstitutionId] = useInstitutionParam(institutions)
+  const { confirmLeave, discardDialog } = useUnsavedChanges(isModalOpen && !isSaving && (name + type) !== '')
 
   useEffect(() => {
     if (institutionId === null) return
@@ -71,9 +71,8 @@ export function SourcesPage() {
   const inactiveCount = sources.filter((source) => !source.active).length
 
   const resetForm = () => {
-    setCode('')
     setName('')
-    setType('AULAS')
+    setType('')
     setActive(true)
   }
 
@@ -84,12 +83,12 @@ export function SourcesPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!code.trim()) {
-      setError('El código de la fuente es obligatorio (ej. AU).')
-      return
-    }
     if (!name.trim()) {
       setError('El nombre de la fuente es obligatorio.')
+      return
+    }
+    if (!type) {
+      setError('Escoja el tipo de espacio de la fuente.')
       return
     }
     if (institutionId === null) {
@@ -101,7 +100,6 @@ export function SourcesPage() {
       setError(null)
       const created = await adminService.createSource(institutionId, {
         institutionId,
-        code: code.trim().toUpperCase(),
         name: name.trim(),
         type,
         active,
@@ -145,6 +143,7 @@ export function SourcesPage() {
         </Button>
       </div>
 
+      <RokkoTip tip="sources" />
       {error && <AlertBanner variant="danger" title="Atención" message={error} onDismiss={() => setError(null)} />}
 
       <div className="sm:max-w-md">
@@ -199,12 +198,13 @@ export function SourcesPage() {
       <Modal isOpen={isModalOpen} onClose={closeModal} title="Crear Fuente de Generación"
         description="Registre un punto o espacio generador de residuos en el plantel.">
         <form onSubmit={handleCreate} className="flex flex-col gap-4">
-          <Input id="source-code" label="Código de Fuente (ej. AU, BA, OF)" placeholder="Ej. AU" value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())} required autoFocus />
           <Input id="source-name" label="Nombre Descriptivo" placeholder="Ej. Aulas Bloque 2" value={name}
-            onChange={(e) => setName(e.target.value)} required />
-          <Select id="source-type" label="Tipo de Espacio" value={type}
+            onChange={(e) => setName(e.target.value)} required autoFocus maxLength={80} />
+          <Select id="source-type" label="Tipo de Espacio" value={type} placeholder="Escoja el tipo de espacio"
             onChange={(e) => setType(e.target.value as SourceType)} options={SOURCE_TYPES} />
+          <p className="m-0 text-xs text-[var(--muted)]" data-testid="source-code-note">
+            El código de la fuente se asigna solo a partir del nombre (por ejemplo, AB2 para «Aulas Bloque 2»).
+          </p>
           <label className="flex items-center gap-2.5 select-none text-sm font-semibold text-slate-700 pt-1">
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)}
               className="w-4 h-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]" />

@@ -7,6 +7,7 @@ import com.ecopoint.model.CharacterizationStudy;
 import com.ecopoint.model.Crew;
 import com.ecopoint.model.GenerationSource;
 import com.ecopoint.model.Permission;
+import com.ecopoint.model.SamplingDay;
 import com.ecopoint.model.StudyStatus;
 import com.ecopoint.model.User;
 import com.ecopoint.persistence.CrewRepository;
@@ -192,6 +193,7 @@ public class StudyService {
         CharacterizationStudy study = new CharacterizationStudy(null, institutionId);
         study.assignCrew(crewId);
         requireFreeCrew(crewId, null, "asignar la cuadrilla");
+        StudyValidator.validateDatesNotInPast(List.of(), dates, LocalDate.now(clock));
         study.scheduleDates(dates);
         StudyValidator.validate(study);
         StudyValidator.validateNoOverlap(study, studies.findByInstitution(institutionId));
@@ -216,6 +218,8 @@ public class StudyService {
     public CharacterizationStudy reschedule(User actor, Long id, List<LocalDate> dates) {
         AccessPolicy.require(actor, Permission.MANAGE_STUDIES);
         CharacterizationStudy study = editable(id);
+        List<LocalDate> previous = study.getDays().stream().map(SamplingDay::getDate).toList();
+        StudyValidator.validateDatesNotInPast(previous, dates, LocalDate.now(clock));
         study.scheduleDates(dates);
         StudyValidator.validate(study);
         StudyValidator.validateNoOverlap(study, studies.findByInstitution(study.getInstitutionId()));

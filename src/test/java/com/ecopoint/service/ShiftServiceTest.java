@@ -92,10 +92,10 @@ class ShiftServiceTest {
 
     @Test
     void r341_teacherOpensAShiftOfAStudyInExecution() {
-        SamplingShift shift = service.open(teacher, STUDY, 3, ShiftType.MANANA);
+        SamplingShift shift = service.open(teacher, STUDY, 1, ShiftType.MANANA);
 
         assertEquals(ShiftStatus.ABIERTO, shift.getStatus());
-        assertEquals("D3-M", shift.getCode());
+        assertEquals("D1-M", shift.getCode());
     }
 
     @Test
@@ -121,7 +121,7 @@ class ShiftServiceTest {
 
     @Test
     void r341_shiftIsWorkedByTheCrewOfTheStudy() {
-        assertEquals(CREW, service.open(teacher, STUDY, 3, ShiftType.MANANA).getCrewId());
+        assertEquals(CREW, service.open(teacher, STUDY, 1, ShiftType.MANANA).getCrewId());
     }
 
     @Test

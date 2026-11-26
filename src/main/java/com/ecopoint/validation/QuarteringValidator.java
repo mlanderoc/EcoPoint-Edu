@@ -92,6 +92,8 @@ public final class QuarteringValidator {
                         "El peso de " + result.getCategoryName() + " no puede ser vacío ni negativo.");
             }
             requireDecimals(result.getWeight(), "peso");
+            ValidationSupport.requireRange(result.getWeight(), "0.01", sample.toPlainString(), "peso",
+                    "El peso de " + result.getCategoryName(), "kg (el peso de la submuestra)");
         }
     }
 

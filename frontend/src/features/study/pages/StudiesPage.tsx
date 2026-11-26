@@ -14,6 +14,7 @@ import { studyService } from '../services/studyService'
 import { InstitutionSelect, useInstitutionParam, useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { formatDate } from '../utils/samplingDays'
 import { STATUS_LABELS, studyTitle } from '../utils/studyStatus'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const STATUS_TONE: Record<StudyStatus, string> = {
   PLANIFICADO: 'pill grey',
@@ -51,8 +52,8 @@ export function StudiesPage() {
   const [shiftsByStudy, setShiftsByStudy] = useState<Record<number, ShiftSlot[]>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [institutionId, setInstitutionId] = useInstitutionParam()
   const { institutions } = useInstitutions(false)
+  const [institutionId, setInstitutionId] = useInstitutionParam(institutions)
   const [params, setParams] = useSearchParams()
   const statusFilter = (params.get('estadoEstudio') ?? '') as StudyStatus | ''
   const visible = statusFilter ? studies.filter((study) => study.status === statusFilter) : studies
@@ -114,6 +115,7 @@ export function StudiesPage() {
         })}
       </div>
 
+      <RokkoTip tip="studies" />
       {error && <AlertBanner variant="danger" message={error} />}
       {isLoading && <p className="text-sm text-[var(--color-text-muted)]">Cargando estudios...</p>}
       {!isLoading && studies.length === 0 && !error && (

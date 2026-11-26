@@ -55,7 +55,9 @@ describe('Estudio en Registro en campo (R-340, CA-321)', () => {
     renderAt('/campo')
 
     const choice = await screen.findByLabelText('Estudio en ejecución')
-    expect(within(choice).getAllByRole('option')).toHaveLength(2)
+    expect(choice).toHaveValue('')
+    expect(within(choice).getAllByRole('option')).toHaveLength(3)
+    expect(within(choice).getByRole('option', { name: 'Escoja un estudio' })).toBeDisabled()
     await user.selectOptions(choice, '30')
     expect(screen.getByLabelText('Estudio en ejecución')).toHaveValue('30')
   })

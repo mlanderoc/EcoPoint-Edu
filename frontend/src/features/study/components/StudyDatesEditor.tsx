@@ -8,15 +8,21 @@
  */
 
 import { AlertBanner, Input } from '@/components/ui'
-import { formatDate, nonBusinessReason, recalculateFrom } from '../utils/samplingDays'
+import { formatDate, nonBusinessReason, pastDateErrors, recalculateFrom, todayIso } from '../utils/samplingDays'
 
 export interface StudyDatesEditorProps {
   dates: string[]
   onChange: (dates: string[]) => void
   disabled?: boolean
+  /** Dates already saved; they may stay in the past (professor's review, point 5). */
+  saved?: string[]
+  /** Current moment; tests pass a fixed one. */
+  now?: Date
 }
 
-export function StudyDatesEditor({ dates, onChange, disabled = false }: StudyDatesEditorProps) {
+export function StudyDatesEditor({ dates, onChange, disabled = false, saved = [], now }: StudyDatesEditorProps) {
+  const today = todayIso(now)
+  const pastErrors = pastDateErrors(dates, saved, today)
   const warnings = dates
     .map((date, index) => {
       const reason = date ? nonBusinessReason(date) : null
@@ -33,7 +39,7 @@ export function StudyDatesEditor({ dates, onChange, disabled = false }: StudyDat
       />
       <p className="text-sm text-[var(--color-text-muted)]">
         Al elegir o cambiar un día, los días siguientes se recalculan con los días hábiles que siguen: sin sábados,
-        domingos ni festivos de Colombia.
+        domingos ni festivos de Colombia. Solo se aceptan fechas desde hoy en adelante.
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {dates.map((date, index) => (
@@ -43,8 +49,10 @@ export function StudyDatesEditor({ dates, onChange, disabled = false }: StudyDat
             type="date"
             label={index === 0 ? 'Día 1 (descarte)' : `Día ${index + 1}`}
             value={date}
+            min={date && date === saved[index] && date < today ? undefined : today}
             onChange={(event) => onChange(recalculateFrom(dates, index, event.target.value))}
             helperText={date ? formatDate(date) : undefined}
+            error={pastErrors[index]}
             disabled={disabled}
             required={index === 0}
           />

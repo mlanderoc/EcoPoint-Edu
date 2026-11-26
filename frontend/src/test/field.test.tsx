@@ -12,7 +12,7 @@ import { delay, http, HttpResponse } from 'msw'
 import { AuthProvider } from '@/features/auth'
 import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/features/field'
 import { mockUsers } from '@/mocks/data/seedData'
-import { handlers, resetMockState } from '@/mocks/handlers'
+import { closeMockShift, handlers, resetMockState } from '@/mocks/handlers'
 import { server } from '@/mocks/server'
 import { User } from '@/types'
 
@@ -38,26 +38,53 @@ function renderField(path: string, user: User = teacher) {
   )
 }
 
-async function openDayFourMorning() {
+/** Closes D3-M, the open shift of the mock, and opens the next one in order: D3-T. */
+async function openNextShift() {
+  closeMockShift(OPEN_SHIFT)
   const user = userEvent.setup()
   renderField('/campo')
   await user.click(await screen.findByRole('button', { name: /Abrir turno/i }))
   expect(await screen.findByText('Cuadrilla Mañana A')).toBeInTheDocument()
   expect(screen.queryByLabelText('Cuadrilla')).toBeNull()
   await user.click(screen.getByRole('button', { name: 'Confirmar apertura' }))
-  expect(await screen.findByRole('heading', { name: 'Turno D4-M' })).toBeInTheDocument()
+  expect(await screen.findByRole('heading', { name: 'Turno D3-T' })).toBeInTheDocument()
   return user
 }
 
 describe('Field dashboard and shift opening (T317, R-340, R-341)', () => {
   it('r341_teacherOpensTheSuggestedShiftWithItsCrew', async () => {
     resetMockState('DOCENTE')
-    await openDayFourMorning()
+    await openNextShift()
     expect(screen.getByText(/Registre primero la población del turno/)).toBeInTheDocument()
+  })
+
+  it('rev10_nextShiftCannotBeOpenedWhileAnotherIsOpen', async () => {
+    resetMockState('DOCENTE')
+    const user = userEvent.setup()
+    renderField('/campo')
+
+    await user.selectOptions(await screen.findByLabelText('Día de muestreo'), '4')
+    expect(await screen.findByText('Cierre el turno D3-M antes de abrir otro.')).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Abrir turno/i })).toBeNull()
+    expect(screen.getByRole('button', { name: /Ir al turno abierto/ })).toBeInTheDocument()
+  })
+
+  it('rev10_shiftsAreOpenedInOrder', async () => {
+    resetMockState('DOCENTE')
+    closeMockShift(OPEN_SHIFT)
+    const user = userEvent.setup()
+    renderField('/campo')
+
+    await user.selectOptions(await screen.findByLabelText('Día de muestreo'), '4')
+    await user.selectOptions(screen.getByLabelText('Turno'), 'MANANA')
+    expect(await screen.findByText('Los turnos van en orden: primero se cierra el turno de la tarde del día 3.'))
+      .toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Abrir turno/i })).toBeNull()
   })
 
   it('ca300_studentSeesThatTheShiftIsNotStartedYet', async () => {
     resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    closeMockShift(OPEN_SHIFT)
     renderField('/campo', student)
 
     expect(await screen.findByText('Turno no iniciado')).toBeInTheDocument()
@@ -79,7 +106,7 @@ describe('Field dashboard and shift opening (T317, R-340, R-341)', () => {
 describe('Population (T318, R-342, CA-303)', () => {
   it('ca303_shiftWithoutPopulationBlocksBagEntry', async () => {
     resetMockState('DOCENTE')
-    const user = await openDayFourMorning()
+    const user = await openNextShift()
     const registerPopulation = await screen.findByRole('button', { name: 'Registrar población' })
     expect(screen.queryByRole('button', { name: /Registrar bolsa/i })).toBeNull()
 
@@ -158,7 +185,7 @@ describe('Bag weighing (T319 to T321, R-343, R-344, CA-304, CA-305, CA-310)', ()
 
   it('r344_atypicalValueShowsAWarningButCanBeSaved', async () => {
     resetMockState('ESTUDIANTE_UNIVERSITARIO')
-    const user = await fillBag('62,40', '0,40', '0,080')
+    const user = await fillBag('55,40', '0,40', '0,080')
 
     expect(screen.getByText('Valor fuera de lo esperado')).toBeInTheDocument()
     await user.click(screen.getByRole('button', { name: 'Guardar bolsa' }))

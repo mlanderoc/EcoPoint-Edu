@@ -7,21 +7,22 @@
 
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
+import { Building2 } from 'lucide-react'
 import { Select } from '@/components/ui'
-import { useAuth } from '@/features/auth'
 import { Institution } from '@/types'
 import { adminService } from '../services/adminService'
 
-/** Institution kept in the URL (?institucion=); by default, the one of the user. */
-export function useInstitutionParam(): [number | null, (id: number) => void] {
-  const { user } = useAuth()
+/**
+ * Institution kept in the URL (?institucion=). With a single institution it is
+ * chosen alone; with more, none is chosen until the user picks one (point 7).
+ */
+export function useInstitutionParam(institutions: Institution[]): [number | null, (id: number) => void] {
   const [params, setParams] = useSearchParams()
   const fromUrl = Number(params.get('institucion'))
-  const value = fromUrl > 0 ? fromUrl : user?.institutionId ?? null
+  const value = fromUrl > 0 ? fromUrl : institutions.length === 1 ? institutions[0].id : null
   const change = (id: number) => {
     const updated = new URLSearchParams(params)
-    if (id === user?.institutionId) updated.delete('institucion')
-    else updated.set('institucion', String(id))
+    updated.set('institucion', String(id))
     setParams(updated, { replace: true })
   }
   return [value, change]
@@ -55,10 +56,11 @@ export function InstitutionSelect({ institutions, value, onChange, label = 'Inst
       id="institution-select"
       label={label}
       value={value ?? ''}
+      placeholder="Escoja una institución"
+      icon={<Building2 />}
       disabled={disabled || institutions.length === 0}
       onChange={(event) => onChange(Number(event.target.value))}
     >
-      {value === null && <option value="">Elija una institución</option>}
       {institutions.map((institution) => (
         <option key={institution.id} value={institution.id}>
           {institution.name}{institution.active === false ? ' (inactiva)' : ''}

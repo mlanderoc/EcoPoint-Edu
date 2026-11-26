@@ -17,7 +17,7 @@ import { cn } from '@/utils/cn'
 import { StudyDatesEditor } from '../components/StudyDatesEditor'
 import { CrewSelect, useCrews } from '../components/CrewSelect'
 import { studyService } from '../services/studyService'
-import { formatDate } from '../utils/samplingDays'
+import { formatDate, pastDateErrors, todayIso } from '../utils/samplingDays'
 import { NEXT_STEP, STATUS_LABELS, canCancel, canDelete, studyTitle } from '../utils/studyStatus'
 
 type Dialog = 'status' | 'return' | 'cancel' | 'delete' | null
@@ -220,14 +220,16 @@ export function StudyDetailPage() {
             {datesSaved && !datesChanged && (
               <AlertBanner variant="success" message="Fechas guardadas." onDismiss={() => setDatesSaved(false)} />
             )}
-            <StudyDatesEditor dates={editedDates} onChange={(next) => { setDates(next); setDatesSaved(false) }}
+            <StudyDatesEditor dates={editedDates} saved={datesOf(study)}
+              onChange={(next) => { setDates(next); setDatesSaved(false) }}
               disabled={isSaving} />
             <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
               <Button variant="outline" className="min-h-[48px]" disabled={!datesChanged || isSaving}
                 onClick={() => setDates(null)}>
                 Descartar
               </Button>
-              <Button className="min-h-[48px]" disabled={!datesChanged || isSaving || !editedDates[0]}
+              <Button className="min-h-[48px]" disabled={!datesChanged || isSaving || !editedDates[0]
+                || pastDateErrors(editedDates, datesOf(study), todayIso()).some(Boolean)}
                 isLoading={isSaving} onClick={handleSaveDates}>
                 Guardar fechas
               </Button>
@@ -253,10 +255,12 @@ export function StudyDetailPage() {
                   {day.discarded && (
                     <p className="text-xs font-medium text-[var(--color-edu-blue)]">Día de descarte: no entra en los cálculos</p>
                   )}
-                  <span className={cn('text-xs px-2 py-1 rounded border', slotStyle(morning))}>
+                  <span className={cn('has-tip text-xs px-2 py-1 rounded border', slotStyle(morning))}
+                    data-tip={`Día ${day.dayNumber}, Turno Mañana`}>
                     M · {slotLabel(morning)}
                   </span>
-                  <span className={cn('text-xs px-2 py-1 rounded border', slotStyle(afternoon))}>
+                  <span className={cn('has-tip text-xs px-2 py-1 rounded border', slotStyle(afternoon))}
+                    data-tip={`Día ${day.dayNumber}, Turno Tarde`}>
                     T · {slotLabel(afternoon)}
                   </span>
                 </div>

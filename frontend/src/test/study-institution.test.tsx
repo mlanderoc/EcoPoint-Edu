@@ -66,7 +66,7 @@ describe('Institución del estudio (R-330, R-337, CA-319)', () => {
 
     renderAt('/estudios')
     expect(await screen.findByText('Estudios de caracterización')).toBeInTheDocument()
-    await screen.findAllByText(/Estudio N\.º/)
+    expect(await screen.findByLabelText('Ver los estudios de')).toHaveValue('')
     expect(screen.queryAllByText(DAY_ONE, { exact: false })).toHaveLength(0)
   })
 
@@ -82,8 +82,10 @@ describe('Institución del estudio (R-330, R-337, CA-319)', () => {
     const user = userEvent.setup()
     renderAt('/admin/fuentes')
 
+    await screen.findByRole('option', { name: SABANAS })
+    await user.selectOptions(screen.getByLabelText('Institución'), '1')
     await screen.findByTestId('source-row-AU')
-    await user.selectOptions(await screen.findByLabelText('Institución'), '2')
+    await user.selectOptions(screen.getByLabelText('Institución'), '2')
     expect(await screen.findByTestId('source-row-BL')).toBeInTheDocument()
     expect(screen.queryByTestId('source-row-AU')).toBeNull()
   })

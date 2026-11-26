@@ -1,5 +1,5 @@
 /**
- * Login page view with the campus photo and Eco greeting (T309 / R-310; D15),
+ * Login page view with the campus photo and Rokko greeting (T309 / R-310; D15),
  * and the link to recover the password (spec D18).
  *
  * @author craulgomez

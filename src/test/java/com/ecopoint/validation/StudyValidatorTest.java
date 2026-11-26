@@ -153,4 +153,24 @@ class StudyValidatorTest {
         assertThrows(BusinessRuleException.class,
                 () -> StudyValidator.validateClose(new CharacterizationStudy(1L, 1L), 0, 0));
     }
+
+    @Test
+    void rev5_newDatesBeforeTodayAreRejected() {
+        LocalDate today = LocalDate.of(2026, 3, 4);
+
+        assertThrows(InvalidDataException.class,
+                () -> StudyValidator.validateDatesNotInPast(List.of(), march(3, 4, 5, 6, 9, 10, 11, 12), today));
+        assertDoesNotThrow(() -> StudyValidator.validateDatesNotInPast(List.of(), march(4, 5, 6, 9, 10, 11, 12, 13),
+                today));
+    }
+
+    @Test
+    void rev5_savedPastDatesCanStayWhenOtherDaysChange() {
+        LocalDate today = LocalDate.of(2026, 3, 4);
+        List<LocalDate> saved = march(2, 3, 4, 5, 6, 9, 10, 11);
+
+        assertDoesNotThrow(() -> StudyValidator.validateDatesNotInPast(saved, march(2, 3, 4, 5, 6, 9, 10, 12), today));
+        assertThrows(InvalidDataException.class,
+                () -> StudyValidator.validateDatesNotInPast(saved, march(1, 3, 4, 5, 6, 9, 10, 11), today));
+    }
 }

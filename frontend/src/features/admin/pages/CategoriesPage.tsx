@@ -24,6 +24,7 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { WasteCategory, WasteGroup } from '@/types'
 import { cn } from '@/utils/cn'
 import { adminService } from '../services/adminService'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const WASTE_GROUPS: { value: WasteGroup; label: string }[] = [
   { value: 'BLANCO', label: 'Blanco (Aprovechables limpios)' },
@@ -37,7 +38,7 @@ export function CategoriesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [name, setName] = useState('')
-  const [group, setGroup] = useState<WasteGroup>('BLANCO')
+  const [group, setGroup] = useState<WasteGroup | ''>('')
   const [active, setActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
@@ -54,7 +55,7 @@ export function CategoriesPage() {
 
   const resetForm = () => {
     setName('')
-    setGroup('BLANCO')
+    setGroup('')
     setActive(true)
     setError(null)
   }
@@ -78,6 +79,10 @@ export function CategoriesPage() {
     }
     try {
       setIsSaving(true)
+      if (!group) {
+        setError('Escoja el grupo de color de la subcategoría.')
+        return
+      }
       const created = await adminService.createCategory({ name: name.trim(), group, active })
       setCategories((prev) => [...prev, created])
       setIsModalOpen(false)
@@ -120,6 +125,7 @@ export function CategoriesPage() {
         </Button>
       </div>
 
+      <RokkoTip tip="categories" />
       {error && <AlertBanner variant="danger" title="Atención" message={error} onDismiss={() => setError(null)} />}
 
       <ActiveFilter value={filter} onChange={setFilter} inactiveCount={inactiveCount} />
@@ -157,6 +163,7 @@ export function CategoriesPage() {
             placeholder="Ej. Vidrio transparente, Tetra Pak, Pilas AA" value={name}
             onChange={(e) => setName(e.target.value)} disabled={isSaving} required />
           <Select id="category-group" label="Grupo de Color (Res. 2184/2019)" value={group}
+            placeholder="Escoja el grupo de color"
             onChange={(e) => setGroup(e.target.value as WasteGroup)} options={WASTE_GROUPS} disabled={isSaving} />
           <div className="flex items-center gap-2 pt-2">
             <input id="category-active" type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)}

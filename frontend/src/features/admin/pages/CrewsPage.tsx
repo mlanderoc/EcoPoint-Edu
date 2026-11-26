@@ -13,6 +13,7 @@ import { studyService } from '@/features/study/services/studyService'
 import { ApiError } from '@/services/apiClient'
 import { CharacterizationStudy, Crew, User } from '@/types'
 import { adminService } from '../services/adminService'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const initials = (user: User) => `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase()
 
@@ -49,7 +50,7 @@ export function CrewsPage() {
   const openForm = (crew: Crew | null) => {
     setEditing(crew)
     setName(crew?.name ?? '')
-    setResponsibleId(crew?.responsibleId ? String(crew.responsibleId) : teachers.length > 0 ? String(teachers[0].id) : '')
+    setResponsibleId(crew?.responsibleId ? String(crew.responsibleId) : teachers.length === 1 ? String(teachers[0].id) : '')
     setSelectedMemberIds(crew?.memberIds ?? [])
     setFormError(null)
     setBusyMembers(new Map())
@@ -112,6 +113,7 @@ export function CrewsPage() {
         </Button>
       </div>
 
+      <RokkoTip tip="crews" />
       {error && <AlertBanner variant="danger" title="Atención" message={error} onDismiss={() => setError(null)} />}
 
       <div className="grid-2">
@@ -194,10 +196,10 @@ export function CrewsPage() {
               id="crew-responsible"
               label="Docente responsable"
               value={responsibleId}
+              placeholder="Escoja un docente responsable"
               onChange={(e) => setResponsibleId(e.target.value)}
               disabled={isSaving}
               options={[
-                { value: '', label: '-- Seleccione un docente responsable --' },
                 ...teachers.map((t) => ({
                   value: String(t.id),
                   label: `${t.firstName} ${t.lastName} (${t.email})`,

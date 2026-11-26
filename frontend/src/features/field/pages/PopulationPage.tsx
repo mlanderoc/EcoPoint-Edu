@@ -9,10 +9,12 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertBanner, BackButton, Button, Input } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
+import { countError, LIMITS } from '@/utils/limits'
 import { ApiError } from '@/services/apiClient'
 import { SamplingShift } from '@/types'
 import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 function count(text: string): number {
   const value = Number(text)
@@ -30,6 +32,12 @@ export function PopulationPage() {
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const total = count(students) + count(teachers) + count(staff)
+  const errors = {
+    students: countError(count(students), LIMITS.students, 'Estudiantes'),
+    teachers: countError(count(teachers), LIMITS.teachers, 'Docentes'),
+    staff: countError(count(staff), LIMITS.staff, 'Personal'),
+  }
+  const hasErrors = Object.values(errors).some(Boolean)
   const shiftPath = `/campo/turno/${shiftId}`
   const { confirmLeave, discardDialog } = useUnsavedChanges(!isSaving && (students + teachers + staff) !== '')
 
@@ -40,6 +48,7 @@ export function PopulationPage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault()
     setError(null)
+    if (hasErrors) return
     if (total <= 0) {
       setError('La población del turno debe ser mayor que cero: registre cuántas personas hay presentes.')
       return
@@ -54,16 +63,18 @@ export function PopulationPage() {
     }
   }
 
-  const field = (fieldId: string, label: string, value: string, onChange: (text: string) => void) => (
+  const field = (fieldId: string, label: string, value: string, onChange: (text: string) => void, max: number,
+    fieldError?: string) => (
     <div className="counter">
-      <Input id={fieldId} label={label} type="number" inputMode="numeric" min={0} step={1} value={value}
-        onChange={(event) => onChange(event.target.value)} disabled={isSaving}
+      <Input id={fieldId} label={label} type="number" inputMode="numeric" min={0} max={max} step={1} value={value}
+        onChange={(event) => onChange(event.target.value)} disabled={isSaving} error={fieldError}
         className="min-h-[56px] text-center text-2xl font-black" />
       <div>
         <Button type="button" variant="outline" size="sm" className="min-h-[48px] min-w-[48px]" aria-label={`Restar ${label}`} disabled={isSaving}
           onClick={() => onChange(String(Math.max(0, count(value) - 1)))}>−</Button>
-        <Button type="button" variant="outline" size="sm" className="min-h-[48px] min-w-[48px]" aria-label={`Sumar ${label}`} disabled={isSaving}
-          onClick={() => onChange(String(count(value) + 1))}>+</Button>
+        <Button type="button" variant="outline" size="sm" className="min-h-[48px] min-w-[48px]" aria-label={`Sumar ${label}`}
+          disabled={isSaving || count(value) >= max}
+          onClick={() => onChange(String(Math.min(max, count(value) + 1)))}>+</Button>
       </div>
     </div>
   )
@@ -74,14 +85,15 @@ export function PopulationPage() {
       <div className="page-hero"><div><h1 className="page-hero-title">Población del turno</h1>
         <p className="m-0 mt-1">{shift ? `Turno ${shift.code}` : 'Cuántas personas hay en este turno'}</p></div></div>
       {shift && <ShiftSteps shift={shift} current="poblacion" />}
+      <RokkoTip tip="population" />
       {error && <AlertBanner variant="danger" message={error} />}
       <section className="panel">
         <h3>¿Cuántas personas hay en este turno?</h3>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <div className="people">
-            {field('population-students', 'Estudiantes presentes', students, setStudents)}
-            {field('population-teachers', 'Docentes', teachers, setTeachers)}
-            {field('population-staff', 'Personal administrativo y de servicios', staff, setStaff)}
+            {field('population-students', 'Estudiantes presentes', students, setStudents, LIMITS.students, errors.students)}
+            {field('population-teachers', 'Docentes', teachers, setTeachers, LIMITS.teachers, errors.teachers)}
+            {field('population-staff', 'Personal administrativo y de servicios', staff, setStaff, LIMITS.staff, errors.staff)}
           </div>
           <div className="total-band" data-testid="population-total"><span>Total población</span><b>{total} personas</b></div>
           <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
@@ -89,7 +101,7 @@ export function PopulationPage() {
               onClick={() => confirmLeave(() => navigate(shiftPath))}>
               Descartar
             </Button>
-            <Button type="submit" className="min-h-[48px]" isLoading={isSaving} disabled={isSaving}>
+            <Button type="submit" className="min-h-[48px]" isLoading={isSaving} disabled={isSaving || hasErrors}>
               Guardar población
             </Button>
           </div>

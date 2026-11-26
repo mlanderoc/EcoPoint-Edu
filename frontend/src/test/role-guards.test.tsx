@@ -19,7 +19,7 @@ import {
 import { FieldDashboard } from '@/features/field/pages/FieldDashboard'
 import { Sidebar, BottomNav, AppLayout } from '@/components/layout'
 import { mockUsers } from '@/mocks/data/seedData'
-import { resetMockState } from '@/mocks/handlers'
+import { closeMockShift, resetMockState } from '@/mocks/handlers'
 
 /** Day 4 of the mock study, morning: a shift not opened yet. */
 const DAY_FOUR_MORNING = new Date(2026, 2, 5, 8, 0)
@@ -32,6 +32,7 @@ describe('Role Guards and Conditional Visibility (T310, CA-300, R-311, RN-081)',
   it('ca300_studentMenuAndButtonsRestricted', async () => {
     // 1. In FieldDashboard, student does NOT see shift control buttons ("Abrir Turno", "Cerrar Turno")
     resetMockState('ESTUDIANTE_UNIVERSITARIO')
+    closeMockShift(14)
     const { unmount: unmountDashboard } = render(
       <MemoryRouter initialEntries={['/campo']}>
         <AuthProvider initialUser={studentUser}>

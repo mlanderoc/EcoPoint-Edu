@@ -14,7 +14,9 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { ApiError } from '@/services/apiClient'
 import { UserRole, UserRow } from '@/types'
 import { cn } from '@/utils/cn'
+import { emailError as checkEmail } from '@/utils/email'
 import { adminService } from '../services/adminService'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 /** Shortest initial password the API accepts (spec 003, UserValidator). */
 const MIN_PASSWORD_LENGTH = 8
@@ -56,7 +58,7 @@ export function UsersPage() {
   const [firstName, setFirstName] = useState('')
   const [lastName, setLastName] = useState('')
   const [email, setEmail] = useState('')
-  const [role, setRole] = useState<UserRole>('ESTUDIANTE_UNIVERSITARIO')
+  const [role, setRole] = useState<UserRole | ''>('')
   const [password, setPassword] = useState('')
   const [emailError, setEmailError] = useState<string | null>(null)
   const [passwordError, setPasswordError] = useState<string | null>(null)
@@ -102,7 +104,7 @@ export function UsersPage() {
     setFirstName('')
     setLastName('')
     setEmail('')
-    setRole('ESTUDIANTE_UNIVERSITARIO')
+    setRole('')
     setPassword('')
     setEmailError(null)
     setPasswordError(null)
@@ -160,8 +162,13 @@ export function UsersPage() {
       setGeneralError('El apellido del usuario es obligatorio.')
       return
     }
-    if (!email.trim()) {
-      setEmailError('El correo electrónico es obligatorio.')
+    const invalidEmail = checkEmail(email)
+    if (invalidEmail) {
+      setEmailError(invalidEmail)
+      return
+    }
+    if (!role) {
+      setGeneralError('Escoja el rol del usuario.')
       return
     }
     if (password.length < MIN_PASSWORD_LENGTH) {
@@ -174,7 +181,7 @@ export function UsersPage() {
         firstName: firstName.trim(),
         lastName: lastName.trim(),
         email: email.trim().toLowerCase(),
-        role,
+        role: role as UserRole,
         password,
       })
       setIsModalOpen(false)
@@ -216,6 +223,7 @@ export function UsersPage() {
         </Button>
       </div>
 
+      <RokkoTip tip="users" />
       {generalError && !isModalOpen && (
         <AlertBanner variant="danger" title="Atención" message={generalError} onDismiss={() => setGeneralError(null)} />
       )}
@@ -324,7 +332,7 @@ export function UsersPage() {
           <Input id="user-email" label="Correo Institucional" type="email" placeholder="Ej. usuario@unicesar.edu.co"
             value={email} onChange={(e) => { setEmail(e.target.value); if (emailError) setEmailError(null) }}
             error={emailError || undefined} disabled={isSaving} required />
-          <Select id="user-role" label="Rol en el Sistema" value={role}
+          <Select id="user-role" label="Rol en el Sistema" value={role} placeholder="Escoja el rol"
             onChange={(e) => setRole(e.target.value as UserRole)} options={ROLE_OPTIONS} disabled={isSaving} />
           <Input id="user-password" label="Contraseña inicial" type="password" autoComplete="new-password"
             placeholder={`Mínimo ${MIN_PASSWORD_LENGTH} caracteres`} value={password}

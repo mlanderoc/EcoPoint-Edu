@@ -7,12 +7,14 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ClipboardList } from 'lucide-react'
 import { AlertBanner, Select } from '@/components/ui'
+import { greeting, longDate } from '@/components/layout/Header'
 import { useAuth } from '@/features/auth/hooks/useAuth'
 import { hasPermission } from '@/features/auth/utils/permissions'
 import { useInstitutions } from '@/features/admin/components/InstitutionSelect'
 import { fieldService } from '@/features/field/services/fieldService'
-import { formatNumber } from '@/features/field/utils/fieldMath'
+import { formatNumber, openBlocker } from '@/features/field/utils/fieldMath'
 import { indicatorService } from '@/features/indicators/services/indicatorService'
 import { StudyIndicators } from '@/features/indicators/types/indicatorTypes'
 import { alertService } from '@/features/quality/services/verificationService'
@@ -20,8 +22,9 @@ import { studyService } from '@/features/study/services/studyService'
 import { formatDate } from '@/features/study/utils/samplingDays'
 import { studyTitle } from '@/features/study/utils/studyStatus'
 import { CharacterizationStudy, SamplingShift, ShiftSlot } from '@/types'
+import { chosenOrOnly } from '@/utils/choice'
 import { BagIcon } from '../components/BagIcon'
-import { StudyTrail, stopState } from '../components/StudyTrail'
+import { StudyTrail, slotName, stopState } from '../components/StudyTrail'
 
 const GROUP_COLORS: Record<string, string> = {
   VERDE: 'var(--waste-green)', BLANCO: 'var(--waste-white)', NEGRO: 'var(--waste-black)', SIN_COLOR: 'var(--waste-none)',
@@ -40,7 +43,7 @@ function currentIndex(slots: ShiftSlot[]): number {
   return next >= 0 ? next : Math.max(0, slots.length - 1)
 }
 
-export function HomePage() {
+export function HomePage({ now = new Date() }: { now?: Date } = {}) {
   const { user } = useAuth()
   const navigate = useNavigate()
   const canOpen = hasPermission(user?.role, 'MANAGE_SHIFTS')
@@ -49,13 +52,14 @@ export function HomePage() {
   const [studies, setStudies] = useState<CharacterizationStudy[] | undefined>(undefined)
   const [slots, setSlots] = useState<ShiftSlot[]>([])
   const [selected, setSelected] = useState(0)
+  const [hovered, setHovered] = useState<number | null>(null)
   const [shift, setShift] = useState<SamplingShift | null>(null)
   const [indicators, setIndicators] = useState<StudyIndicators | null>(null)
   const [pendingAlerts, setPendingAlerts] = useState(0)
   const [error, setError] = useState<string | null>(null)
 
   const chosenId = Number(params.get('estudio'))
-  const study = studies?.find((item) => item.id === chosenId) ?? studies?.[0] ?? null
+  const study = chosenOrOnly(studies, chosenId)
   const studyId = study?.id ?? null
   const slot = slots[selected]
   const shiftId = slot?.shiftId ?? null
@@ -118,10 +122,11 @@ export function HomePage() {
   const shiftName = slot?.type === 'MANANA' ? 'Mañana' : 'Tarde'
   const pendingSources = shift?.sources.filter((source) => source.status === 'PENDIENTE') ?? []
   const shiftKg = shift?.totalNetWeight ?? 0
-  const blocked = state === 'pending' && !canOpen
+  const orderBlocker = state === 'pending' && slot ? openBlocker(slots, slot.dayNumber, slot.type) : null
+  const blocked = state === 'pending' && (!canOpen || orderBlocker !== null)
   const actionText = state === 'closed' ? 'Ver turno'
     : state === 'current' ? 'Continuar turno'
-      : canOpen ? 'Abrir turno' : 'Espera la apertura'
+      : !canOpen ? 'Espera la apertura' : orderBlocker ? 'Aún no disponible' : 'Abrir turno'
 
   const goToShift = () => {
     if (!study || !slot) return
@@ -133,10 +138,14 @@ export function HomePage() {
   return (
     <div className="home">
       <div className="home-top">
-        <h1>¡Hola, {user?.firstName ?? 'de nuevo'}!</h1>
-        {study && studies && studies.length > 1 && (
+        <div>
+          <h1>{greeting(now)}, {user?.firstName ?? 'de nuevo'}</h1>
+          <p className="home-date" data-testid="home-date">{longDate(now)}</p>
+        </div>
+        {studies && studies.length > 1 && (
           <div className="home-study">
-            <Select id="home-study" aria-label="Estudio en ejecución" value={String(study.id)}
+            <Select id="home-study" aria-label="Estudio en ejecución" value={study ? String(study.id) : ''}
+              placeholder="Escoja un estudio" icon={<ClipboardList />}
               onChange={(event) => chooseStudy(Number(event.target.value))}
               options={studies.map((item) => ({ value: String(item.id), label: label(item) }))} />
           </div>
@@ -146,6 +155,9 @@ export function HomePage() {
 
       {error && <AlertBanner variant="danger" title="No se pudo cargar" message={error} />}
       {studies === undefined && <p className="text-sm text-[var(--color-text-muted)]">Cargando estudio...</p>}
+      {!study && studies && studies.length > 1 && (
+        <AlertBanner variant="info" title="Escoja un estudio" message="Hay varios estudios en ejecución: elija uno arriba para ver su recorrido." />
+      )}
       {studies?.length === 0 && !error && (
         <AlertBanner variant="info" title="No hay un estudio en ejecución"
           message={canOpen
@@ -162,6 +174,7 @@ export function HomePage() {
                 <h2>Día {slot.dayNumber} · {shiftName}</h2>
                 <p className="trail-when">{formatDate(day?.date)}{slot.dayNumber === 1 ? ' · día de descarte' : ''}</p>
                 <button className="trail-cta" type="button" disabled={blocked} onClick={goToShift}>{actionText}</button>
+                {canOpen && orderBlocker && <p className="trail-why" data-testid="trail-why">{orderBlocker}</p>}
               </div>
               <div className="trail-stats">
                 <div><b>{shift?.bagCount ?? 0}</b><span>bolsas del turno</span></div>
@@ -170,8 +183,12 @@ export function HomePage() {
                 <div><b>{study.pendingRecords}</b><span>por verificar</span></div>
               </div>
             </div>
-            <StudyTrail slots={slots} selected={selected} onSelect={setSelected} />
+            <StudyTrail slots={slots} selected={selected} onSelect={setSelected} onHover={setHovered} />
             <img className="trail-eco" src="/brand/eco-saluda.webp" alt="" />
+            <p className={hovered !== null && slots[hovered] ? 'trail-say on' : 'trail-say'} aria-live="polite"
+              data-testid="rokko-says">
+              {hovered !== null && slots[hovered] ? slotName(slots[hovered]) : ''}
+            </p>
           </section>
 
           <div className="home-board">

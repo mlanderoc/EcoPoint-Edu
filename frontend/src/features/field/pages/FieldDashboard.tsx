@@ -18,9 +18,11 @@ import { studyService } from '@/features/study/services/studyService'
 import { formatDate } from '@/features/study/utils/samplingDays'
 import { studyTitle } from '@/features/study/utils/studyStatus'
 import { ApiError } from '@/services/apiClient'
+import { chosenOrOnly } from '@/utils/choice'
 import { CharacterizationStudy, ShiftSlot, ShiftType } from '@/types'
 import { fieldService } from '../services/fieldService'
-import { suggestSlot } from '../utils/fieldMath'
+import { openBlocker, suggestSlot } from '../utils/fieldMath'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const SHIFT_LABELS: Record<ShiftType, string> = { MANANA: 'Mañana', TARDE: 'Tarde' }
 
@@ -43,7 +45,7 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
   const requested = useRef({ day: Number(params.get('dia')), type: params.get('turno') })
   const study: CharacterizationStudy | null | undefined = studies === undefined
     ? undefined
-    : studies.find((item) => item.id === chosenId) ?? studies[0] ?? null
+    : chosenOrOnly(studies, chosenId)
   const [slots, setSlots] = useState<ShiftSlot[]>([])
   const [dayNumber, setDayNumber] = useState(1)
   const [type, setType] = useState<ShiftType>('MANANA')
@@ -90,6 +92,8 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
     [slots, dayNumber, type]
   )
   const day = study?.days.find((item) => item.dayNumber === dayNumber)
+  const openSlot = slots.find((item) => item.status === 'ABIERTO')
+  const blocker = slot?.shiftId ? null : openBlocker(slots, dayNumber, type)
 
   const handleOpen = async () => {
     if (!study) return
@@ -125,11 +129,12 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
         </div>
       </div>
 
-      {study && studies && studies.length > 1 && (
+      {studies && studies.length > 1 && (
         <Select
           id="field-study"
           label="Estudio en ejecución"
-          value={String(study.id)}
+          placeholder="Escoja un estudio"
+          value={study ? String(study.id) : ''}
           onChange={(event) => chooseStudy(Number(event.target.value))}
           options={studies.map((item) => ({
             value: String(item.id),
@@ -138,11 +143,17 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
         />
       )}
 
+      <RokkoTip tip="field" />
       {error && <AlertBanner variant="danger" title="No se pudo continuar" message={error} />}
 
       {study === undefined && <p className="text-sm text-[var(--color-text-muted)]">Cargando estudio...</p>}
 
-      {study === null && !error && (
+      {study === null && studies && studies.length > 1 && !error && (
+        <AlertBanner variant="info" title="Escoja un estudio"
+          message="Hay varios estudios en ejecución: elija en cuál va a registrar los datos del turno." />
+      )}
+
+      {study === null && studies?.length === 0 && !error && (
         <AlertBanner
           variant="info"
           title="No hay un estudio en ejecución"
@@ -184,6 +195,15 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
                 {slot.status === 'CERRADO' ? 'Ver turno cerrado' : 'Continuar turno'}
                 <ArrowRight className="w-5 h-5 ml-2" />
               </Button>
+            ) : canOpen && blocker ? (
+              <div className="flex flex-col gap-3" data-testid="open-blocked">
+                <AlertBanner variant="warning" title="Este turno todavía no se puede abrir" message={blocker} />
+                {openSlot?.shiftId && (
+                  <Button variant="outline" className="min-h-[48px]" onClick={() => navigate(`/campo/turno/${openSlot.shiftId}`)}>
+                    Ir al turno abierto <ArrowRight className="w-5 h-5 ml-2" />
+                  </Button>
+                )}
+              </div>
             ) : canOpen ? (
               <Button className="min-h-[56px] text-lg" onClick={() => setIsConfirming(true)}>
                 <PlayCircle className="w-5 h-5 mr-2" /> Abrir turno
@@ -208,7 +228,8 @@ export function FieldDashboard({ now }: FieldDashboardProps = {}) {
                     const dayShift = slots.find((entry) => entry.dayNumber === item.dayNumber && entry.type === shiftType)
                     const tone = dayShift?.status === 'CERRADO' ? 'closed' : dayShift?.status === 'ABIERTO' ? 'open' : ''
                     return (
-                      <button key={shiftType} type="button" className={tone}
+                      <button key={shiftType} type="button" className={`has-tip ${tone}`}
+                        data-tip={`Día ${item.dayNumber}, Turno ${SHIFT_LABELS[shiftType]}`}
                         aria-label={`Elegir día ${item.dayNumber}, ${SHIFT_LABELS[shiftType]}`}
                         aria-pressed={dayNumber === item.dayNumber && type === shiftType}
                         onClick={() => { setDayNumber(item.dayNumber); setType(shiftType) }}>

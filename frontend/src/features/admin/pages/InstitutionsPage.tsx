@@ -22,6 +22,8 @@ import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
 import { Institution } from '@/types'
 import { cn } from '@/utils/cn'
 import { adminService } from '../services/adminService'
+import { AddressFields, AddressParts, EMPTY_ADDRESS, addressErrors, composeAddress } from '../components/AddressFields'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 function isActive(institution: Institution): boolean {
   return institution.active !== false
@@ -32,13 +34,15 @@ export function InstitutionsPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [name, setName] = useState('')
-  const [address, setAddress] = useState('')
+  const [address, setAddress] = useState<AddressParts>(EMPTY_ADDRESS)
+  const [triedSave, setTriedSave] = useState(false)
   const [active, setActive] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const [togglingId, setTogglingId] = useState<number | null>(null)
   const [filter, setFilter] = useActiveFilter()
-  const { confirmLeave, discardDialog } = useUnsavedChanges(isModalOpen && !isSaving && (name + address) !== '')
+  const { confirmLeave, discardDialog } = useUnsavedChanges(isModalOpen && !isSaving
+    && (name !== '' || JSON.stringify(address) !== JSON.stringify(EMPTY_ADDRESS)))
 
   useEffect(() => {
     adminService.getInstitutions()
@@ -52,7 +56,8 @@ export function InstitutionsPage() {
 
   const resetForm = () => {
     setName('')
-    setAddress('')
+    setAddress(EMPTY_ADDRESS)
+    setTriedSave(false)
     setActive(true)
   }
 
@@ -67,14 +72,15 @@ export function InstitutionsPage() {
       setError('El nombre de la institución es obligatorio.')
       return
     }
-    if (!address.trim()) {
-      setError('La dirección de la institución es obligatoria.')
+    setTriedSave(true)
+    if (Object.keys(addressErrors(address)).length > 0) {
+      setError('Revise la dirección: debe ser una dirección válida de Valledupar.')
       return
     }
     try {
       setIsSaving(true)
       setError(null)
-      const created = await adminService.createInstitution({ name: name.trim(), address: address.trim(), active })
+      const created = await adminService.createInstitution({ name: name.trim(), address: composeAddress(address), active })
       setInstitutions((prev) => [...prev, created])
       setIsModalOpen(false)
       resetForm()
@@ -113,6 +119,7 @@ export function InstitutionsPage() {
         </Button>
       </div>
 
+      <RokkoTip tip="institutions" />
       {error && <AlertBanner variant="danger" title="Atención" message={error} onDismiss={() => setError(null)} />}
 
       <ActiveFilter value={filter} onChange={setFilter} inactiveCount={inactiveCount} />
@@ -151,8 +158,7 @@ export function InstitutionsPage() {
         <form onSubmit={handleCreate} className="flex flex-col gap-4">
           <Input id="institution-name" label="Nombre de la Institución" placeholder="Ej. I.E. Prudencia Daza"
             value={name} onChange={(e) => setName(e.target.value)} required autoFocus />
-          <Input id="institution-address" label="Dirección" placeholder="Ej. Calle 16 # 19-32, Valledupar"
-            value={address} onChange={(e) => setAddress(e.target.value)} required />
+          <AddressFields value={address} onChange={setAddress} showErrors={triedSave} disabled={isSaving} />
           <label className="flex items-center gap-2.5 select-none text-sm font-semibold text-slate-700 pt-1">
             <input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)}
               className="w-4 h-4 rounded border-slate-300 text-[var(--color-primary)] focus:ring-[var(--color-primary)]" />

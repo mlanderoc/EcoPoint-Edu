@@ -180,6 +180,7 @@ class QualityFlowIT extends PostgresIntegrationTest {
     }
 
     private long shiftWithSixBags(String type) throws Exception {
+        readyToOpen(RUNNING_STUDY, 3, type);
         String opened = teacher.json(post("/api/v1/studies/" + RUNNING_STUDY + "/shifts"),
                         "{\"dayNumber\":3,\"type\":\"" + type + "\"}")
                 .andExpect(status().isCreated())

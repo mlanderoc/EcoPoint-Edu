@@ -141,6 +141,7 @@ describe('Quartering screen (T403)', () => {
     await user.type(screen.getByLabelText('Papel de archivo (kg)'), '30')
     await user.type(screen.getByLabelText('Restos de comida (kg)'), '20')
     await user.click(screen.getByRole('button', { name: 'Guardar cuarteo' }))
+    await screen.findByText('Composición')
 
     const steps = await screen.findByRole('navigation', { name: 'Pasos del turno' })
     expect(await within(steps).findByText('Registrado')).toBeInTheDocument()

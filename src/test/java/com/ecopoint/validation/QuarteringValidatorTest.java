@@ -139,4 +139,13 @@ class QuarteringValidatorTest {
         nonConforming.evaluateQuality(SETTINGS.qualityTolerancePercent());
         assertDoesNotThrow(() -> QuarteringValidator.validateAnnul(nonConforming, student()));
     }
+
+    @Test
+    void rev1_subcategoryHeavierThanTheSampleIsRejected() {
+        Quartering quartering = new Quartering(null, 1L, new BigDecimal("120"), new BigDecimal("50"),
+                new VerificationInfo(10L, AT));
+        quartering.addResult(QuarteringResult.of(PAPER, new BigDecimal("50.50")));
+
+        assertThrows(InvalidDataException.class, () -> QuarteringValidator.validate(quartering, SETTINGS));
+    }
 }

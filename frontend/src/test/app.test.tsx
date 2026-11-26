@@ -15,7 +15,7 @@ describe('App initial render', () => {
     resetMockState('DOCENTE')
     render(<App />)
 
-    expect(await screen.findByRole('heading', { name: /Hola/ })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: /Buen(os|as) (días|tardes|noches)/ })).toBeInTheDocument()
     expect((await screen.findAllByAltText('EcoPoint Edu Logo')).length).toBeGreaterThanOrEqual(1)
   })
 

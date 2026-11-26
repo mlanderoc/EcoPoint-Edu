@@ -13,7 +13,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from '@/features/auth'
 import { FieldDashboard, NewBagPage, PopulationPage, ShiftPage } from '@/features/field'
 import { mockUsers } from '@/mocks/data/seedData'
-import { resetMockState } from '@/mocks/handlers'
+import { closeMockShift, resetMockState } from '@/mocks/handlers'
 
 const MIN_TOUCH_PX = 48
 const DAY_FOUR_MORNING = new Date(2026, 2, 5, 8, 0)
@@ -41,6 +41,7 @@ describe('Field flow on a 360 px phone (T324, CA-307, CA-308)', () => {
 
   it('ca307_wholeShiftWithThreeBagsUsesOnlyLargeTouchTargets', async () => {
     resetMockState('DOCENTE')
+    closeMockShift(14)
     const user = userEvent.setup()
     render(
       <MemoryRouter initialEntries={['/campo']}>
@@ -59,7 +60,7 @@ describe('Field flow on a 360 px phone (T324, CA-307, CA-308)', () => {
     expectTouchTargets()
     await user.click(await screen.findByRole('button', { name: /Abrir turno/i }))
     await user.click(await screen.findByRole('button', { name: 'Confirmar apertura' }))
-    await screen.findByRole('heading', { name: 'Turno D4-M' })
+    await screen.findByRole('heading', { name: 'Turno D3-T' })
     expectTouchTargets()
 
     // Population
@@ -80,14 +81,14 @@ describe('Field flow on a 360 px phone (T324, CA-307, CA-308)', () => {
       await user.type(screen.getByLabelText('Volumen de la bolsa (m³)'), '0,080')
       expectTouchTargets()
       await user.click(screen.getByRole('button', { name: 'Guardar bolsa' }))
-      expect(await screen.findByTestId('bag-label')).toHaveTextContent(new RegExp(`^${code}-D4-M`))
+      expect(await screen.findByTestId('bag-label')).toHaveTextContent(new RegExp(`^${code}-D3-T`))
       expectTouchTargets()
       const last = index === bags.length - 1
       await user.click(screen.getByRole('button', { name: last ? 'Ver turno' : 'Siguiente bolsa' }))
     }
 
     // Mark the other sources without generation and close the shift
-    await screen.findByRole('heading', { name: 'Turno D4-M' })
+    await screen.findByRole('heading', { name: 'Turno D3-T' })
     for (const code of ['BA', 'OF', 'PAE', 'ZV']) {
       await user.click(within(await screen.findByTestId(`source-${code}`))
         .getByRole('button', { name: 'Marcar sin generación' }))

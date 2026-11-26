@@ -141,4 +141,29 @@ class GenerationSourceServiceTest {
         assertFalse(created.isActive());
         assertEquals(1, service.list(INSTITUTION, null).size());
     }
+
+    @Test
+    void rev4_codeIsGeneratedFromTheNameWhenTheFormDoesNotSendIt() {
+        GenerationSource created = service.create(teacher, INSTITUTION, null, "Aulas de Clase", SourceType.AULAS);
+        GenerationSource lab = service.create(teacher, INSTITUTION, " ", "Laboratorio", SourceType.LABORATORIO);
+
+        assertEquals("AC", created.getCode());
+        assertEquals("LAB", lab.getCode());
+    }
+
+    @Test
+    void rev4_generatedCodeSkipsTheCodesAlreadyTaken() {
+        GenerationSource created = service.create(teacher, INSTITUTION, null, "Tienda Interna", SourceType.TIENDA_ESCOLAR);
+
+        assertEquals("TI2", created.getCode());
+    }
+
+    @Test
+    void rev4_updateWithoutCodeKeepsTheCurrentOne() {
+        GenerationSource updated = service.update(teacher, INSTITUTION, 5L, null, "Tienda principal",
+                SourceType.TIENDA_ESCOLAR);
+
+        assertEquals("TI", updated.getCode());
+        assertEquals("Tienda principal", updated.getName());
+    }
 }

@@ -58,6 +58,28 @@ public final class StudyValidator {
     }
 
     /**
+     * Validates that every date typed now is today or later (professor's
+     * review, point 5). Dates that were already saved and did not change are
+     * accepted even if they are in the past, so a study in progress can still
+     * be edited.
+     *
+     * @param previous dates saved before, in the order of the days; empty for a new study
+     * @param dates    dates typed now, in the order of the days; a date may be null
+     * @param today    current date
+     * @throws InvalidDataException if a new or changed date is before today
+     */
+    public static void validateDatesNotInPast(List<LocalDate> previous, List<LocalDate> dates, LocalDate today) {
+        for (int index = 0; index < dates.size(); index++) {
+            LocalDate date = dates.get(index);
+            LocalDate before = index < previous.size() ? previous.get(index) : null;
+            if (date != null && !date.equals(before) && date.isBefore(today)) {
+                throw new InvalidDataException("fechas", "La fecha del día " + (index + 1) + " ("
+                        + format(date) + ") no puede ser anterior a hoy (" + format(today) + ").");
+            }
+        }
+    }
+
+    /**
      * Validates that the study does not overlap with another study of the same
      * institution (RN-013). The study itself, studies of other institutions,
      * cancelled studies (their dates are free again, RN-018) and studies without

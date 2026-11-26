@@ -51,7 +51,7 @@ class InstitutionServiceTest {
 
     @Test
     void r320_teacherCreatesAnInstitution() {
-        Institution created = service.create(teacher, new Institution(7L, "Colegio Nuevo", "Calle 1"));
+        Institution created = service.create(teacher, new Institution(7L, "Colegio Nuevo", "Calle 1 # 2 - 3, Valledupar, Cesar"));
 
         assertNull(created.getId(), "El id lo asigna la base de datos");
         verify(institutions).save(created);
@@ -60,30 +60,30 @@ class InstitutionServiceTest {
     @Test
     void r320_repeatedNameIsRejected() {
         assertThrows(BusinessRuleException.class,
-                () -> service.create(teacher, new Institution(null, "I.E. Prudencia Daza", "Otra dirección")));
+                () -> service.create(teacher, new Institution(null, "I.E. Prudencia Daza", "Carrera 9 # 15 - 20, Valledupar, Cesar")));
     }
 
     @Test
     void r320_missingNameIsInvalid() {
-        assertThrows(InvalidDataException.class, () -> service.create(teacher, new Institution(null, " ", "Calle 1")));
+        assertThrows(InvalidDataException.class, () -> service.create(teacher, new Institution(null, " ", "Calle 1 # 2 - 3, Valledupar, Cesar")));
     }
 
     @Test
     void ca203_studentCannotCreateInstitutions() {
         assertThrows(AccessDeniedException.class,
-                () -> service.create(student, new Institution(null, "Colegio Nuevo", "Calle 1")));
+                () -> service.create(student, new Institution(null, "Colegio Nuevo", "Calle 1 # 2 - 3, Valledupar, Cesar")));
         verify(institutions, never()).save(any());
     }
 
     @Test
     void r623_updateKeepsTheNameAndSavesTheMapView() {
-        Institution changes = new Institution(null, "I.E. Prudencia Daza", "Valledupar, Cesar");
+        Institution changes = new Institution(null, "I.E. Prudencia Daza", "Calle 16 # 19 - 32, Valledupar, Cesar");
         changes.setMapCenter(GeoPoint.of("10.47", "-73.25"));
         changes.setMapZoom(18);
 
         Institution saved = service.update(teacher, 1L, changes);
 
-        assertEquals("Valledupar, Cesar", saved.getAddress());
+        assertEquals("Calle 16 # 19 - 32, Valledupar, Cesar", saved.getAddress());
         assertEquals(18, saved.getMapZoom());
         assertEquals(GeoPoint.of("10.47", "-73.25"), saved.getMapCenter());
     }

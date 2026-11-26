@@ -135,7 +135,7 @@ class WasteBagServiceTest {
     void ca037_atypicalBagIsSavedWithItsAlert() {
         withPopulation();
 
-        WasteBag bag = register("62.40", "0.40", "0.080");
+        WasteBag bag = register("55.40", "0.40", "0.080");
 
         assertTrue(bag.isAtypical());
         ArgumentCaptor<Alert> alert = ArgumentCaptor.forClass(Alert.class);

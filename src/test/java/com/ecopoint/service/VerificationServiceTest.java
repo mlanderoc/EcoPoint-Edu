@@ -192,9 +192,9 @@ class VerificationServiceTest {
     void rn093_heavierShiftUpdatesTheWeightOfTheQuartering() {
         Quartering quartering = quarteringOf("12.00", "12.00");
 
-        service.correct(checker, RecordKind.BAG, 50L, Map.of("grossWeight", new BigDecimal("70.40")), "Dato del papel");
+        service.correct(checker, RecordKind.BAG, 50L, Map.of("grossWeight", new BigDecimal("58.40")), "Dato del papel");
 
-        assertEquals(0, new BigDecimal("70.00").compareTo(quartering.getShiftNetWeight()));
+        assertEquals(0, new BigDecimal("58.00").compareTo(quartering.getShiftNetWeight()));
         assertFalse(quartering.isFullSample());
         assertEquals(QualityStatus.NO_CONFORME, quartering.getQualityStatus());
     }

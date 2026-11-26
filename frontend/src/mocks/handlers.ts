@@ -182,6 +182,21 @@ function findShift(params: Record<string, unknown>): MockShift | undefined {
   return shiftsState.find((shift) => shift.id === Number(params.shiftId))
 }
 
+/** Same rule as GenerationSource.generateCode in the backend (professor's review, point 4). */
+function generateSourceCode(name: string, taken: Set<string>): string {
+  const connectors = new Set(['DE', 'DEL', 'LA', 'LAS', 'EL', 'LOS', 'Y', 'E', 'EN', 'A', 'AL', 'PARA', 'CON', 'POR'])
+  const words = name.normalize('NFD').replace(/\p{M}/gu, '').toUpperCase().replace(/[^A-Z0-9 ]/g, ' ')
+    .trim().split(/\s+/).filter((word) => word && !connectors.has(word))
+  let prefix = words.length > 1 ? words.slice(0, 3).map((word) => word[0]).join('') : (words[0] ?? '').slice(0, 3)
+  if (prefix.length < 2) prefix = 'FU'
+  if (!taken.has(prefix)) return prefix
+  for (let number = 2; ; number++) {
+    const suffix = String(number)
+    const candidate = prefix.slice(0, 6 - suffix.length) + suffix
+    if (!taken.has(candidate)) return candidate
+  }
+}
+
 export const handlers = [
   // --- AUTHENTICATION (plan 003, section 4.1) ---
   http.get('/api/v1/auth/csrf', () => new HttpResponse(null, { status: 204 })),
@@ -265,12 +280,14 @@ export const handlers = [
     const path = `/api/v1/institutions/${params.id}/sources`
     const denied = requirePermission('MANAGE_ADMINISTRATION', path)
     if (denied) return denied
-    const body = (await request.json()) as Pick<GenerationSource, 'code' | 'name' | 'type'> & { active?: boolean }
-    if (sourcesState.some((source) => source.code === body.code && source.institutionId === Number(params.id))) {
-      return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${body.code} en esta institución.`, path)
+    const body = (await request.json()) as Pick<GenerationSource, 'name' | 'type'> & { code?: string; active?: boolean }
+    const taken = new Set(sourcesState.filter((source) => source.institutionId === Number(params.id)).map((source) => source.code))
+    const code = body.code?.trim() || generateSourceCode(body.name, taken)
+    if (taken.has(code)) {
+      return apiError(422, 'ERR_BUSINESS_RULE', `Ya existe una fuente con el código ${code} en esta institución.`, path)
     }
     const created: GenerationSource = {
-      ...body, id: newId(), institutionId: Number(params.id) || 1, active: body.active !== false, hasGeometry: false,
+      ...body, code, id: newId(), institutionId: Number(params.id) || 1, active: body.active !== false, hasGeometry: false,
     }
     sourcesState.push(created)
     return HttpResponse.json(created, { status: 201 })
@@ -631,6 +648,20 @@ export const handlers = [
       && shift.type === body.type)) {
       const label = body.type === 'MANANA' ? 'mañana' : 'tarde'
       return apiError(422, 'ERR_BUSINESS_RULE', `El turno de ${label} del día ${body.dayNumber} ya existe.`, path)
+    }
+    const studyShifts = shiftsState.filter((item) => item.studyId === studyId)
+    const open = studyShifts.find((item) => item.status === 'ABIERTO')
+    if (open) {
+      return apiError(422, 'ERR_BUSINESS_RULE',
+        `Cierre el turno D${open.dayNumber}-${open.type === 'MANANA' ? 'M' : 'T'} antes de abrir otro.`, path)
+    }
+    if (!(body.dayNumber === 1 && body.type === 'MANANA')) {
+      const previousDay = body.type === 'TARDE' ? body.dayNumber : body.dayNumber - 1
+      const previousType: ShiftType = body.type === 'TARDE' ? 'MANANA' : 'TARDE'
+      if (!studyShifts.some((item) => item.dayNumber === previousDay && item.type === previousType && item.status === 'CERRADO')) {
+        return apiError(422, 'ERR_BUSINESS_RULE', `Los turnos van en orden: primero se cierra el turno de la ${
+          previousType === 'MANANA' ? 'mañana' : 'tarde'} del día ${previousDay}.`, path)
+      }
     }
     const shift: MockShift = {
       id: newId(), studyId, dayNumber: body.dayNumber, type: body.type, status: 'ABIERTO',
@@ -1035,6 +1066,12 @@ function cloneShifts(): MockShift[] {
 }
 
 /** Resets the mock state between tests; null leaves the user logged out. */
+/** Closes a mock shift, so tests can open the next one in order. */
+export function closeMockShift(shiftId: number) {
+  const shift = shiftsState.find((item) => item.id === shiftId)
+  if (shift) shift.status = 'CERRADO'
+}
+
 export function resetMockState(userRole?: UserRole | null) {
   activeUser = userRole === null
     ? null
