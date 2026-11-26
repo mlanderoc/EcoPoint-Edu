@@ -84,10 +84,12 @@ public class GenerationSourceService {
 
     /**
      * Creates a source, active or inactive as chosen in the form (RN-005, R-321).
+     * Without a code, the system generates a free one from the name
+     * (professor's review, point 4).
      *
      * @param actor         teacher that acts
      * @param institutionId institution id
-     * @param code          source code
+     * @param code          source code, or null or blank to generate it
      * @param name          source name
      * @param type          source type
      * @param active        false to create it inactive
@@ -97,12 +99,14 @@ public class GenerationSourceService {
                                    boolean active) {
         AccessPolicy.require(actor, Permission.MANAGE_ADMINISTRATION);
         requireInstitution(institutionId);
-        GenerationSource source = new GenerationSource(null, institutionId, code, name, type);
+        Set<String> takenCodes = new HashSet<>(sources.findCodesByInstitution(institutionId));
+        String finalCode = code == null || code.isBlank() ? GenerationSource.generateCode(name, takenCodes) : code;
+        GenerationSource source = new GenerationSource(null, institutionId, finalCode, name, type);
         if (!active) {
             source.deactivate();
         }
         GenerationSourceValidator.validate(source);
-        GenerationSourceValidator.validateUniqueCode(source, sources.findCodesByInstitution(institutionId));
+        GenerationSourceValidator.validateUniqueCode(source, takenCodes);
         return sources.save(source);
     }
 
@@ -112,7 +116,7 @@ public class GenerationSourceService {
      * @param actor         user that acts
      * @param institutionId institution of the source
      * @param sourceId      source id
-     * @param code          new code
+     * @param code          new code, or null or blank to keep the current one
      * @param name          new name
      * @param type          new type
      * @return the saved source
@@ -123,7 +127,9 @@ public class GenerationSourceService {
         GenerationSource source = get(institutionId, sourceId);
         Set<String> otherCodes = new HashSet<>(sources.findCodesByInstitution(institutionId));
         otherCodes.remove(source.getCode());
-        source.setCode(code);
+        if (code != null && !code.isBlank()) {
+            source.setCode(code);
+        }
         source.setName(name);
         source.setType(type);
         GenerationSourceValidator.validate(source);
