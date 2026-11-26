@@ -34,9 +34,16 @@ export interface StudyTrailProps {
   slots: ShiftSlot[]
   selected: number
   onSelect: (index: number) => void
+  /** Stop under the pointer or the keyboard focus, so Rokko can say its day and shift (point 6). */
+  onHover?: (index: number | null) => void
 }
 
-export function StudyTrail({ slots, selected, onSelect }: StudyTrailProps) {
+/** "Día 3, Turno Mañana". */
+export function slotName(slot: ShiftSlot): string {
+  return `Día ${slot.dayNumber}, Turno ${slot.type === 'MANANA' ? 'Mañana' : 'Tarde'}`
+}
+
+export function StudyTrail({ slots, selected, onSelect, onHover }: StudyTrailProps) {
   const reached = slots.reduce((last, slot, index) => (slot.shiftId !== null ? index : last), -1)
   return (
     <div className="trail-scroll">
@@ -53,6 +60,11 @@ export function StudyTrail({ slots, selected, onSelect }: StudyTrailProps) {
               key={`${slot.dayNumber}-${slot.type}`}
               type="button"
               className={`trail-stop ${stopState(slot)}`}
+              title={slotName(slot)}
+              onMouseEnter={() => onHover?.(index)}
+              onMouseLeave={() => onHover?.(null)}
+              onFocus={() => onHover?.(index)}
+              onBlur={() => onHover?.(null)}
               style={{ left: `${position.x / 10}%`, top: `${(position.y / 176) * 100}%` }}
               aria-label={`Día ${slot.dayNumber}, ${shiftName}`}
               aria-pressed={index === selected}

@@ -21,12 +21,14 @@ import { parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
 import { Quartering, SamplingShift, WasteCategory, WasteGroup } from '@/types'
 import { cn } from '@/utils/cn'
+import { rangeError } from '@/utils/limits'
 import { qualityService } from '../services/qualityService'
 import { settingsOfStudy } from '@/features/study/services/studySettings'
 import { CompositionChart } from '../components/CompositionChart'
 import {
   DEFAULT_QUARTERING_SETTINGS, checkQuality, formatKg, formatPercent, proposedFullSample, sampleError,
 } from '../utils/quarteringMath'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const GROUPS: WasteGroup[] = ['BLANCO', 'VERDE', 'NEGRO', 'SIN_COLOR']
 
@@ -87,6 +89,9 @@ export function QuarteringPage() {
   )
   const sampleMessage = shift ? sampleError(sampleValue, shift.totalNetWeight, settings) : null
   const hasWeights = weightValues.some((value) => value !== null && value > 0)
+  const weightErrors = weightValues.map((value) => value === null || value === 0 ? undefined
+    : rangeError(value, [0.01, sampleValue ?? 0], 'El peso', 'kg (la submuestra)'))
+  const hasWeightErrors = weightErrors.some(Boolean)
 
   /** Brings the shift's steps and totals up to date after saving, without reloading the page. */
   const refreshShift = () => {
@@ -95,7 +100,7 @@ export function QuarteringPage() {
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (sampleMessage || !hasWeights || sampleValue === null) return
+    if (sampleMessage || !hasWeights || sampleValue === null || hasWeightErrors) return
     setError(null)
     try {
       setIsSaving(true)
@@ -190,6 +195,7 @@ export function QuarteringPage() {
           </p>
         </div>
       </div>
+      <RokkoTip tip="quartering" />
       <ShiftSteps shift={shift} current="cuarteo" />
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       {shift.status !== 'ABIERTO' && (
@@ -222,7 +228,7 @@ export function QuarteringPage() {
                 : `No conforme (> ${formatKg(settings.qualityTolerancePercent, 0)} %)`}
             </p>
             <Button type="submit" className="min-h-[48px]" isLoading={isSaving}
-              disabled={isSaving || !!sampleMessage || !hasWeights || shift.status !== 'ABIERTO'}>
+              disabled={isSaving || !!sampleMessage || !hasWeights || hasWeightErrors || shift.status !== 'ABIERTO'}>
               Guardar cuarteo
             </Button>
             <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
@@ -248,14 +254,26 @@ export function QuarteringPage() {
                       {locked ? 'Solo un docente registra residuos peligrosos' : 'Residuos peligrosos: van a posconsumo'}
                     </p>
                   )}
-                  {inGroup.map((category) => (
-                    <label key={category.id} className="weight-row" htmlFor={`category-${category.id}`}>
-                      <span>{category.name} (kg)</span>
-                      <input id={`category-${category.id}`} inputMode="decimal" placeholder="0"
-                        value={weights[category.id] ?? ''} disabled={isSaving || locked}
-                        onChange={(event) => setWeights((previous) => ({ ...previous, [category.id]: event.target.value }))} />
-                    </label>
-                  ))}
+                  {inGroup.map((category) => {
+                    const weightError = weightErrors[categories.indexOf(category)]
+                    return (
+                      <div key={category.id}>
+                        <label className={cn('weight-row', weightError && 'is-error')} htmlFor={`category-${category.id}`}>
+                          <span>{category.name} (kg)</span>
+                          <input id={`category-${category.id}`} inputMode="decimal" placeholder="0"
+                            value={weights[category.id] ?? ''} disabled={isSaving || locked}
+                            aria-invalid={weightError ? true : undefined}
+                            aria-describedby={weightError ? `category-${category.id}-error` : undefined}
+                            onChange={(event) => setWeights((previous) => ({ ...previous, [category.id]: event.target.value }))} />
+                        </label>
+                        {weightError && (
+                          <p id={`category-${category.id}-error`} role="alert" className="m-0 mt-0.5 text-xs font-semibold text-red-600">
+                            {weightError}
+                          </p>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
               )
             })}

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { UsersRound } from 'lucide-react'
 import { Select } from '@/components/ui'
 import { adminService } from '@/features/admin/services/adminService'
 import { Crew } from '@/types'
@@ -50,10 +51,11 @@ export function CrewSelect({ crews, value, currentName, onChange, disabled, stud
       id="study-crew"
       label="Cuadrilla del estudio"
       value={value ?? ''}
+      placeholder="Escoja una cuadrilla"
+      icon={<UsersRound />}
       disabled={disabled || (crews.length === 0 && !isForeign)}
       onChange={(event) => onChange(Number(event.target.value))}
     >
-      {value === null && <option value="">Elija una cuadrilla</option>}
       {isForeign && <option value={value}>{currentName ?? 'Cuadrilla asignada'}</option>}
       {crews.map((crew) => {
         const holder = crew.id === value ? undefined : unavailable.get(crew.id)

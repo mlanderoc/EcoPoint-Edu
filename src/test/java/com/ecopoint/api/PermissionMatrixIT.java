@@ -55,7 +55,7 @@ class PermissionMatrixIT extends PostgresIntegrationTest {
 
     @Test
     void ca211_manageAdministrationOnlyForTheTeacher() throws Exception {
-        String institution = "{\"name\":\"Colegio %s\",\"address\":\"Valledupar\"}";
+        String institution = "{\"name\":\"Colegio %s\",\"address\":\"Calle 16 # 19 - 32, Valledupar, Cesar\"}";
 
         teacher.json(post("/api/v1/institutions"), institution.formatted("Docente")).andExpect(status().isCreated());
         student.json(post("/api/v1/institutions"), institution.formatted("Estudiante"))
@@ -137,6 +137,7 @@ class PermissionMatrixIT extends PostgresIntegrationTest {
     }
 
     private long openShift(int day, String type) throws Exception {
+        readyToOpen(RUNNING_STUDY, day, type);
         String body = teacher.json(post("/api/v1/studies/" + RUNNING_STUDY + "/shifts"),
                         "{\"dayNumber\":" + day + ",\"type\":\"" + type + "\"}")
                 .andExpect(status().isCreated())

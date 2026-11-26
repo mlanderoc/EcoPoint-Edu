@@ -49,7 +49,7 @@ export const adminService = {
 
   createSource: async (
     institutionId: number,
-    data: Omit<GenerationSource, 'id'>
+    data: Omit<GenerationSource, 'id' | 'code'> & { code?: string }
   ): Promise<GenerationSource> => {
     return apiClient.post<GenerationSource>(`/api/v1/institutions/${institutionId}/sources`, data)
   },

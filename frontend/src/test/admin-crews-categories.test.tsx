@@ -82,10 +82,8 @@ describe('Crews and Categories Administration (T313, R-323, R-324, RN-085)', () 
 
     await user.type(nameInput, 'Cuadrilla Sábado C')
 
-    // If teacher is cleared, warning is shown and button is disabled
-    await user.selectOptions(teacherSelect, '')
-    expect(await screen.findByText(/Es obligatorio asignar un docente responsable/i)).toBeInTheDocument()
-    expect(saveBtn).toBeDisabled()
+    // With a single teacher available, that teacher is chosen alone (professor's review, point 7)
+    expect(teacherSelect).toHaveValue(String(teacherUser.id))
 
     // Select teacher and submit
     await user.selectOptions(teacherSelect, String(teacherUser.id))

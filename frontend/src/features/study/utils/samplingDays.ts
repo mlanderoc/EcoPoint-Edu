@@ -102,3 +102,20 @@ export function formatDate(isoDate: string | null | undefined): string {
     timeZone: 'UTC',
   }).format(toUtc(isoDate))
 }
+
+/** Today as yyyy-mm-dd in the local time zone. */
+export function todayIso(now: Date = new Date()): string {
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${now.getFullYear()}-${month}-${day}`
+}
+
+/**
+ * Message for each date typed before today (professor's review, point 5). A
+ * date already saved that did not change is accepted, as the backend does.
+ */
+export function pastDateErrors(dates: string[], saved: string[], today: string): (string | undefined)[] {
+  return dates.map((date, index) => date && date !== saved[index] && date < today
+    ? `La fecha no puede ser anterior a hoy (${formatDate(today)}).`
+    : undefined)
+}

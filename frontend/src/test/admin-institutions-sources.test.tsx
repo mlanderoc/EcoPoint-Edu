@@ -42,16 +42,19 @@ describe('Institutions and Generation Sources Administration (T311, R-320, R-321
     expect(await screen.findByText('Registrar Institución Educativa')).toBeInTheDocument()
 
     const nameInput = screen.getByLabelText(/Nombre de la Institución/i)
-    const addressInput = screen.getByLabelText(/Dirección/i)
     const saveBtn = screen.getByRole('button', { name: /Guardar Institución/i })
 
     await user.type(nameInput, 'Colegio Nacional Loperena')
-    await user.type(addressInput, 'Carrera 9 # 15-20')
+    await user.selectOptions(screen.getByLabelText('Tipo de vía'), 'Carrera')
+    await user.type(screen.getByLabelText('Número de la carrera'), '9')
+    await user.type(screen.getByLabelText('#'), '15')
+    await user.type(screen.getByLabelText('-'), '20')
+    expect(screen.getByTestId('address-preview')).toHaveTextContent('Carrera 9 # 15 - 20, Valledupar, Cesar')
     await user.click(saveBtn)
 
     // Verify created institution appears in the list
     expect(await screen.findByText('Colegio Nacional Loperena')).toBeInTheDocument()
-    expect(screen.getByText('Carrera 9 # 15-20')).toBeInTheDocument()
+    expect(screen.getByText('Carrera 9 # 15 - 20, Valledupar, Cesar')).toBeInTheDocument()
   })
 
   it('renders generation sources list and allows adding a new source linked to an institution', async () => {
@@ -79,16 +82,16 @@ describe('Institutions and Generation Sources Administration (T311, R-320, R-321
     // Modal opens
     expect(await screen.findByText('Crear Fuente de Generación')).toBeInTheDocument()
 
-    const codeInput = screen.getByLabelText(/Código de Fuente/i)
+    expect(screen.queryByLabelText(/Código de Fuente/i)).toBeNull()
     const nameInput = screen.getByLabelText(/Nombre Descriptivo/i)
     const saveBtn = screen.getByRole('button', { name: /Guardar Fuente/i })
 
-    await user.type(codeInput, 'LAB')
     await user.type(nameInput, 'Laboratorio de Química')
+    await user.selectOptions(screen.getByLabelText('Tipo de Espacio'), 'LABORATORIO')
     await user.click(saveBtn)
 
-    // Verify new source appears in the table
+    // The code is generated from the name (professor's review, point 4)
     expect(await screen.findByText('Laboratorio de Química')).toBeInTheDocument()
-    expect(screen.getByText('LAB')).toBeInTheDocument()
+    expect(screen.getByText('LQ')).toBeInTheDocument()
   })
 })

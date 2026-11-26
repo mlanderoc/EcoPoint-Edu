@@ -48,6 +48,7 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
     await user.type(nameInput, 'Docente')
     await user.type(lastNameInput, 'Duplicado')
     await user.type(emailInput, 'docente.demo@unicesar.edu.co')
+    await user.selectOptions(screen.getByLabelText('Rol en el Sistema'), 'DOCENTE')
     await user.type(screen.getByLabelText(/Contraseña inicial/i), 'ClaveSegura2026')
     await user.click(saveBtn)
 
@@ -113,6 +114,7 @@ describe('Users Administration (T312, R-322, CA-302)', () => {
     await user.type(screen.getByLabelText(/Nombres/i), 'Mario')
     await user.type(screen.getByLabelText(/Apellidos/i), 'Gómez')
     await user.type(screen.getByLabelText(/Correo Institucional/i), 'mario.gomez@unicesar.edu.co')
+    await user.selectOptions(screen.getByLabelText('Rol en el Sistema'), 'ESTUDIANTE_UNIVERSITARIO')
     await user.type(screen.getByLabelText(/Contraseña inicial/i), 'corta')
     await user.click(screen.getByRole('button', { name: /Guardar Usuario/i }))
 

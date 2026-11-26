@@ -21,16 +21,16 @@ import { GenerationSource } from '@/types'
 import { studyService } from '../services/studyService'
 import { StudyDatesEditor } from '../components/StudyDatesEditor'
 import { CrewSelect, useCrews } from '../components/CrewSelect'
-import { DAY_COUNT } from '../utils/samplingDays'
+import { DAY_COUNT, pastDateErrors, todayIso } from '../utils/samplingDays'
+import { chosenOrOnly } from '@/utils/choice'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 export function NewStudyPage() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { institutions, error: institutionsError } = useInstitutions(true)
-  const [chosenInstitution, setInstitutionId] = useState<number | null>(user?.institutionId ?? null)
-  const institutionId = institutions.some((item) => item.id === chosenInstitution)
-    ? chosenInstitution
-    : institutions[0]?.id ?? null
+  const [chosenInstitution, setInstitutionId] = useState<number | null>(null)
+  const institutionId = chosenOrOnly(institutions, chosenInstitution)?.id ?? null
   const { crews, error: crewsError } = useCrews()
   const [crewId, setCrewId] = useState<number | null>(null)
   const [dates, setDates] = useState<string[]>(Array(DAY_COUNT).fill(''))
@@ -82,6 +82,10 @@ export function NewStudyPage() {
       setError('Elija la fecha del día 1.')
       return
     }
+    if (pastDateErrors(dates, [], todayIso()).some(Boolean)) {
+      setError('Las fechas del estudio no pueden ser anteriores a hoy.')
+      return
+    }
     if (selected.size === 0) {
       setError('Elija al menos una fuente participante.')
       return
@@ -116,6 +120,7 @@ export function NewStudyPage() {
         </p>
       </div>
 
+      <RokkoTip tip="studies" />
       {error && <AlertBanner variant="danger" title="No se pudo guardar" message={error} />}
       {institutionsError && <AlertBanner variant="danger" message={institutionsError} />}
       {crewsError && <AlertBanner variant="danger" message={crewsError} />}

@@ -17,7 +17,9 @@ import { BagIcon } from '@/features/home/components/BagIcon'
 import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
 import { settingsOfStudy } from '@/features/study/services/studySettings'
+import { LIMITS, rangeError } from '@/utils/limits'
 import { DEFAULT_LIMITS, density, formatNumber, isAtypical, netWeight, parseDecimal } from '../utils/fieldMath'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 type Limits = Pick<CharacterizationSettings, 'maxBagNetWeight' | 'minBagDensity' | 'maxBagDensity'>
 
@@ -54,13 +56,19 @@ export function NewBagPage() {
   const grossValue = parseDecimal(gross)
   const tareValue = parseDecimal(tare)
   const volumeValue = parseDecimal(volume)
+  const grossError = rangeError(grossValue, LIMITS.bagGrossWeight, 'El peso bruto', 'kg')
   const tareError = grossValue !== null && tareValue !== null && tareValue >= grossValue
     ? 'La tara no puede superar el peso bruto.'
-    : undefined
+    : rangeError(tareValue, LIMITS.bagTare, 'La tara', 'kg')
+  const volumeError = rangeError(volumeValue, LIMITS.bagVolume, 'El volumen', 'm³')
   const net = grossValue !== null && tareValue !== null && !tareError ? netWeight(grossValue, tareValue) : null
   const bagDensity = net !== null && volumeValue !== null ? density(net, volumeValue) : null
   const atypical = net !== null && isAtypical(net, bagDensity, limits)
+  const densityError = !grossError && !volumeError
+    ? rangeError(bagDensity, LIMITS.density, 'La densidad de la bolsa', 'kg/m³: revise el peso y el volumen')
+    : undefined
   const complete = sourceId !== null && net !== null && volumeValue !== null && volumeValue > 0
+    && !grossError && !volumeError && !densityError
 
   /** Chooses the source and brings the weighing form into view (D15). */
   const chooseSource = (id: number) => {
@@ -162,6 +170,7 @@ export function NewBagPage() {
       <div className="page-hero"><div><h1 className="page-hero-title">Registrar bolsa · {shift.code}</h1>
         <p className="m-0 mt-1">Pesa la bolsa y el sistema calcula el neto y la densidad.</p></div></div>
       <ShiftSteps shift={shift} current="bolsas" />
+      <RokkoTip tip="bag" />
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
 
       <form onSubmit={handleSave} className="grid-left">
@@ -199,12 +208,14 @@ export function NewBagPage() {
           </div>
           <div className="form-row">
             <Input id="bag-gross" label="Peso bruto (kg)" inputMode="decimal" placeholder="Ej. 12,40" value={gross}
-              onChange={(event) => setGross(event.target.value)} disabled={isSaving} className="min-h-[56px] text-xl" />
+              onChange={(event) => setGross(event.target.value)} error={grossError} disabled={isSaving}
+              className="min-h-[56px] text-xl" />
             <Input id="bag-tare" label="Tara del recipiente (kg)" inputMode="decimal" placeholder="Ej. 0,40" value={tare}
               onChange={(event) => setTare(event.target.value)} error={tareError} disabled={isSaving}
               className="min-h-[56px] text-xl" />
             <Input id="bag-volume" label="Volumen de la bolsa (m³)" inputMode="decimal" placeholder="Ej. 0,080"
-              value={volume} onChange={(event) => setVolume(event.target.value)} disabled={isSaving}
+              value={volume} onChange={(event) => setVolume(event.target.value)} error={volumeError ?? densityError}
+              disabled={isSaving}
               className="min-h-[56px] text-xl" />
           </div>
           {atypical && (

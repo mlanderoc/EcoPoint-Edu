@@ -1,4 +1,13 @@
+/**
+ * Drop-down list of the design system. It always shows the arrow that tells
+ * there are more values, and an optional "Escoja..." message instead of a value
+ * chosen by default (professor's review, point 7).
+ *
+ * @author craulgomez
+ */
+
 import React from 'react'
+import { ChevronDown } from 'lucide-react'
 import { cn } from '@/utils/cn'
 
 export interface SelectOption {
@@ -10,11 +19,16 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
   label?: string
   error?: string
   options?: SelectOption[]
+  /** First, empty option shown while nothing is chosen, such as "Escoja un estudio". */
+  placeholder?: string
+  /** Small icon at the left of the value. */
+  icon?: React.ReactNode
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
-  ({ className, label, error, id, options = [], children, ...props }, ref) => {
+  ({ className, label, error, id, options = [], children, placeholder, icon, ...props }, ref) => {
     const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined)
+    const isEmpty = props.value === '' || props.value === undefined
 
     return (
       <div className="w-full flex flex-col gap-1.5">
@@ -26,28 +40,32 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
             {label}
           </label>
         )}
-        <select
-          id={selectId}
-          ref={ref}
-          className={cn(
-            'min-h-[48px] px-4 py-2.5 rounded-xl border text-sm md:text-base font-medium transition-colors bg-white appearance-none',
-            'focus:outline-none focus:ring-2 focus:ring-offset-1',
-            error
-              ? 'border-red-500 text-red-900 focus:ring-red-500 bg-red-50/30'
-              : 'border-slate-300 text-[var(--color-text-main)] focus:border-[var(--color-primary)] focus:ring-[var(--color-primary)]',
-            props.disabled && 'bg-slate-100 text-slate-400 cursor-not-allowed',
-            className
-          )}
-          {...props}
-        >
-          {options.length > 0
-            ? options.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))
-            : children}
-        </select>
+        <div className={cn('select-box', error && 'is-error', props.disabled && 'is-disabled', icon ? 'has-icon' : undefined)}>
+          {icon && <span className="select-icon" aria-hidden="true">{icon}</span>}
+          <select
+            id={selectId}
+            ref={ref}
+            className={cn(
+              'select-field min-h-[48px] text-sm md:text-base font-semibold appearance-none',
+              isEmpty && placeholder ? 'is-placeholder' : undefined,
+              error ? 'text-red-900' : 'text-[var(--color-text-main)]',
+              props.disabled && 'cursor-not-allowed',
+              className
+            )}
+            aria-invalid={error ? true : undefined}
+            {...props}
+          >
+            {placeholder && <option value="" disabled>{placeholder}</option>}
+            {options.length > 0
+              ? options.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))
+              : children}
+          </select>
+          <ChevronDown className="select-arrow" aria-hidden="true" />
+        </div>
         {error && (
           <p role="alert" className="text-xs font-semibold text-red-600 mt-0.5">
             {error}

@@ -110,14 +110,21 @@ a:focus-visible, button:focus-visible, select:focus-visible { outline: 3px solid
 .shell-link:hover { background: rgba(255, 255, 255, .09); }
 .shell-link:active { transform: scale(.98); }
 .shell-link.on { background: var(--leaf); color: var(--forest); font-weight: 700; }
-.shell-person { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, .08); }
+.shell-person { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, .08); color: inherit; text-decoration: none; transition: background .15s ease; }
+.shell-person:hover, .shell-person.on { background: rgba(255, 255, 255, .16); }
+.shell-person-go { width: 18px; height: 18px; margin-left: auto; flex: none; color: #b9d3c1; transition: transform .15s ease; }
+.shell-person:hover .shell-person-go { transform: translateX(2px); }
 .shell-avatar { display: grid; place-items: center; width: 38px; height: 38px; flex: none; border-radius: 50%; background: var(--leaf); color: var(--forest); font: 900 .95rem var(--display); }
 .shell-person b { display: block; color: #fff; font-size: .92rem; overflow-wrap: anywhere; }
-.shell-person small { color: #b9d3c1; }
+.shell-person small { display: block; overflow: hidden; color: #b9d3c1; white-space: nowrap; text-overflow: ellipsis; }
 .shell-main { min-width: 0; display: flex; flex-direction: column; }
 .shell-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 22px 0; }
 .shell-crumb { display: flex; align-items: center; gap: 10px; min-width: 0; color: var(--muted); font-size: .92rem; font-weight: 500; }
 .shell-crumb img { display: none; width: 34px; height: 34px; object-fit: contain; padding: 3px; border-radius: 10px; background: #fff; }
+.shell-hello { display: flex; flex-direction: column; align-items: flex-end; gap: 1px; margin: 0 0 0 auto; text-align: right; line-height: 1.25; }
+.shell-hello b { color: var(--forest); font: 800 .98rem var(--display); }
+.shell-hello time { color: var(--muted); font-size: .8rem; }
+.shell-hello time::first-letter { text-transform: uppercase; }
 .shell-logout { display: inline-flex; align-items: center; gap: 8px; min-width: 44px; min-height: 44px; justify-content: center; padding: 0 12px; border-radius: 12px; color: var(--forest); font-weight: 700; font-size: .88rem; transition: background .15s ease; }
 .shell-logout:hover { background: #e4e8db; }
 .shell-content { flex: 1; width: 100%; max-width: 100%; display: flex; flex-direction: column; padding: 12px 22px 24px; overflow-x: clip; }
@@ -456,6 +463,8 @@ a.shift-step:hover { transform: translateY(-1px); border-color: var(--brand); }
   .shell-bottom { display: flex; }
   .shell-top { padding: 10px 16px 0; }
   .shell-crumb img { display: block; }
+  .shell-crumb span { display: none; }
+  .shell-hello b { font-size: .9rem; }
   .shell-content { padding: 10px max(16px, env(safe-area-inset-right, 0px)) 20px max(16px, env(safe-area-inset-left, 0px)); }
   .page-hero { min-height: 92px; padding: 15px 100px 15px 16px; }
   .page-hero::after { right: 2px; bottom: -18px; width: 96px; }
@@ -486,3 +495,82 @@ a.shift-step:hover { transform: translateY(-1px); border-color: var(--brand); }
   .ld-leaf, .trail-stop.current::after { animation: none; }
   .ld-btn, .lg-back, .shell-link, .study-card, .shift-step, .trail-cta, .trail-stop, .home-bag, .home-todo button { transition: none; }
 }
+
+/* Drop-down lists: arrow always visible and a softer field (professor's review, point 7) */
+.select-box { position: relative; display: flex; align-items: center; border: 1.5px solid #cfd8c4; border-radius: 14px; background: linear-gradient(180deg, #fff 0%, #f6f9f0 100%); box-shadow: 0 1px 0 rgba(16, 56, 34, .04), 0 3px 10px rgba(16, 56, 34, .05); transition: border-color .15s ease, box-shadow .15s ease; }
+.select-box:hover { border-color: #93b77a; }
+.select-box:focus-within { border-color: var(--forest-2); box-shadow: 0 0 0 3px rgba(164, 214, 94, .45); }
+.select-field { width: 100%; padding: 10px 48px 10px 16px; border: 0; border-radius: 14px; background: transparent; cursor: pointer; }
+.select-field:focus-visible { outline: none; }
+.select-field.is-placeholder { color: var(--muted); }
+.select-field option { color: var(--ink); font-weight: 500; }
+.has-icon .select-field { padding-left: 42px; }
+.select-icon { position: absolute; left: 14px; display: grid; color: var(--forest-2); pointer-events: none; }
+.select-icon svg { width: 18px; height: 18px; }
+.select-arrow { position: absolute; right: 10px; width: 28px; height: 28px; padding: 5px; border-radius: 9px; background: #e7f2d8; color: var(--forest); pointer-events: none; transition: background .15s ease, transform .15s ease; }
+.select-box:hover .select-arrow { background: var(--leaf); }
+.select-box.is-error { border-color: #ef4444; background: #fff5f5; }
+.select-box.is-disabled { border-color: #e2e8f0; background: #f1f5f9; box-shadow: none; }
+.select-box.is-disabled .select-arrow { background: #e2e8f0; color: #94a3b8; }
+
+/* Small box with the day and the shift on hover (professor's review, point 6) */
+.has-tip { position: relative; }
+.has-tip::after { content: attr(data-tip); position: absolute; left: 50%; bottom: calc(100% + 8px); z-index: 30; padding: 5px 10px; border-radius: 8px; background: var(--forest); color: #fff; font: 700 .78rem/1.2 var(--display); white-space: nowrap; box-shadow: 0 4px 12px rgba(16, 56, 34, .25); opacity: 0; pointer-events: none; transform: translate(-50%, 4px); transition: opacity .12s ease, transform .12s ease; }
+.has-tip:hover::after, .has-tip:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { .has-tip::after { transition: none; } }
+.weight-row.is-error input { border-color: #ef4444; background: #fff5f5; }
+
+/* Guided address of Valledupar (professor's review, point 2) */
+.address-fields { display: flex; flex-direction: column; gap: 12px; min-width: 0; margin: 0; padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: #fafcf6; }
+.address-fields legend { padding: 0 6px; color: var(--forest); font: 800 .9rem var(--display); }
+.address-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; align-items: start; }
+.address-bis { display: flex; align-items: center; gap: 8px; min-height: 48px; margin-top: 26px; font-weight: 700; font-size: .9rem; }
+.address-bis input { width: 18px; height: 18px; }
+.address-preview { margin: 0; padding: 8px 10px; border-radius: 10px; background: #eef5e4; color: var(--forest); font-size: .86rem; font-weight: 600; }
+
+/* Rokko, the guide mascot: small, soft and easy to fold away (professor's review, point 3) */
+.rokko { position: relative; display: flex; align-items: flex-start; gap: 12px; padding: 12px 48px 12px 12px; border: 1px solid #dbe8c9; border-radius: 18px; background: #f6faef; color: var(--ink); animation: rokko-in .25s ease-out; }
+.rokko-face { flex: none; width: 52px; height: 52px; border-radius: 50%; border: 2px solid #fff; background: #e7f2d8 url('/brand/eco-saluda.webp') no-repeat 47% 4% / 165%; box-shadow: 0 2px 8px rgba(16, 56, 34, .12); }
+.rokko-bubble { position: relative; flex: 1; min-width: 0; padding: 12px 16px 14px; border-radius: 14px; background: #fff; box-shadow: 0 1px 4px rgba(16, 56, 34, .06); }
+.rokko-bubble::before { content: ""; position: absolute; left: -7px; top: 18px; width: 14px; height: 14px; background: #fff; transform: rotate(45deg); box-shadow: -1px 1px 2px rgba(16, 56, 34, .04); }
+.rokko-title { position: relative; margin: 0 0 10px; font-size: .92rem; color: var(--forest); }
+.rokko-bubble ol { position: relative; display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; counter-reset: rokko-step; }
+.rokko-bubble li { position: relative; display: flex; align-items: flex-start; gap: 9px; padding: 9px 10px; border-radius: 12px; background: #f6faef; color: var(--ink); font-size: .85rem; line-height: 1.4; counter-increment: rokko-step; }
+.rokko-bubble li::before { content: counter(rokko-step); display: grid; place-items: center; flex: none; width: 22px; height: 22px; border-radius: 50%; background: var(--forest); color: #fff; font: 800 .72rem var(--display); }
+.rokko-hide { position: absolute; top: 0; right: 0; display: grid; place-items: center; width: 48px; height: 48px; border-radius: 14px; color: var(--muted); transition: background .15s ease; }
+.rokko-hide:hover { background: #e7f2d8; color: var(--forest); }
+.rokko-hide svg { width: 16px; height: 16px; }
+.rokko-mini { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; min-height: 48px; padding: 3px 16px 3px 5px; border: 1px solid #dbe8c9; border-radius: 999px; background: #f6faef; color: var(--forest); font: 700 .85rem var(--display); transition: background .15s ease; }
+.rokko-mini:hover { background: #e7f2d8; }
+.rokko-mini .rokko-face { width: 34px; height: 34px; border-width: 1px; box-shadow: none; }
+@keyframes rokko-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .rokko { animation: none; } }
+@media (max-width: 640px) { .rokko-face { width: 40px; height: 40px; } }
+.home-date { margin: 2px 0 0; color: var(--muted); font-size: .9rem; } .home-date::first-letter { text-transform: uppercase; }
+
+/* Open list of the drop-downs with the brand look, in browsers that allow it (Edge/Chrome 135+) */
+@supports (appearance: base-select) {
+  .select-field, .select-field::picker(select) { appearance: base-select; }
+  .select-field { display: flex; align-items: center; }
+  .select-field::picker-icon { display: none; }
+  .select-field::picker(select) { min-width: anchor-size(width); max-height: min(320px, 60vh); margin-top: 6px; padding: 6px; border: 1px solid #d6e2c6; border-radius: 16px; background: #fff; box-shadow: 0 16px 40px rgba(16, 56, 34, .18), 0 2px 6px rgba(16, 56, 34, .08); overflow-y: auto; opacity: 0; transform: translateY(-4px); transition: opacity .14s ease, transform .14s ease, overlay .14s allow-discrete, display .14s allow-discrete; }
+  .select-field:open::picker(select) { opacity: 1; transform: none; }
+  @starting-style { .select-field:open::picker(select) { opacity: 0; transform: translateY(-4px); } }
+  .select-field option { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 8px 12px; border-radius: 11px; color: var(--ink); font: 600 .95rem var(--body, inherit); cursor: pointer; transition: background .12s ease, color .12s ease; }
+  .select-field option + option { margin-top: 2px; }
+  .select-field option:hover, .select-field option:focus-visible { background: #eef5e4; color: var(--forest); outline: none; }
+  .select-field option:checked { background: var(--forest); color: #fff; }
+  .select-field option::checkmark { order: 1; margin-left: auto; color: var(--leaf); font-weight: 900; }
+  .select-field option:disabled { min-height: 34px; color: var(--muted); font-size: .82rem; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; cursor: default; background: transparent; }
+  .select-field option:disabled::checkmark { content: none; }
+  .select-box:has(.select-field:open) { border-color: var(--forest-2); box-shadow: 0 0 0 3px rgba(164, 214, 94, .45); }
+  .select-box:has(.select-field:open) .select-arrow { background: var(--leaf); transform: rotate(180deg); }
+  @media (prefers-reduced-motion: reduce) { .select-field::picker(select) { transition: none; } }
+}
+
+/* Rokko says the day and shift of the stop under the pointer (professor's review, point 6) */
+.trail-say { position: absolute; right: 196px; bottom: 150px; z-index: 2; max-width: 210px; margin: 0; padding: 8px 14px; border-radius: 16px 16px 4px 16px; background: #fff; color: var(--forest); font: 800 .92rem/1.25 var(--display); box-shadow: 0 6px 18px rgba(0, 0, 0, .25); opacity: 0; pointer-events: none; transform: translateY(6px) scale(.96); transform-origin: 100% 100%; transition: opacity .14s ease, transform .14s ease; }
+.trail-say.on { opacity: 1; transform: none; }
+@media (max-width: 900px) { .trail-say { top: 30px; right: 112px; bottom: auto; border-radius: 16px 4px 16px 16px; transform-origin: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .trail-say { transition: none; } }
+.trail-why { max-width: 280px; margin: 8px 0 0; color: #cfe3c5; font-size: .84rem; line-height: 1.35; }

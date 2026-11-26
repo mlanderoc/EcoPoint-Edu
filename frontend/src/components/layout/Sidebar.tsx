@@ -4,6 +4,7 @@ import {
   Bell,
   Building,
   Calendar,
+  ChevronRight,
   ClipboardList,
   Home,
   MapPin,
@@ -118,13 +119,22 @@ export function Sidebar({
         </nav>
       )}
 
-      <div className="shell-person">
+      <a
+        href="/perfil"
+        className={cn('shell-person min-h-[48px]', isActive(currentPath, '/perfil') && 'on')}
+        title="Ver mi perfil"
+        onClick={(event) => {
+          event.preventDefault()
+          onNavigate?.('/perfil')
+        }}
+      >
         <span className="shell-avatar">{`${user?.firstName?.[0] ?? ''}${user?.lastName?.[0] ?? ''}`.toUpperCase() || (isDocente ? 'D' : 'E')}</span>
         <div className="min-w-0">
           {user && <b>{user.firstName} {user.lastName}</b>}
           <small>{isDocente ? 'Docente' : 'Estudiante'}</small>
         </div>
-      </div>
+        <ChevronRight className="shell-person-go" aria-hidden="true" />
+      </a>
     </aside>
   )
 }

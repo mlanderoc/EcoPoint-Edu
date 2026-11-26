@@ -19,6 +19,7 @@ import { BagIcon } from '@/features/home/components/BagIcon'
 import { ShiftSteps } from '../components/ShiftSteps'
 import { fieldService } from '../services/fieldService'
 import { formatNumber, plural } from '../utils/fieldMath'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 const STATUS_TEXT: Record<SourceProgress['status'], string> = {
   CON_GENERACION: 'Con bolsas',
@@ -135,6 +136,7 @@ export function ShiftPage() {
       </div>
       <ShiftSteps shift={shift} />
 
+      <RokkoTip tip="shift" />
       {error && <AlertBanner variant="danger" message={error} onDismiss={() => setError(null)} />}
       {quarteringStatus === 'NO_CONFORME' && (
         <AlertBanner variant="danger" title="Cuarteo no conforme: repesar"

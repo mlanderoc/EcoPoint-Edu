@@ -1,6 +1,6 @@
 /**
  * Shared layout of the public access screens: login and password recovery
- * (D15; spec D18). Campus photo on one side and the card with Eco on the other.
+ * (D15; spec D18). Campus photo on one side and the card with Rokko on the other.
  *
  * @author craulgomez
  */

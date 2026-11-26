@@ -33,7 +33,7 @@ export function IndicatorsDashboard() {
         // A planned study has no data yet, and a cancelled one has no baseline (D13, A20).
         const withData = loaded.filter((study) => study.status !== 'PLANIFICADO' && study.status !== 'CANCELADO')
         setStudies(withData)
-        setStudyId((current) => current ?? withData[0]?.id ?? null)
+        setStudyId((current) => current ?? (withData.length === 1 ? withData[0].id : null))
       })
       .catch(() => setListError('No se pudieron cargar los estudios.'))
   }, [institutions])
@@ -47,6 +47,9 @@ export function IndicatorsDashboard() {
       {(listError || error) && <AlertBanner variant="danger" message={listError ?? error ?? ''} />}
       {!listError && studies.length === 0 && (
         <AlertBanner variant="info" message="Aún no hay estudios con datos de campo." />
+      )}
+      {studyId === null && studies.length > 1 && (
+        <AlertBanner variant="info" title="Escoja un estudio" message="Elija arriba el estudio cuyos indicadores quiere ver." />
       )}
       {isLoading && !indicators && <p className="text-sm text-slate-500">Calculando indicadores...</p>}
       {indicators && (

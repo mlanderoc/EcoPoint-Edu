@@ -122,6 +122,7 @@ class FieldFlowIT extends PostgresIntegrationTest {
     }
 
     private long openShift() throws Exception {
+        readyToOpen(RUNNING_STUDY, 3, "MANANA");
         String body = teacher.json(post("/api/v1/studies/" + RUNNING_STUDY + "/shifts"),
                         "{\"dayNumber\":3,\"type\":\"MANANA\"}")
                 .andExpect(status().isCreated())

@@ -6,6 +6,7 @@
  */
 
 import { useEffect, useState } from 'react'
+import { LIMITS, rangeError } from '@/utils/limits'
 import { useNavigate, useParams } from 'react-router-dom'
 import { AlertBanner, BackButton, Button, Input } from '@/components/ui'
 import { useUnsavedChanges } from '@/hooks/useUnsavedChanges'
@@ -15,6 +16,7 @@ import { formatNumber, parseDecimal } from '@/features/field/utils/fieldMath'
 import { ApiError } from '@/services/apiClient'
 import { DensityMeasurement, SamplingShift } from '@/types'
 import { qualityService } from '../services/qualityService'
+import { RokkoTip } from '@/components/guide/RokkoTip'
 
 /** Measuring containers used by the crews (R-411); extend it with the list of Environmental Engineering (P2). */
 export const FREQUENT_CONTAINERS = [{ name: 'Caneca de 55 galones', volume: 0.208 }]
@@ -45,10 +47,16 @@ export function DensityPage() {
   const volumeValue = parseDecimal(volume)
   const weightValue = parseDecimal(weight)
   const density = volumeValue && weightValue && volumeValue > 0 ? Math.round((weightValue / volumeValue) * 100) / 100 : null
+  const volumeError = rangeError(volumeValue, LIMITS.containerVolume, 'El volumen del recipiente', 'm³')
+  const weightError = rangeError(weightValue, LIMITS.containerWeight, 'El peso neto', 'kg')
+  const densityError = !volumeError && !weightError
+    ? rangeError(density, LIMITS.density, 'La densidad', 'kg/m³: revise el peso y el volumen')
+    : undefined
+  const invalid = Boolean(volumeError || weightError || densityError)
 
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault()
-    if (volumeValue === null || weightValue === null) return
+    if (volumeValue === null || weightValue === null || invalid) return
     setError(null)
     try {
       setIsSaving(true)
@@ -73,6 +81,7 @@ export function DensityPage() {
       <div className="page-hero"><div><h1 className="page-hero-title">Densidad del turno</h1>
         <p className="m-0 mt-1">Peso volumétrico de los residuos.</p></div></div>
       {shift && <ShiftSteps shift={shift} current="densidad" />}
+      <RokkoTip tip="density" />
       {error && <AlertBanner variant="danger" message={error} />}
       <section className="panel">
         <h3>Peso volumétrico del turno</h3>
@@ -96,9 +105,11 @@ export function DensityPage() {
                 ))}
               </div>
               <Input id="density-volume" label="Volumen del recipiente (m³)" inputMode="decimal" value={volume}
-                onChange={(event) => setVolume(event.target.value)} disabled={isSaving} className="min-h-[52px] text-lg" />
+                onChange={(event) => setVolume(event.target.value)} error={volumeError} disabled={isSaving}
+                className="min-h-[52px] text-lg" />
               <Input id="density-weight" label="Peso neto de los residuos (kg)" inputMode="decimal" value={weight}
-                onChange={(event) => setWeight(event.target.value)} disabled={isSaving} className="min-h-[52px] text-lg" />
+                onChange={(event) => setWeight(event.target.value)} error={weightError ?? densityError}
+                disabled={isSaving} className="min-h-[52px] text-lg" />
               <div className="total-band" data-testid="live-shift-density"><span>Densidad</span><b>{formatNumber(density)} kg/m³</b></div>
               <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
                 <Button type="button" variant="outline" className="min-h-[48px]" disabled={isSaving}
@@ -106,7 +117,7 @@ export function DensityPage() {
                   Descartar
                 </Button>
                 <Button type="submit" className="min-h-[48px]" isLoading={isSaving}
-                  disabled={isSaving || density === null}>
+                  disabled={isSaving || density === null || invalid}>
                   Guardar densidad
                 </Button>
               </div>

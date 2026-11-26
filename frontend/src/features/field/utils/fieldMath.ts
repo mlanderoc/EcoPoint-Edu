@@ -69,14 +69,42 @@ export function shiftTypeAt(now: Date): ShiftType {
  * study; otherwise an open shift; otherwise the first one not opened yet.
  */
 export function suggestSlot(study: CharacterizationStudy, slots: ShiftSlot[], now: Date): { dayNumber: number; type: ShiftType } {
+  const ordered = inShiftOrder(slots)
+  const lastWorked = ordered.reduce((last, slot, index) => (slot.shiftId !== null ? index : last), -1)
+  const candidate = ordered.find((slot) => slot.status === 'ABIERTO')
+    ?? ordered.slice(lastWorked + 1).find((slot) => openBlocker(slots, slot.dayNumber, slot.type) === null)
+  if (candidate) return { dayNumber: candidate.dayNumber, type: candidate.type }
   const today = study.days.find((day) => day.date === localIsoDate(now))
-  if (today) {
-    return { dayNumber: today.dayNumber, type: shiftTypeAt(now) }
+  if (today) return { dayNumber: today.dayNumber, type: shiftTypeAt(now) }
+  const last = ordered[ordered.length - 1]
+  return last ? { dayNumber: last.dayNumber, type: last.type } : { dayNumber: 1, type: 'MANANA' }
+}
+
+function shiftOrder(dayNumber: number, type: ShiftType): number {
+  return (dayNumber - 1) * 2 + (type === 'MANANA' ? 0 : 1)
+}
+
+/** The shifts in the order they are worked: day 1 morning, day 1 afternoon, day 2 morning... */
+export function inShiftOrder(slots: ShiftSlot[]): ShiftSlot[] {
+  return [...slots].sort((a, b) => shiftOrder(a.dayNumber, a.type) - shiftOrder(b.dayNumber, b.type))
+}
+
+/**
+ * Why a shift cannot be opened yet, or null when it can: another shift is
+ * still open, or the shift before it is not closed. Same rule as
+ * ShiftValidator in the backend.
+ */
+export function openBlocker(slots: ShiftSlot[], dayNumber: number, type: ShiftType): string | null {
+  const open = slots.find((slot) => slot.status === 'ABIERTO')
+  if (open && !(open.dayNumber === dayNumber && open.type === type)) {
+    return `Cierre el turno D${open.dayNumber}-${open.type === 'MANANA' ? 'M' : 'T'} antes de abrir otro.`
   }
-  const candidate = slots.find((slot) => slot.status === 'ABIERTO')
-    ?? slots.find((slot) => slot.status === null)
-    ?? slots[slots.length - 1]
-  return candidate ? { dayNumber: candidate.dayNumber, type: candidate.type } : { dayNumber: 1, type: 'MANANA' }
+  if (dayNumber === 1 && type === 'MANANA') return null
+  const previousDay = type === 'TARDE' ? dayNumber : dayNumber - 1
+  const previousType: ShiftType = type === 'TARDE' ? 'MANANA' : 'TARDE'
+  const previous = slots.find((slot) => slot.dayNumber === previousDay && slot.type === previousType)
+  return previous?.status === 'CERRADO' ? null
+    : `Los turnos van en orden: primero se cierra el turno de la ${previousType === 'MANANA' ? 'mañana' : 'tarde'} del día ${previousDay}.`
 }
 
 /** "1 bolsa", "3 bolsas". */

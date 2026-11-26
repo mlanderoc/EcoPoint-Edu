@@ -55,14 +55,16 @@ describe('Tabla de usuarios (R-322, CA-313)', () => {
     expect(screen.getByText('estudiante10@unicesar.edu.co')).toBeInTheDocument()
   })
 
-  it('ca096_newUserDefaultsToStudent', async () => {
+  it('rev7_newUserHasNoRoleChosenUntilTheTeacherPicksOne', async () => {
     resetMockState('DOCENTE')
     const user = userEvent.setup()
     renderUsers()
 
     await user.click(await screen.findByRole('button', { name: /Nuevo Usuario/ }))
 
-    expect(screen.getByLabelText('Rol en el Sistema')).toHaveValue('ESTUDIANTE_UNIVERSITARIO')
+    const role = screen.getByLabelText('Rol en el Sistema')
+    expect(role).toHaveValue('')
+    expect(within(role).getByRole('option', { name: 'Escoja el rol' })).toBeDisabled()
   })
 
   it('ca313_searchFindsByEmailAndTeachersHaveNoDeactivateButton', async () => {

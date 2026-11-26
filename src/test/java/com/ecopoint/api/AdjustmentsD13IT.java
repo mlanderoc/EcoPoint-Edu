@@ -47,6 +47,8 @@ class AdjustmentsD13IT extends PostgresIntegrationTest {
         ApiClient student = ApiClient.loggedIn(mvc, STUDENT, PASSWORD);
         Long executing = jdbc.queryForObject("SELECT id FROM ESTUDIO WHERE estado = 'EN_EJECUCION'", Long.class);
         String cancel = "/api/v1/studies/" + executing + "/cancel";
+        // New dates cannot be before today (professor's review, point 5): 260 weeks ahead keeps the weekdays.
+        jdbc.update("UPDATE DIA_MUESTREO SET fecha = fecha + 1820 WHERE id_estudio = ?", executing);
 
         student.json(post(cancel), "{\"reason\":\"Fechas equivocadas\"}").andExpect(status().isForbidden());
         teacher.json(post(cancel), "{\"reason\":\" \"}").andExpect(status().isBadRequest());

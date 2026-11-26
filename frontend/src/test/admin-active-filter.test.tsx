@@ -29,8 +29,8 @@ describe('Activar, desactivar y filtrar (R-325, CA-312)', () => {
     renderPage(<SourcesPage />)
 
     await user.click(await screen.findByRole('button', { name: /Nueva Fuente/ }))
-    await user.type(screen.getByLabelText(/Código de Fuente/), 'CAF')
     await user.type(screen.getByLabelText('Nombre Descriptivo'), 'Cafetería')
+    await user.selectOptions(screen.getByLabelText('Tipo de Espacio'), 'TIENDA_ESCOLAR')
     await user.click(screen.getByRole('checkbox', { name: /Fuente activa para muestreo/ }))
     await user.click(screen.getByRole('button', { name: 'Guardar Fuente' }))
 
