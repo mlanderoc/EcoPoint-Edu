@@ -18,6 +18,10 @@ public final class DensityValidator {
 
     private static final int WEIGHT_DECIMALS = 2;
     private static final int VOLUME_DECIMALS = 3;
+    static final String MIN_CONTAINER_VOLUME = "0.010";
+    static final String MAX_CONTAINER_VOLUME = "1.000";
+    static final String MIN_NET_WEIGHT = "0.1";
+    static final String MAX_NET_WEIGHT = "500";
 
     private DensityValidator() {
     }
@@ -36,6 +40,12 @@ public final class DensityValidator {
         requirePositive(measurement.getContainerVolume(), "volumenRecipiente",
                 "El volumen del recipiente", VOLUME_DECIMALS);
         requirePositive(measurement.getNetWeight(), "pesoNeto", "El peso neto", WEIGHT_DECIMALS);
+        ValidationSupport.requireRange(measurement.getContainerVolume(), MIN_CONTAINER_VOLUME, MAX_CONTAINER_VOLUME,
+                "volumenRecipiente", "El volumen del recipiente", "m³");
+        ValidationSupport.requireRange(measurement.getNetWeight(), MIN_NET_WEIGHT, MAX_NET_WEIGHT,
+                "pesoNeto", "El peso neto", "kg");
+        ValidationSupport.requireRange(measurement.getDensity(), WasteBagValidator.MIN_DENSITY,
+                WasteBagValidator.MAX_DENSITY, "pesoNeto", "La densidad", "kg/m³: revise el peso y el volumen");
     }
 
     /**

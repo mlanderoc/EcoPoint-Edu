@@ -60,4 +60,13 @@ class DensityValidatorTest {
 
         assertThrows(BusinessRuleException.class, () -> DensityValidator.validateNoExistingDensity(shift));
     }
+
+    @Test
+    void rev1_densityValuesOutsideTheirLogicalRangeAreRejected() {
+        assertThrows(InvalidDataException.class, () -> DensityValidator.validate(measurement("0.005", "1.00")));
+        assertThrows(InvalidDataException.class, () -> DensityValidator.validate(measurement("1.200", "100.00")));
+        assertThrows(InvalidDataException.class, () -> DensityValidator.validate(measurement("0.208", "600.00")));
+        assertThrows(InvalidDataException.class, () -> DensityValidator.validate(measurement("1.000", "1.00")));
+        assertDoesNotThrow(() -> DensityValidator.validate(measurement("0.208", "31.20")));
+    }
 }

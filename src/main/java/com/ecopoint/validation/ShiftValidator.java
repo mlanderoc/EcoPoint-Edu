@@ -21,6 +21,10 @@ import java.util.Objects;
  */
 public final class ShiftValidator {
 
+    private static final int MAX_STUDENTS = 5000;
+    private static final int MAX_TEACHERS = 500;
+    private static final int MAX_STAFF = 100;
+
     private ShiftValidator() {
     }
 
@@ -32,7 +36,8 @@ public final class ShiftValidator {
      * @param dayNumber      sampling day, 1 to 8
      * @param type           morning or afternoon
      * @param existingShifts shifts already opened in the study
-     * @throws BusinessRuleException if the study is not executing or the shift already exists
+     * @throws BusinessRuleException if the study is not executing, the shift already exists,
+     *                               another shift is still open or the previous shift is not closed
      */
     public static void validateNewShift(CharacterizationStudy study, int dayNumber, ShiftType type,
                                         List<SamplingShift> existingShifts) {
@@ -46,22 +51,48 @@ public final class ShiftValidator {
             throw new BusinessRuleException("El turno de " + type.getDisplayName().toLowerCase()
                     + " del día " + dayNumber + " ya existe.");
         }
+        existingShifts.stream().filter(SamplingShift::isOpen).findFirst().ifPresent(open -> {
+            throw new BusinessRuleException("Cierre el turno " + open.getCode() + " antes de abrir otro.");
+        });
+        requirePreviousShiftClosed(dayNumber, type, existingShifts);
     }
 
     /**
-     * Validates the population of a shift: every count is zero or more and
-     * the total is greater than zero (RN-022).
+     * The shifts are worked in order: day 1 morning, day 1 afternoon, day 2
+     * morning... so a shift opens only when the one before it is closed.
+     */
+    private static void requirePreviousShiftClosed(int dayNumber, ShiftType type, List<SamplingShift> existingShifts) {
+        if (dayNumber == 1 && type == ShiftType.MANANA) {
+            return;
+        }
+        int previousDay = type == ShiftType.TARDE ? dayNumber : dayNumber - 1;
+        ShiftType previousType = type == ShiftType.TARDE ? ShiftType.MANANA : ShiftType.TARDE;
+        boolean previousClosed = existingShifts.stream()
+                .anyMatch(shift -> shift.getDayNumber() == previousDay && shift.getType() == previousType
+                        && !shift.isOpen());
+        if (!previousClosed) {
+            throw new BusinessRuleException("Los turnos van en orden: primero se cierra el turno de la "
+                    + previousType.getDisplayName().toLowerCase() + " del día " + previousDay + ".");
+        }
+    }
+
+    /**
+     * Validates the population of a shift: every count lies in its logical
+     * range (up to 5000 students, 500 teachers and 100 staff) and the total is
+     * greater than zero (RN-022; professor's review, point 1).
      *
      * @param population population to validate
-     * @throws InvalidDataException if a count is negative or nobody is present
+     * @throws InvalidDataException if a count is out of range or nobody is present
      */
     public static void validatePopulation(ShiftPopulation population) {
         if (population == null) {
             throw new InvalidDataException("poblacion", "La población del turno no puede ser nula.");
         }
-        requireNotNegative(population.getStudents(), "estudiantes");
-        requireNotNegative(population.getTeachers(), "docentes");
-        requireNotNegative(population.getStaff(), "personal");
+        ValidationSupport.requireCount(population.getStudents(), MAX_STUDENTS, "estudiantes",
+                "La cantidad de estudiantes");
+        ValidationSupport.requireCount(population.getTeachers(), MAX_TEACHERS, "docentes",
+                "La cantidad de docentes");
+        ValidationSupport.requireCount(population.getStaff(), MAX_STAFF, "personal", "La cantidad de personal");
         if (population.getTotal() <= 0) {
             throw new InvalidDataException("poblacion",
                     "La población del turno debe ser mayor que cero: registre cuántas personas hay presentes.");
@@ -181,9 +212,4 @@ public final class ShiftValidator {
         }
     }
 
-    private static void requireNotNegative(int value, String field) {
-        if (value < 0) {
-            throw new InvalidDataException(field, "La cantidad de " + field + " no puede ser negativa.");
-        }
-    }
 }

@@ -17,6 +17,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Unit tests for {@link ShiftValidator} (RN-020 to RN-025, CA-020 to CA-023).
@@ -44,10 +45,35 @@ class ShiftValidatorTest {
 
     @Test
     void ca020_secondMorningShiftOnTheSameDayIsRejected() {
-        List<SamplingShift> existing = List.of(openShift());
+        SamplingShift morning = openShift();
+        List<SamplingShift> existing = List.of(morning);
 
         assertThrows(BusinessRuleException.class,
                 () -> ShiftValidator.validateNewShift(executingStudy(), 3, ShiftType.MANANA, existing));
+        morning.close();
+        assertDoesNotThrow(() -> ShiftValidator.validateNewShift(executingStudy(), 3, ShiftType.TARDE, existing));
+    }
+
+    @Test
+    void rev10_noShiftOpensWhileAnotherIsStillOpen() {
+        BusinessRuleException error = assertThrows(BusinessRuleException.class,
+                () -> ShiftValidator.validateNewShift(executingStudy(), 3, ShiftType.TARDE, List.of(openShift())));
+
+        assertTrue(error.getMessage().contains("Cierre el turno D3-M antes de abrir otro."));
+    }
+
+    @Test
+    void rev10_shiftsAreOpenedInOrder() {
+        SamplingShift morning = openShift();
+        morning.close();
+        List<SamplingShift> existing = List.of(morning);
+
+        assertDoesNotThrow(() -> ShiftValidator.validateNewShift(executingStudy(), 1, ShiftType.MANANA, List.of()));
+        assertThrows(BusinessRuleException.class,
+                () -> ShiftValidator.validateNewShift(executingStudy(), 1, ShiftType.TARDE, List.of()));
+        BusinessRuleException skipped = assertThrows(BusinessRuleException.class,
+                () -> ShiftValidator.validateNewShift(executingStudy(), 4, ShiftType.MANANA, existing));
+        assertTrue(skipped.getMessage().contains("primero se cierra el turno de la tarde del día 3"));
         assertDoesNotThrow(() -> ShiftValidator.validateNewShift(executingStudy(), 3, ShiftType.TARDE, existing));
     }
 
@@ -139,5 +165,13 @@ class ShiftValidatorTest {
 
         assertDoesNotThrow(() -> ShiftValidator.validateReopen(shift, executingStudy()));
         assertThrows(BusinessRuleException.class, () -> ShiftValidator.validateReopen(shift, cleaning));
+    }
+
+    @Test
+    void rev1_populationAboveItsLogicalRangeIsRejected() {
+        assertThrows(InvalidDataException.class, () -> ShiftValidator.validatePopulation(population(5001, 10, 5)));
+        assertThrows(InvalidDataException.class, () -> ShiftValidator.validatePopulation(population(400, 501, 5)));
+        assertThrows(InvalidDataException.class, () -> ShiftValidator.validatePopulation(population(400, 10, 101)));
+        assertDoesNotThrow(() -> ShiftValidator.validatePopulation(population(5000, 500, 100)));
     }
 }
